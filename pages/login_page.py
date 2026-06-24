@@ -1,4 +1,12 @@
-"""pages/login_page.py — Page Object for the Login page (Keycloak SSO)."""
+"""pages/login_page.py — Page Object for the Login page (Keycloak SSO).
+
+STRATEGY: Go directly to /login and immediately wait for any of 3 states:
+  1. Already on /overview  → already logged in, skip
+  2. Redirect to Keycloak  → fill credentials
+  3. Shows "Get started"   → click it, then fill credentials
+
+No fixed sleeps. No guessing. Pure event-driven waiting.
+"""
 
 from playwright.sync_api import Page
 from pages.base_page import BasePage
@@ -10,62 +18,53 @@ class LoginPage(BasePage):
     _EMAIL_INPUT             = '#username'
     _PASSWORD_INPUT          = '#password'
     _SUBMIT_BUTTON           = '#kc-login'
+    _KEYCLOAK_HOST           = "keycloak-dev.dentalbase.ai"
     _POST_LOGIN_URL_FRAGMENT = "/overview"
-    _KEYCLOAK_URL_FRAGMENT   = "keycloak"
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
-        self.email_input   = page.locator(self._EMAIL_INPUT)
+        self.email_input    = page.locator(self._EMAIL_INPUT)
         self.password_input = page.locator(self._PASSWORD_INPUT)
         self.submit_button  = page.locator(self._SUBMIT_BUTTON)
 
     def goto(self) -> None:
         self.page.goto("/login", wait_until="domcontentloaded")
-        # Wait for page to settle — could redirect to /overview or stay on /login
-        self.page.wait_for_timeout(3000)
 
     def login(self, email: str, password: str) -> None:
+        """
+        Wait for whichever state appears first — no fixed timeouts on steps.
+        Uses Playwright's expect_one_of pattern via wait_for_function.
+        """
+        # Wait until URL is one of: overview, keycloak, or /login with button
+        self.page.wait_for_function(
+            """() => {
+                const url = window.location.href;
+                if (url.includes('overview')) return 'overview';
+                if (url.includes('keycloak')) return 'keycloak';
+                const btn = document.querySelector('button');
+                if (btn && btn.innerText.includes('Get started')) return 'login';
+                return false;
+            }""",
+            timeout=20_000
+        )
 
-        # Case 1: Already logged in — redirected to /overview
-        if self._POST_LOGIN_URL_FRAGMENT in self.page.url:
-            print(f"[Login] Already logged in → {self.page.url}")
+        current_url = self.page.url
+
+        # Already logged in
+        if self._POST_LOGIN_URL_FRAGMENT in current_url:
             return
 
-        # Case 2: Already on Keycloak (rare — previous redirect)
-        if self._KEYCLOAK_URL_FRAGMENT in self.page.url:
-            print("[Login] Already on Keycloak — filling credentials...")
+        # On Keycloak directly (app auto-redirected)
+        if self._KEYCLOAK_HOST in current_url:
             self._fill_keycloak(email, password)
             return
 
-        # Case 3: On /login — look for "Get started" button
-        get_started = self.page.locator(self._GET_STARTED_BUTTON)
-        try:
-            get_started.wait_for(state="visible", timeout=5_000)
-            print("[Login] Clicking 'Get started'...")
-            get_started.click()
-            # Wait until Keycloak URL appears
-            self.page.wait_for_url(
-                f"**{self._KEYCLOAK_URL_FRAGMENT}**",
-                timeout=15_000,
-                wait_until="domcontentloaded"
-            )
-            print(f"[Login] On Keycloak → {self.page.url}")
-            self._fill_keycloak(email, password)
-
-        except Exception as e:
-            # "Get started" not found — check where we are
-            print(f"[Login] 'Get started' not found. URL={self.page.url}. Error={e}")
-            if self._POST_LOGIN_URL_FRAGMENT in self.page.url:
-                print("[Login] Actually already logged in — skip.")
-                return
-            raise RuntimeError(
-                f"Login failed: could not find 'Get started' button.\n"
-                f"Current URL: {self.page.url}\n"
-                f"Original error: {e}"
-            )
+        # On /login with "Get started" button
+        self.page.locator(self._GET_STARTED_BUTTON).click()
+        self.page.wait_for_url(f"**{self._KEYCLOAK_HOST}**", timeout=15_000)
+        self._fill_keycloak(email, password)
 
     def _fill_keycloak(self, email: str, password: str) -> None:
-        """Fill and submit the Keycloak login form."""
         self.email_input.wait_for(state="visible", timeout=10_000)
         self.email_input.fill(email)
         self.password_input.fill(password)
@@ -77,4 +76,3 @@ class LoginPage(BasePage):
             timeout=25_000,
             wait_until="domcontentloaded"
         )
-        print(f"[Login] Successfully landed on: {self.page.url}")
