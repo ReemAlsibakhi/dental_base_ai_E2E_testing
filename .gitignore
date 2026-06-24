@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+reports/
+.playwright_auth/
+.env
+dental_base_ai_E2E_testing/
