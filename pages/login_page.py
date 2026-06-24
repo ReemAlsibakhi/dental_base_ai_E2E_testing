@@ -6,11 +6,12 @@ from pages.base_page import BasePage
 
 class LoginPage(BasePage):
 
-    _GET_STARTED_BUTTON     = 'button:has-text("Get started")'
-    _EMAIL_INPUT            = '#username'
-    _PASSWORD_INPUT         = '#password'
-    _SUBMIT_BUTTON          = '#kc-login'
+    _GET_STARTED_BUTTON      = 'button:has-text("Get started")'
+    _EMAIL_INPUT             = '#username'
+    _PASSWORD_INPUT          = '#password'
+    _SUBMIT_BUTTON           = '#kc-login'
     _POST_LOGIN_URL_FRAGMENT = "/overview"
+    _KEYCLOAK_URL_FRAGMENT   = "keycloak"
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -27,15 +28,18 @@ class LoginPage(BasePage):
         if self._POST_LOGIN_URL_FRAGMENT in self.page.url:
             return
 
-        # Try clicking "Get started" if visible
-        try:
-            self.get_started_button.wait_for(state="visible", timeout=6_000)
-            self.get_started_button.click()
-            self.page.wait_for_load_state("domcontentloaded")
-        except Exception:
-            pass  # already on Keycloak page
+        # Click "Get started" and WAIT until Keycloak URL loads
+        self.get_started_button.wait_for(state="visible", timeout=8_000)
+        self.get_started_button.click()
 
-        # Fill Keycloak credentials
+        # Wait until we are ON Keycloak (URL contains "keycloak")
+        self.page.wait_for_url(
+            f"**{self._KEYCLOAK_URL_FRAGMENT}**",
+            timeout=15_000,
+            wait_until="domcontentloaded"
+        )
+
+        # Now fill credentials
         self.email_input.wait_for(state="visible", timeout=10_000)
         self.email_input.fill(email)
         self.password_input.fill(password)
