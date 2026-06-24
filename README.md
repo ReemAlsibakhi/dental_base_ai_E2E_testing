@@ -3,7 +3,7 @@
 ## Stack
 - Python 3.11+
 - Playwright for Python
-- pytest + pytest-playwright
+- pytest + pytest-playwright + pytest-html
 
 ## Quick Start
 
@@ -13,35 +13,42 @@ playwright install chromium
 pytest --headed -v
 ```
 
-## Required Environment Variables
+## Environment Variables
 
-Create a `.env` file from `.env.example`:
+Create a `.env` file:
 
 ```env
-BASE_URL=https://dentalbase-staging-v2.vercel.app
-ADMIN_EMAIL=osama+stg+opendental@dentalbase.ai
-ADMIN_PASSWORD=<your-password>
-NON_ADMIN_EMAIL=<non-admin-user@domain.com>
-NON_ADMIN_PASSWORD=<non-admin-password>
+BASE_URL=https://dentalbase-dev-v2.vercel.app
+ADMIN_EMAIL=reem_user
+ADMIN_PASSWORD=your_password
+NON_ADMIN_EMAIL=non_admin_user
+NON_ADMIN_PASSWORD=non_admin_password
+HEADLESS=true
+SLOW_MO=0
 ```
+
+## Auth Flow (Keycloak SSO)
+
+The app uses Keycloak SSO. The login sequence is:
+1. Navigate to `/login` on the main app
+2. Click **"Get started"** → redirected to `keycloak-dev.dentalbase.ai`
+3. Fill `#username` + `#password` → click `#kc-login`
+4. Redirected back to `/overview`
+
+`conftest.py` handles this once per session and reuses the auth state for all tests.
 
 ## Project Structure
 
 ```
-profile_e2e/
-├── conftest.py                   # Fixtures: browser, auth state, pages
-├── pytest.ini                    # Pytest config
-├── .env.example
+├── conftest.py                   # Fixtures + auth state reuse
+├── pytest.ini                    # Markers + test paths
+├── .env.example                  # Environment template
 ├── pages/
-│   ├── base_page.py              # BasePage with shared helpers
-│   ├── login_page.py             # Login page POM
-│   └── profile_page.py          # Profile/Settings POM (LOCATORS NEEDED)
-├── fixtures/
-│   └── auth_fixtures.py          # Auth state reuse
+│   ├── base_page.py              # Shared helpers
+│   ├── login_page.py             # Keycloak SSO login POM
+│   └── profile_page.py          # Settings → Profile POM (real selectors)
 ├── test_data/
-│   └── profile_data.py           # All parametrised test data
-├── utils/
-│   └── helpers.py                # String generators, wait helpers
+│   └── profile_data.py           # All test inputs + error strings
 └── tests/profile/
     ├── test_edit_profile_first_name.py
     ├── test_edit_profile_last_name.py
@@ -51,51 +58,40 @@ profile_e2e/
     └── test_profile_security.py
 ```
 
-## ⚠️  LOCATORS REQUIRED FROM LIVE SITE
+## Run Subsets
 
-See `pages/profile_page.py` for all `TODO:` placeholders.
-The following selectors must be confirmed from the live DOM before the
-suite will run correctly:
+```bash
+pytest -m smoke          # Quick sanity check (CI per-PR)
+pytest -m regression     # Full suite (nightly)
+pytest -m negative       # Validation / error paths only
+pytest -m security       # RBAC tests only
+```
 
-### Login Page
-| Placeholder | What to inspect |
-|-------------|----------------|
-| `LOGIN_EMAIL_INPUT` | Email/username input on /login |
-| `LOGIN_PASSWORD_INPUT` | Password input on /login |
-| `LOGIN_SUBMIT_BUTTON` | Sign-in button |
+## Real Selectors (extracted from live DOM)
 
-### Settings / Profile Page
-| Placeholder | What to inspect |
-|-------------|----------------|
-| `SETTINGS_NAV_LINK` | Left-nav or top-nav link to /settings |
-| `PROFILE_TAB` | "Profile" tab selector inside /settings |
-| `EDIT_PROFILE_BUTTON` | "Edit" button on Profile Information card |
-| **Edit Profile Modal** | |
-| `EDIT_MODAL_CONTAINER` | Modal wrapper element |
-| `FIRST_NAME_INPUT` | First Name field inside modal |
-| `LAST_NAME_INPUT` | Last Name field inside modal |
-| `PHONE_INPUT` | Phone Number field inside modal |
-| `SAVE_BUTTON` | Save/Submit button inside modal |
-| `CANCEL_BUTTON` | Cancel button inside modal |
-| `FIRST_NAME_ERROR` | Inline error message under First Name |
-| `LAST_NAME_ERROR` | Inline error message under Last Name |
-| `PHONE_ERROR` | Inline error message under Phone |
-| `SUCCESS_TOAST` | Success toast/notification |
-| **Profile Card (read)** | |
-| `FULL_NAME_DISPLAY` | Full name text on profile card |
-| `PHONE_DISPLAY` | Phone text on profile card ("No phone" or number) |
-| `EMAIL_DISPLAY` | Email display on profile card |
-| **Account Users Card** | |
-| `USER_COUNT_TEXT` | "N users with access" text |
-| `ADD_USER_BUTTON` | "Add User" button |
-| `VIEW_ALL_BUTTON` | "View All" button |
-| **Add User Form/Modal** | |
-| `ADD_USER_EMAIL_INPUT` | Email field in Add User form |
-| `ADD_USER_FIRST_NAME_INPUT` | First Name in Add User (if separate) |
-| `ADD_USER_LAST_NAME_INPUT` | Last Name in Add User (if separate) |
-| `ADD_USER_SUBMIT_BUTTON` | Submit/Invite button |
-| `ADD_USER_CANCEL_BUTTON` | Cancel button |
-| `ADD_USER_EMAIL_ERROR` | Inline error on email field |
-| **View All Modal** | |
-| `VIEW_ALL_MODAL` | View All modal/panel container |
-| `VIEW_ALL_USER_ROWS` | Each user row in the list |
+| Element | Selector |
+|---------|----------|
+| Login — Username | `#username` |
+| Login — Password | `#password` |
+| Login — Submit | `#kc-login` |
+| Settings nav link | `a[href="/settings"]` |
+| Profile tab | `button:has-text("Profile")` |
+| Edit button | `button[type="button"]:has-text("Edit")` |
+| Edit modal | `[role="dialog"][aria-label="Edit Profile"]` |
+| First Name input | `#first_name` |
+| Last Name input | `#last_name` |
+| Phone input | `#phone_number` |
+| Save Changes | `button:has-text("Save Changes")` (inside modal) |
+| Cancel | `button:has-text("Cancel")` (inside modal) |
+| Close panel | `button[aria-label="Close panel"]` |
+| Success toast | `p.text-sm.font-medium:has-text("Profile updated successfully")` |
+| User count | `p.text-sm.text-gray-500:has-text("users with access")` |
+| Add User button | `button:has-text("Add User")` |
+| View all button | `button:has-text("View all")` |
+| Add User modal | `[role="dialog"][aria-label="Add New User"]` |
+| Add User — Email | `#email` |
+| Add User — First Name | `#first_name` (inside Add User modal) |
+| Add User — Last Name | `#last_name` (inside Add User modal) |
+| Add User — Username | `#username` (inside Add User modal) |
+| View All modal | `[role="dialog"][aria-label="All Users"]` |
+| View All — user rows | `.space-y-1 > div.flex.items-center` (inside modal) |
