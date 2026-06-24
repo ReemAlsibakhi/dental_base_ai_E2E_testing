@@ -18,7 +18,7 @@ def test_valid_first_name_saves_successfully(profile_page: ProfilePage) -> None:
     current = profile_page.first_name_input.input_value()
     new_value = "Lara" if current.strip() != "Lara" else "Reem"
 
-    profile_page.first_name_input.triple_click()
+    profile_page.first_name_input.click(click_count=3)
     profile_page.first_name_input.fill(new_value)
 
     # Wait for Save button to become enabled
@@ -38,7 +38,7 @@ def test_valid_last_name_saves_successfully(profile_page: ProfilePage) -> None:
     current = profile_page.last_name_input.input_value()
     new_value = "Hassan" if current.strip() != "Hassan" else "Sibakhi"
 
-    profile_page.last_name_input.triple_click()
+    profile_page.last_name_input.click(click_count=3)
     profile_page.last_name_input.fill(new_value)
 
     expect(profile_page.modal_save_button).to_be_enabled(timeout=5_000)
@@ -55,7 +55,7 @@ def test_valid_phone_saves_successfully(profile_page: ProfilePage) -> None:
     current = profile_page.phone_input.input_value()
     new_value = "6035551234" if current.strip() != "6035551234" else "9995551234"
 
-    profile_page.phone_input.triple_click()
+    profile_page.phone_input.click(click_count=3)
     profile_page.phone_input.fill(new_value)
 
     profile_page.assert_no_phone_error()
