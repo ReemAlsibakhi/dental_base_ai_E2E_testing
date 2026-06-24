@@ -10,46 +10,69 @@
 ```bash
 pip install playwright pytest pytest-playwright pytest-html python-dotenv
 playwright install chromium
-pytest --headed -v
 ```
 
-## Environment Variables
+## Environment Setup
 
-Create a `.env` file:
+```bash
+cp .env.example .env
+# Edit .env and fill in your password
+```
 
+`.env` contents:
 ```env
 BASE_URL=https://dentalbase-dev-v2.vercel.app
 ADMIN_EMAIL=reem_user
 ADMIN_PASSWORD=your_password
-NON_ADMIN_EMAIL=non_admin_user
-NON_ADMIN_PASSWORD=non_admin_password
+NON_ADMIN_EMAIL=
+NON_ADMIN_PASSWORD=
 HEADLESS=true
 SLOW_MO=0
 ```
 
+## Running Tests
+
+```bash
+# Phase 1 — Smoke only (4 tests, ~2 min)
+pytest -m smoke --headed -v
+
+# Smoke headless (CI mode)
+pytest -m smoke -v
+
+# Full suite
+pytest -v
+
+# With HTML report
+pytest -m smoke -v --html=reports/report.html --self-contained-html
+
+# Single test (debug)
+pytest tests/profile/test_smoke.py::test_valid_first_name_saves_successfully --headed -v -s
+```
+
 ## Auth Flow (Keycloak SSO)
 
-The app uses Keycloak SSO. The login sequence is:
-1. Navigate to `/login` on the main app
-2. Click **"Get started"** → redirected to `keycloak-dev.dentalbase.ai`
-3. Fill `#username` + `#password` → click `#kc-login`
-4. Redirected back to `/overview`
+Login happens **once per session** and is reused by all tests:
 
-`conftest.py` handles this once per session and reuses the auth state for all tests.
+1. Navigate to `/login` → click **"Get started"**
+2. Keycloak form → `#username` / `#password` → `#kc-login`
+3. Redirected to `/overview`
+4. Auth state saved to `.playwright_auth/admin.json`
+5. Every test gets a fresh browser context pre-seeded with saved cookies
 
 ## Project Structure
 
 ```
-├── conftest.py                   # Fixtures + auth state reuse
-├── pytest.ini                    # Markers + test paths
-├── .env.example                  # Environment template
+├── conftest.py                    # Session fixtures + auth state reuse
+├── pytest.ini                     # Markers + test paths
+├── .env.example                   # Environment template
 ├── pages/
-│   ├── base_page.py              # Shared helpers
-│   ├── login_page.py             # Keycloak SSO login POM
-│   └── profile_page.py          # Settings → Profile POM (real selectors)
+│   ├── base_page.py               # Shared helpers
+│   ├── login_page.py              # Keycloak SSO POM
+│   └── profile_page.py            # Settings → Profile POM
 ├── test_data/
-│   └── profile_data.py           # All test inputs + error strings
+│   └── profile_data.py            # All inputs + error strings
 └── tests/profile/
+    ├── test_smoke.py              # ← Phase 1: 4 smoke tests
     ├── test_edit_profile_first_name.py
     ├── test_edit_profile_last_name.py
     ├── test_edit_profile_phone.py
@@ -58,40 +81,30 @@ The app uses Keycloak SSO. The login sequence is:
     └── test_profile_security.py
 ```
 
-## Run Subsets
+## Phase Execution Plan
 
-```bash
-pytest -m smoke          # Quick sanity check (CI per-PR)
-pytest -m regression     # Full suite (nightly)
-pytest -m negative       # Validation / error paths only
-pytest -m security       # RBAC tests only
-```
+| Phase | Scope | Tests | Status |
+|-------|-------|-------|--------|
+| **Phase 1** | Smoke — auth + 4 happy paths | 4 | 🔄 In Progress |
+| Phase 2 | First Name + Last Name full validation | ~45 | ⏳ Pending |
+| Phase 3 | Phone + Add User + Security/RBAC | ~70 | ⏳ Pending |
+| Phase 4 | View All + Medium priority + CI pipeline | ~98 | ⏳ Pending |
 
-## Real Selectors (extracted from live DOM)
+## Confirmed Selectors (Live DOM)
 
 | Element | Selector |
 |---------|----------|
 | Login — Username | `#username` |
 | Login — Password | `#password` |
 | Login — Submit | `#kc-login` |
-| Settings nav link | `a[href="/settings"]` |
-| Profile tab | `button:has-text("Profile")` |
-| Edit button | `button[type="button"]:has-text("Edit")` |
 | Edit modal | `[role="dialog"][aria-label="Edit Profile"]` |
 | First Name input | `#first_name` |
 | Last Name input | `#last_name` |
 | Phone input | `#phone_number` |
-| Save Changes | `button:has-text("Save Changes")` (inside modal) |
-| Cancel | `button:has-text("Cancel")` (inside modal) |
+| Save Changes | `button:has-text("Save Changes")` (scoped to modal) |
+| Cancel | `button:has-text("Cancel")` (scoped to modal) |
 | Close panel | `button[aria-label="Close panel"]` |
 | Success toast | `p.text-sm.font-medium:has-text("Profile updated successfully")` |
-| User count | `p.text-sm.text-gray-500:has-text("users with access")` |
-| Add User button | `button:has-text("Add User")` |
-| View all button | `button:has-text("View all")` |
 | Add User modal | `[role="dialog"][aria-label="Add New User"]` |
-| Add User — Email | `#email` |
-| Add User — First Name | `#first_name` (inside Add User modal) |
-| Add User — Last Name | `#last_name` (inside Add User modal) |
-| Add User — Username | `#username` (inside Add User modal) |
+| Add User email | `#email` |
 | View All modal | `[role="dialog"][aria-label="All Users"]` |
-| View All — user rows | `.space-y-1 > div.flex.items-center` (inside modal) |
