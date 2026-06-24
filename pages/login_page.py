@@ -1,20 +1,15 @@
 """pages/login_page.py — Page Object for the Login page (Keycloak SSO)."""
 
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page
 from pages.base_page import BasePage
 
 
 class LoginPage(BasePage):
 
-    # Landing page CTA
-    _GET_STARTED_BUTTON = 'button:has-text("Get started")'
-
-    # Keycloak form
-    _EMAIL_INPUT    = '#username'
-    _PASSWORD_INPUT = '#password'
-    _SUBMIT_BUTTON  = '#kc-login'
-
-    # Post-login URL
+    _GET_STARTED_BUTTON     = 'button:has-text("Get started")'
+    _EMAIL_INPUT            = '#username'
+    _PASSWORD_INPUT         = '#password'
+    _SUBMIT_BUTTON          = '#kc-login'
     _POST_LOGIN_URL_FRAGMENT = "/overview"
 
     def __init__(self, page: Page) -> None:
@@ -25,27 +20,30 @@ class LoginPage(BasePage):
         self.submit_button      = page.locator(self._SUBMIT_BUTTON)
 
     def goto(self) -> None:
-        self.page.goto("/login")
-        self.page.wait_for_load_state("networkidle")
+        self.page.goto("/login", wait_until="domcontentloaded")
 
     def login(self, email: str, password: str) -> None:
-        # إذا كان already logged in يوديه لـ /overview مباشرة
-        if "/overview" in self.page.url or "/settings" in self.page.url:
+        # Already logged in — skip entirely
+        if self._POST_LOGIN_URL_FRAGMENT in self.page.url:
             return
 
-        # إذا ظهر زر "Get started" اضغطه
+        # Try clicking "Get started" if visible
         try:
-            self.get_started_button.wait_for(timeout=5_000)
+            self.get_started_button.wait_for(state="visible", timeout=6_000)
             self.get_started_button.click()
-            self.page.wait_for_load_state("networkidle")
+            self.page.wait_for_load_state("domcontentloaded")
         except Exception:
-            pass  # ربما وصل مباشرة لـ Keycloak
+            pass  # already on Keycloak page
 
-        # Keycloak form
-        self.email_input.wait_for(timeout=10_000)
+        # Fill Keycloak credentials
+        self.email_input.wait_for(state="visible", timeout=10_000)
         self.email_input.fill(email)
         self.password_input.fill(password)
         self.submit_button.click()
 
     def wait_for_successful_login(self) -> None:
-        self.page.wait_for_url(f"**{self._POST_LOGIN_URL_FRAGMENT}**", timeout=15_000)
+        self.page.wait_for_url(
+            f"**{self._POST_LOGIN_URL_FRAGMENT}**",
+            timeout=20_000,
+            wait_until="domcontentloaded"
+        )
