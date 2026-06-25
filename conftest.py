@@ -1,13 +1,20 @@
 """
-conftest.py — Global pytest fixtures for the DentalBase Profile E2E suite.
+conftest.py — Global pytest fixtures.
 
-Auth flow:
-  1. Navigate to /login — app may redirect immediately to /overview if session exists
-  2. If on /login → click "Get started" → Keycloak → fill credentials
-  3. Storage state saved; every test reuses it — no re-login per test.
+PROFESSIONAL AUTH STRATEGY:
+  Login happens exactly ONCE per test run (session-scoped fixture).
+  The session is saved to .playwright_auth/admin.json on disk.
+  Every test gets a fresh browser context pre-loaded with saved cookies.
+  Tests NEVER touch the login page — they start directly on /settings.
+
+  This means:
+  - No spinner waiting per test
+  - No Keycloak redirects per test
+  - Login UI is hit only once — even across 100 tests
 """
 
 import os
+import json
 import pytest
 from pathlib import Path
 from dotenv import load_dotenv
@@ -18,17 +25,32 @@ from pages.profile_page import ProfilePage
 
 load_dotenv()
 
-BASE_URL          = os.getenv("BASE_URL", "https://dentalbase-dev-v2.vercel.app")
-ADMIN_EMAIL       = os.getenv("ADMIN_EMAIL", "")
-ADMIN_PASSWORD    = os.getenv("ADMIN_PASSWORD", "")
-NON_ADMIN_EMAIL   = os.getenv("NON_ADMIN_EMAIL", "")
+BASE_URL           = os.getenv("BASE_URL", "https://dentalbase-dev-v2.vercel.app")
+ADMIN_EMAIL        = os.getenv("ADMIN_EMAIL", "")
+ADMIN_PASSWORD     = os.getenv("ADMIN_PASSWORD", "")
+NON_ADMIN_EMAIL    = os.getenv("NON_ADMIN_EMAIL", "")
 NON_ADMIN_PASSWORD = os.getenv("NON_ADMIN_PASSWORD", "")
-HEADLESS          = os.getenv("HEADLESS", "true").lower() == "true"
-SLOW_MO           = int(os.getenv("SLOW_MO", "0"))
+HEADLESS           = os.getenv("HEADLESS", "true").lower() == "true"
+SLOW_MO            = int(os.getenv("SLOW_MO", "0"))
 
 AUTH_DIR        = Path(".playwright_auth")
 ADMIN_STATE     = AUTH_DIR / "admin.json"
 NON_ADMIN_STATE = AUTH_DIR / "non_admin.json"
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _is_valid_state_file(path: Path) -> bool:
+    """Return True if the saved auth state file exists and has cookies."""
+    try:
+        if not path.exists():
+            return False
+        data = json.loads(path.read_text())
+        return bool(data.get("cookies"))
+    except Exception:
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -41,19 +63,25 @@ def browser_instance():
         browser = p.chromium.launch(
             headless=HEADLESS,
             slow_mo=SLOW_MO,
-            args=["--no-sandbox"],
         )
         yield browser
         browser.close()
 
 
 # ---------------------------------------------------------------------------
-# Auth state — login once, persist to disk
+# Auth state — login once, save to disk, reuse for all tests
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="session")
 def admin_auth_state(browser_instance: Browser) -> Path:
     AUTH_DIR.mkdir(exist_ok=True)
+
+    # Reuse existing valid session if available
+    if _is_valid_state_file(ADMIN_STATE):
+        print(f"\n[Auth] Reusing saved session: {ADMIN_STATE}")
+        return ADMIN_STATE
+
+    print(f"\n[Auth] No valid session found — performing fresh login...")
     context = browser_instance.new_context(
         base_url=BASE_URL,
         viewport={"width": 1280, "height": 800},
@@ -67,14 +95,21 @@ def admin_auth_state(browser_instance: Browser) -> Path:
 
     context.storage_state(path=str(ADMIN_STATE))
     context.close()
+
+    print(f"[Auth] Session saved to {ADMIN_STATE}")
     return ADMIN_STATE
 
 
 @pytest.fixture(scope="session")
 def non_admin_auth_state(browser_instance: Browser) -> Path:
     AUTH_DIR.mkdir(exist_ok=True)
+
     if not NON_ADMIN_EMAIL:
         pytest.skip("NON_ADMIN_EMAIL not configured")
+
+    if _is_valid_state_file(NON_ADMIN_STATE):
+        return NON_ADMIN_STATE
+
     context = browser_instance.new_context(base_url=BASE_URL)
     page = context.new_page()
     login = LoginPage(page)
@@ -87,7 +122,7 @@ def non_admin_auth_state(browser_instance: Browser) -> Path:
 
 
 # ---------------------------------------------------------------------------
-# Per-test context + page — fresh context, reused auth cookies
+# Per-test context — fresh isolated context with saved auth cookies
 # ---------------------------------------------------------------------------
 
 @pytest.fixture()
@@ -131,7 +166,7 @@ def non_admin_page(non_admin_context: BrowserContext) -> Page:
 
 
 # ---------------------------------------------------------------------------
-# Page-object fixtures
+# Page object fixtures
 # ---------------------------------------------------------------------------
 
 @pytest.fixture()
