@@ -1,4 +1,11 @@
-"""pages/login_page.py — Page Object for the Login page (Keycloak SSO)."""
+"""pages/login_page.py — Page Object for the Login page (Keycloak SSO).
+
+ROOT CAUSE DISCOVERED:
+After Keycloak login, app redirects to:
+  /login?access_token=eyJ...&refresh_token=eyJ...
+React reads the tokens from URL, stores them, then redirects to /overview.
+The wait_for_url("/overview") must wait for THIS final redirect.
+"""
 
 from playwright.sync_api import Page
 from pages.base_page import BasePage
@@ -23,47 +30,32 @@ class LoginPage(BasePage):
         self.page.goto("/login", wait_until="commit", timeout=60_000)
 
     def login(self, email: str, password: str) -> None:
-        # Use Playwright's first() with or_() to wait for any of the states
-        # This is the correct API for "wait for one of multiple locators"
-        self.page.locator("#username").or_(
-            self.page.locator("button:has-text('Get started')")
-        ).or_(
-            self.page.get_by_text("Good Afternoon", exact=False)
-        ).or_(
-            self.page.get_by_text("Good Morning", exact=False)
-        ).or_(
-            self.page.get_by_text("Good Evening", exact=False)
-        ).first.wait_for(state="attached", timeout=60_000)
+        # Wait for "Get started" button OR already on overview
+        self.page.locator(self._GET_STARTED_BUTTON).wait_for(
+            state="visible", timeout=30_000
+        )
 
-        url = self.page.url
-
-        # Case 1: Already on dashboard
-        if self._POST_LOGIN_URL in url:
+        # If already redirected to overview — done
+        if self._POST_LOGIN_URL in self.page.url:
             return
 
-        # Case 2: On Keycloak — #username visible
-        if self._KEYCLOAK_HOST in url or self.page.locator('#username').count() > 0:
-            self._fill_keycloak(email, password)
-            return
+        # Click "Get started" → Keycloak
+        self.page.locator(self._GET_STARTED_BUTTON).click()
 
-        # Case 3: "Get started" button visible — click → Keycloak
-        if self.page.locator(self._GET_STARTED_BUTTON).is_visible():
-            self.page.locator(self._GET_STARTED_BUTTON).click()
-            self.page.locator('#username').wait_for(state="visible", timeout=20_000)
-            self._fill_keycloak(email, password)
-            return
+        # Wait for Keycloak #username field
+        self.email_input.wait_for(state="visible", timeout=20_000)
 
-        raise RuntimeError(f"Login: unknown state. URL={url}")
-
-    def _fill_keycloak(self, email: str, password: str) -> None:
-        self.email_input.wait_for(state="visible", timeout=10_000)
+        # Fill credentials
         self.email_input.fill(email)
         self.password_input.fill(password)
         self.submit_button.click()
 
     def wait_for_successful_login(self) -> None:
+        # After submit, app lands on /login?access_token=...
+        # then React processes tokens and redirects to /overview
+        # We wait for /overview to appear
         self.page.wait_for_url(
             f"**{self._POST_LOGIN_URL}**",
-            timeout=60_000,
+            timeout=30_000,
             wait_until="commit"
         )
