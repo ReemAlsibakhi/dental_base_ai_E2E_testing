@@ -6,22 +6,12 @@ from pages.base_page import BasePage
 
 class LoginPage(BasePage):
 
-    _GET_STARTED_BUTTON = "button:has-text('Get started')"  # single quotes inside
+    _GET_STARTED_BUTTON = "button:has-text('Get started')"
     _EMAIL_INPUT        = '#username'
     _PASSWORD_INPUT     = '#password'
     _SUBMIT_BUTTON      = '#kc-login'
     _KEYCLOAK_HOST      = "keycloak-dev.dentalbase.ai"
     _POST_LOGIN_URL     = "/overview"
-
-    # Multi-selector — wait for whichever appears first
-    # Uses single quotes inside to avoid nested double-quote issue
-    _ANY_STATE_SELECTOR = ", ".join([
-        "button:has-text('Get started')",   # session expired → show login btn
-        "#username",                         # redirected to Keycloak
-        "text=Good Afternoon",               # dashboard greeting
-        "text=Good Morning",                 # dashboard greeting
-        "text=Good Evening",                 # dashboard greeting
-    ])
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -33,12 +23,17 @@ class LoginPage(BasePage):
         self.page.goto("/login", wait_until="commit", timeout=60_000)
 
     def login(self, email: str, password: str) -> None:
-        # Wait for ANY visible element that tells us which state we are in
-        self.page.wait_for_selector(
-            self._ANY_STATE_SELECTOR,
-            timeout=60_000,
-            state="attached"
-        )
+        # Use Playwright's first() with or_() to wait for any of the states
+        # This is the correct API for "wait for one of multiple locators"
+        self.page.locator("#username").or_(
+            self.page.locator("button:has-text('Get started')")
+        ).or_(
+            self.page.get_by_text("Good Afternoon", exact=False)
+        ).or_(
+            self.page.get_by_text("Good Morning", exact=False)
+        ).or_(
+            self.page.get_by_text("Good Evening", exact=False)
+        ).first.wait_for(state="attached", timeout=60_000)
 
         url = self.page.url
 
@@ -46,21 +41,15 @@ class LoginPage(BasePage):
         if self._POST_LOGIN_URL in url:
             return
 
-        # Case 2: On Keycloak
-        if self._KEYCLOAK_HOST in url:
+        # Case 2: On Keycloak — #username visible
+        if self._KEYCLOAK_HOST in url or self.page.locator('#username').count() > 0:
             self._fill_keycloak(email, password)
             return
 
-        # Case 3: "Get started" button visible
-        btn = self.page.locator(self._GET_STARTED_BUTTON)
-        if btn.is_visible():
-            btn.click()
-            self.page.wait_for_selector('#username', timeout=20_000)
-            self._fill_keycloak(email, password)
-            return
-
-        # Case 4: #username appeared directly
-        if self.page.locator('#username').count() > 0:
+        # Case 3: "Get started" button visible — click → Keycloak
+        if self.page.locator(self._GET_STARTED_BUTTON).is_visible():
+            self.page.locator(self._GET_STARTED_BUTTON).click()
+            self.page.locator('#username').wait_for(state="visible", timeout=20_000)
             self._fill_keycloak(email, password)
             return
 
