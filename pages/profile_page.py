@@ -46,7 +46,11 @@ class ProfilePage(BasePage):
     _ADD_USER_USERNAME_INPUT   = '[aria-label="Add New User"] #username'
     _ADD_USER_SUBMIT_BUTTON    = '[aria-label="Add New User"] button:has-text("Add User")'
     _ADD_USER_CANCEL_BUTTON    = '[aria-label="Add New User"] button:has-text("Cancel")'
-    _ADD_USER_EMAIL_ERROR      = '#email + p.text-red-500'
+    _ADD_USER_EMAIL_ERROR      = (
+        '#email + p, '                          # direct sibling (some builds)
+        '#email ~ p.text-red-500, '             # any following sibling
+        '[aria-label="Add New User"] p.text-red-500'  # scoped to modal
+    )
 
     # View All panel
     _VIEW_ALL_MODAL      = '[role="dialog"][aria-label="All Users"]'
@@ -77,7 +81,8 @@ class ProfilePage(BasePage):
         self.add_user_username_input: Locator    = page.locator(self._ADD_USER_USERNAME_INPUT)
         self.add_user_submit_button: Locator     = page.locator(self._ADD_USER_SUBMIT_BUTTON)
         self.add_user_cancel_button: Locator     = page.locator(self._ADD_USER_CANCEL_BUTTON)
-        self.add_user_email_error: Locator       = page.locator(self._ADD_USER_EMAIL_ERROR)
+        # Use first() — the selector matches multiple elements, we want the first visible error
+        self.add_user_email_error: Locator       = page.locator(self._ADD_USER_EMAIL_ERROR).first
         self.view_all_modal: Locator       = page.locator(self._VIEW_ALL_MODAL)
         self.view_all_user_rows: Locator   = page.locator(self._VIEW_ALL_USER_ROWS)
 
