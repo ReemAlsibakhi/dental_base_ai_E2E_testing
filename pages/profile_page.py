@@ -87,12 +87,18 @@ class ProfilePage(BasePage):
 
     def navigate_to_profile(self) -> None:
         self.page.goto(self._SETTINGS_URL, wait_until="commit", timeout=60_000)
-        # Wait for settings content to appear
-        self.page.wait_for_selector(
-            'text=Profile Information',
-            timeout=30_000,
-            state="visible"
+        # Wait for Profile Information card — confirms settings loaded
+        self.page.locator("text=Profile Information").wait_for(
+            state="visible", timeout=30_000
         )
+        # Ensure any leftover modals from previous tests are closed
+        try:
+            if self.page.locator('[role="dialog"]').count() > 0:
+                close_btn = self.page.locator('button[aria-label="Close panel"]')
+                if close_btn.count() > 0 and close_btn.is_visible():
+                    close_btn.click()
+        except Exception:
+            pass
 
     # ===================================================================
     # EDIT PROFILE ACTIONS

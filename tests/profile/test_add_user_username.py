@@ -170,3 +170,18 @@ def test_username_xss_payload_rejected(profile_page: ProfilePage) -> None:
     expect(_get_username_error(profile_page)).to_be_visible()
     expect(_get_username_error(profile_page)).to_contain_text(ERR["un_chars"])
     profile_page.cancel_add_user()
+
+
+# ===========================================================================
+# Auto-cleanup fixture — prevents cascade failures
+# ===========================================================================
+
+@pytest.fixture(autouse=True)
+def close_any_open_panel(profile_page: ProfilePage):
+    """Guarantee no modal is left open after each test."""
+    yield
+    try:
+        if profile_page.add_user_modal.is_visible():
+            profile_page.add_user_cancel_button.click()
+    except Exception:
+        pass
