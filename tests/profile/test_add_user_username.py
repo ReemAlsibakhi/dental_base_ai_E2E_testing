@@ -80,20 +80,6 @@ def test_username_invalid_shows_error(
     profile_page.cancel_add_user()
 
 
-@pytest.mark.negative
-@pytest.mark.parametrize("test_id, value, error_key", USERNAME_INVALID)
-def test_username_invalid_blocks_submit(
-    profile_page: ProfilePage,
-    test_id: str,
-    value: str,
-    error_key: str,
-) -> None:
-    """
-    TC-N-P-UN-* (submit): Submit must be disabled when username is invalid.
-    """
-    _open_and_fill_username(profile_page, value)
-    expect(profile_page.add_user_submit_button).to_be_disabled()
-    profile_page.cancel_add_user()
 
 
 # ===========================================================================

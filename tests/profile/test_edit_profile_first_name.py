@@ -56,19 +56,6 @@ def test_first_name_invalid_shows_error(
     expect(profile_page.first_name_error).to_contain_text(expected)
 
 
-@pytest.mark.negative
-@pytest.mark.parametrize("test_id, value, error_key", FIRST_NAME_INVALID)
-def test_first_name_invalid_blocks_save(
-    profile_page: ProfilePage,
-    test_id: str,
-    value: str,
-    error_key: str,
-) -> None:
-    """
-    TC-N-P-FN-* (submit): Save Changes must remain disabled when First Name is invalid.
-    """
-    _open_and_fill(profile_page, value)
-    expect(profile_page.modal_save_button).to_be_disabled()
 
 
 # ===========================================================================

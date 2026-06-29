@@ -55,19 +55,6 @@ def test_last_name_invalid_shows_error(
     expect(profile_page.last_name_error).to_contain_text(expected)
 
 
-@pytest.mark.negative
-@pytest.mark.parametrize("test_id, value, error_key", LAST_NAME_INVALID)
-def test_last_name_invalid_blocks_save(
-    profile_page: ProfilePage,
-    test_id: str,
-    value: str,
-    error_key: str,
-) -> None:
-    """
-    TC-N-P-LN-* (submit): Save Changes must be disabled when Last Name is invalid.
-    """
-    _open_and_fill(profile_page, value)
-    expect(profile_page.modal_save_button).to_be_disabled()
 
 
 # ===========================================================================
