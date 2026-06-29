@@ -22,7 +22,7 @@ ERR = {
     # First Name
     "fn_required":    "First name is required",
     "fn_min":         "First name must be at least 2 characters",
-    "fn_max":         "First name cannot exceed 50 characters",
+    "fn_max":         "First name must not exceed 50 characters",
     "fn_chars":       "First name can only contain letters, spaces, hyphens, and apostrophes",
     "fn_consecutive": "First name cannot contain consecutive special characters",
     "fn_start_end":   "First name must start and end with a letter",
@@ -30,7 +30,7 @@ ERR = {
     # Last Name
     "ln_required":    "Last name is required",
     "ln_min":         "Last name must be at least 2 characters",
-    "ln_max":         "Last name cannot exceed 50 characters",
+    "ln_max":         "Last name must not exceed 50 characters",
     "ln_chars":       "Last name can only contain letters, spaces, hyphens, and apostrophes",
     "ln_consecutive": "Last name cannot contain consecutive special characters",
     "ln_start_end":   "Last name must start and end with a letter",
