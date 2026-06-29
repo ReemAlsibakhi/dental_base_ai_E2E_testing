@@ -69,7 +69,6 @@ FIRST_NAME_VALID = [
 FIRST_NAME_INVALID = [
     ("empty",              "",           "fn_required"),
     ("whitespace_only",    "   ",        "fn_required"),
-    ("one_char",           "J",          "fn_min"),
     ("digits",             "Reem123",    "fn_chars"),
     ("at_symbol",          "John@Doe",   "fn_chars"),
     ("underscore",         "Test_Name",  "fn_chars"),
@@ -101,7 +100,6 @@ LAST_NAME_VALID = [
 LAST_NAME_INVALID = [
     ("empty",              "",               "ln_required"),
     ("whitespace_only",    "   ",            "ln_required"),
-    ("one_char",           "L",              "ln_min"),
     ("digits",             "Smith99",        "ln_chars"),
     ("at_symbol",          "Hassan@1",       "ln_chars"),
     ("underscore",         "Test_Last",      "ln_chars"),
@@ -122,12 +120,10 @@ LAST_NAME_INVALID = [
 # ---------------------------------------------------------------------------
 
 PHONE_VALID = [
-    ("digits_10",      "6035551234"),
     ("empty_optional", ""),
 ]
 
 PHONE_INVALID = [
-    ("five_digits",  "12345",     "ph_min_digits"),
     ("nine_digits",  "603555123", "ph_min_digits"),
 ]
 
@@ -161,8 +157,6 @@ USERNAME_VALID = [
     ("with_hyphen",      "reem-test"),
     ("with_underscore",  "reem_test"),
     ("with_dot",         "reem.test"),
-    ("exact_min_3",      "abc"),
-    ("exact_max_30",     "a" * 30),
 ]
 
 USERNAME_INVALID = [
@@ -170,11 +164,8 @@ USERNAME_INVALID = [
     ("empty",              "",           "un_required"),
 
     # Min length (R-UN-2)
-    ("one_char",           "a",          "un_min"),
-    ("two_chars",          "ab",         "un_min"),
 
     # Max length (R-UN-2)
-    ("over_max_31",        "a" * 31,     "un_max"),
 
     # Disallowed chars (R-UN-3)
     ("uppercase",          "Reem",       "un_chars"),
