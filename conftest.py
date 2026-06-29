@@ -177,6 +177,34 @@ def profile_page_non_admin(non_admin_page: Page) -> ProfilePage:
 
 
 # ---------------------------------------------------------------------------
+# Profile page with modal already open — reused across tests in same module
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(scope="module")
+def profile_page_modal_open(admin_context: BrowserContext) -> ProfilePage:
+    """
+    Opens the Edit Profile modal ONCE per test module.
+    All tests in the module share the same open modal — no re-navigation.
+
+    Use this fixture in test files where ALL tests work inside the Edit modal.
+    The modal is closed automatically after all tests in the module finish.
+    """
+    page = admin_context.new_page()
+    pp = ProfilePage(page)
+    pp.navigate_to_profile()
+    pp.open_edit_modal()
+    yield pp
+    # Cleanup
+    try:
+        if pp.edit_modal.is_visible():
+            pp.close_panel_button.click()
+    except Exception:
+        pass
+    if not page.is_closed():
+        page.close()
+
+
+# ---------------------------------------------------------------------------
 # Screenshot on failure
 # ---------------------------------------------------------------------------
 
