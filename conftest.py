@@ -1,23 +1,15 @@
 """
-conftest.py — Global pytest fixtures.
+conftest.py — Global pytest fixtures + automatic bug report generation.
 
-PERFORMANCE STRATEGY:
-  - browser_instance: session scope (one browser process)
-  - admin_context:    session scope (one context, one tab — fastest)
-  - admin_page:       function scope (fresh page per test — cheap, fast)
-
-Why page per test instead of context per test?
-  - Opening a new page (tab) is ~10ms
-  - Opening a new context is ~200ms
-  - Both give URL/state isolation when we navigate at start of each test
-  - The profile_page fixture navigates to /settings before every test
-    so state from previous test is always discarded
+After each test run, if there are failures, a structured bug report
+is generated in reports/bug_report.md automatically.
 """
 
 import os
 import json
 import pytest
 from pathlib import Path
+from datetime import datetime
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page
 
@@ -38,6 +30,9 @@ AUTH_DIR        = Path(".playwright_auth")
 ADMIN_STATE     = AUTH_DIR / "admin.json"
 NON_ADMIN_STATE = AUTH_DIR / "non_admin.json"
 
+# Collect failures for bug report
+_failures = []
+
 
 def _is_valid_state_file(path: Path) -> bool:
     try:
@@ -50,34 +45,28 @@ def _is_valid_state_file(path: Path) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Browser — one process for the entire run
+# Browser
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="session")
 def browser_instance():
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=HEADLESS,
-            slow_mo=SLOW_MO,
-        )
+        browser = p.chromium.launch(headless=HEADLESS, slow_mo=SLOW_MO)
         yield browser
         browser.close()
 
 
 # ---------------------------------------------------------------------------
-# Auth state — login once, save to disk
+# Auth state
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="session")
 def admin_auth_state(browser_instance: Browser) -> Path:
     AUTH_DIR.mkdir(exist_ok=True)
-
     if _is_valid_state_file(ADMIN_STATE):
         return ADMIN_STATE
-
     context = browser_instance.new_context(
-        base_url=BASE_URL,
-        viewport={"width": 1280, "height": 800},
+        base_url=BASE_URL, viewport={"width": 1280, "height": 800}
     )
     page = context.new_page()
     login = LoginPage(page)
@@ -108,8 +97,7 @@ def non_admin_auth_state(browser_instance: Browser) -> Path:
 
 
 # ---------------------------------------------------------------------------
-# Context — SESSION scope (one context for all tests — faster)
-# Isolation is handled by navigate_to_profile() at start of each test
+# Context — session scoped (one context for all tests)
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="session")
@@ -137,15 +125,13 @@ def non_admin_context(browser_instance: Browser, non_admin_auth_state: Path) -> 
 
 
 # ---------------------------------------------------------------------------
-# Page — FUNCTION scope (new tab per test — ~10ms, gives URL isolation)
+# Page — function scoped (new tab per test)
 # ---------------------------------------------------------------------------
 
 @pytest.fixture()
 def admin_page(admin_context: BrowserContext) -> Page:
-    """New tab per test — cheap isolation without context overhead."""
     page = admin_context.new_page()
     yield page
-    # Close tab after test — keeps context clean
     if not page.is_closed():
         page.close()
 
@@ -176,16 +162,9 @@ def profile_page_non_admin(non_admin_page: Page) -> ProfilePage:
     return pp
 
 
-# ---------------------------------------------------------------------------
-# Profile page with modal already open — reused across tests in same module
-# ---------------------------------------------------------------------------
-
 @pytest.fixture(scope="module")
 def profile_page_modal_open(admin_context: BrowserContext) -> ProfilePage:
-    """
-    Opens the Edit Profile modal ONCE per test module.
-    All tests share the same open modal — no re-navigation per test.
-    """
+    """Edit Profile modal open for entire module."""
     page = admin_context.new_page()
     pp = ProfilePage(page)
     pp.navigate_to_profile()
@@ -202,10 +181,7 @@ def profile_page_modal_open(admin_context: BrowserContext) -> ProfilePage:
 
 @pytest.fixture(scope="module")
 def add_user_panel_open(admin_context: BrowserContext) -> ProfilePage:
-    """
-    Opens the Add New User panel ONCE per test module.
-    All tests share the same open panel — no re-navigation per test.
-    """
+    """Add User panel open for entire module."""
     page = admin_context.new_page()
     pp = ProfilePage(page)
     pp.navigate_to_profile()
@@ -221,16 +197,106 @@ def add_user_panel_open(admin_context: BrowserContext) -> ProfilePage:
 
 
 # ---------------------------------------------------------------------------
-# Screenshot on failure
+# Screenshot on failure + collect failures for bug report
 # ---------------------------------------------------------------------------
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
     rep = outcome.get_result()
+
     if rep.when == "call" and rep.failed:
+        # Screenshot
         page: Page = item.funcargs.get("admin_page") or item.funcargs.get("non_admin_page")
+        screenshot_path = None
         if page and not page.is_closed():
             Path("reports/screenshots").mkdir(parents=True, exist_ok=True)
             safe = rep.nodeid.replace("/", "_").replace("::", "__")
-            page.screenshot(path=f"reports/screenshots/{safe}.png", full_page=True)
+            screenshot_path = f"reports/screenshots/{safe}.png"
+            page.screenshot(path=screenshot_path, full_page=True)
+
+        # Collect failure for bug report
+        _failures.append({
+            "test_id":     rep.nodeid,
+            "module":      item.module.__name__ if hasattr(item, "module") else "",
+            "error":       str(rep.longrepr).split("\n")[-1] if rep.longrepr else "",
+            "full_error":  str(rep.longrepr) if rep.longrepr else "",
+            "screenshot":  screenshot_path,
+            "duration":    round(rep.duration, 2) if hasattr(rep, "duration") else 0,
+        })
+
+
+# ---------------------------------------------------------------------------
+# Auto-generate bug report after session ends
+# ---------------------------------------------------------------------------
+
+def pytest_sessionfinish(session, exitstatus):
+    """Generate structured bug report if there are failures."""
+    if not _failures:
+        return
+
+    Path("reports").mkdir(exist_ok=True)
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    report_path = Path("reports/bug_report.md")
+
+    # Group failures by module
+    by_module = {}
+    for f in _failures:
+        mod = f["module"].replace("tests.profile.", "").replace("_", " ").title()
+        by_module.setdefault(mod, []).append(f)
+
+    lines = [
+        "# Automated Bug Report",
+        f"**Generated:** {now}",
+        f"**Environment:** {BASE_URL}",
+        f"**Total Failures:** {len(_failures)}",
+        "",
+        "---",
+        "",
+        "## Summary",
+        "",
+        "| # | Test | Error |",
+        "|---|------|-------|",
+    ]
+
+    for i, f in enumerate(_failures, 1):
+        test_name = f["test_id"].split("::")[-1]
+        error_short = f["error"][:80] + "..." if len(f["error"]) > 80 else f["error"]
+        lines.append(f"| {i} | `{test_name}` | {error_short} |")
+
+    lines += ["", "---", "", "## Failures by Module", ""]
+
+    for mod, failures in by_module.items():
+        lines += [f"### {mod}", ""]
+        for f in failures:
+            test_name = f["test_id"].split("::")[-1]
+            lines += [
+                f"#### ❌ `{test_name}`",
+                "",
+                f"**Test ID:** `{f['test_id']}`",
+                f"**Duration:** {f['duration']}s",
+                "",
+                "**Error:**",
+                "```",
+                f["error"],
+                "```",
+            ]
+            if f["screenshot"]:
+                lines.append(f"**Screenshot:** `{f['screenshot']}`")
+            lines.append("")
+
+    lines += [
+        "---",
+        "",
+        "## Next Steps",
+        "",
+        "1. Share this report with the dev team",
+        "2. Create tickets for each failure",
+        "3. Re-run tests after fixes: `pytest --headed -v`",
+        "",
+        f"*Report auto-generated by Playwright E2E suite — {now}*",
+    ]
+
+    report_path.write_text("\n".join(lines))
+    print(f"\n📋 Bug report generated: {report_path}")
+    print(f"   {len(_failures)} failures documented")
