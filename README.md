@@ -108,3 +108,33 @@ Login happens **once per session** and is reused by all tests:
 | Add User modal | `[role="dialog"][aria-label="Add New User"]` |
 | Add User email | `#email` |
 | View All modal | `[role="dialog"][aria-label="All Users"]` |
+
+## CI/CD Pipeline
+
+### GitHub Actions Workflows
+
+| Workflow | Trigger | Tests | Timeout |
+|----------|---------|-------|---------|
+| **Smoke** | Every push/PR | `@smoke` only (4 tests) | 15 min |
+| **Regression** | Nightly 2AM + manual | Full suite (53 tests) | 60 min |
+
+### Setup GitHub Secrets
+
+Go to **Settings → Secrets → Actions** and add:
+
+```
+BASE_URL        = https://dentalbase-dev-v2.vercel.app
+ADMIN_EMAIL     = reem_user
+ADMIN_PASSWORD  = your_password
+```
+
+### Manual trigger
+
+Go to **Actions → Profile E2E Tests → Run workflow**
+
+### Artifacts
+
+After each run, download reports from the **Artifacts** section:
+- `smoke-report/smoke_report.html`
+- `regression-report-N/regression_report.html`
+- `regression-report-N/bug_report.md` (if failures)

@@ -1,0 +1,109 @@
+name: Profile E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 2 * * *'   # Nightly at 2 AM UTC
+  workflow_dispatch:        # Manual trigger
+
+env:
+  BASE_URL:       ${{ secrets.BASE_URL }}
+  ADMIN_EMAIL:    ${{ secrets.ADMIN_EMAIL }}
+  ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+  HEADLESS:       true
+  SLOW_MO:        0
+
+jobs:
+  # ─────────────────────────────────────────
+  # Job 1: Smoke — runs on every PR (fast)
+  # ─────────────────────────────────────────
+  smoke:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright pytest pytest-playwright pytest-html python-dotenv
+          playwright install chromium --with-deps
+
+      - name: Run smoke tests
+        run: |
+          pytest -m smoke --headed=false -v \
+            --html=reports/smoke_report.html \
+            --self-contained-html
+
+      - name: Upload smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report
+          path: reports/
+          retention-days: 7
+
+  # ─────────────────────────────────────────
+  # Job 2: Regression — runs nightly
+  # ─────────────────────────────────────────
+  regression:
+    name: Full Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright pytest pytest-playwright pytest-html python-dotenv
+          playwright install chromium --with-deps
+
+      - name: Run full regression suite
+        run: |
+          pytest tests/profile/ --headed=false -v \
+            --html=reports/regression_report.html \
+            --self-contained-html
+
+      - name: Upload regression report + bug report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-report-${{ github.run_number }}
+          path: reports/
+          retention-days: 30
+
+      - name: Comment bug report on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'reports/bug_report.md';
+            if (fs.existsSync(path)) {
+              const body = fs.readFileSync(path, 'utf8');
+              github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `🐛 Regression Failures — Run #${context.runNumber}`,
+                body: body,
+                labels: ['bug', 'automation']
+              });
+            }
