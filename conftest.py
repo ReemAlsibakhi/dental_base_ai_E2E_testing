@@ -1,16 +1,17 @@
 """
 conftest.py — Global pytest fixtures.
 
-PROFESSIONAL AUTH STRATEGY:
-  Login happens exactly ONCE per test run (session-scoped fixture).
-  The session is saved to .playwright_auth/admin.json on disk.
-  Every test gets a fresh browser context pre-loaded with saved cookies.
-  Tests NEVER touch the login page — they start directly on /settings.
+PERFORMANCE STRATEGY:
+  - browser_instance: session scope (one browser process)
+  - admin_context:    session scope (one context, one tab — fastest)
+  - admin_page:       function scope (fresh page per test — cheap, fast)
 
-  This means:
-  - No spinner waiting per test
-  - No Keycloak redirects per test
-  - Login UI is hit only once — even across 100 tests
+Why page per test instead of context per test?
+  - Opening a new page (tab) is ~10ms
+  - Opening a new context is ~200ms
+  - Both give URL/state isolation when we navigate at start of each test
+  - The profile_page fixture navigates to /settings before every test
+    so state from previous test is always discarded
 """
 
 import os
@@ -38,12 +39,7 @@ ADMIN_STATE     = AUTH_DIR / "admin.json"
 NON_ADMIN_STATE = AUTH_DIR / "non_admin.json"
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _is_valid_state_file(path: Path) -> bool:
-    """Return True if the saved auth state file exists and has cookies."""
     try:
         if not path.exists():
             return False
@@ -54,7 +50,7 @@ def _is_valid_state_file(path: Path) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Browser — one process per session
+# Browser — one process for the entire run
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="session")
@@ -69,47 +65,37 @@ def browser_instance():
 
 
 # ---------------------------------------------------------------------------
-# Auth state — login once, save to disk, reuse for all tests
+# Auth state — login once, save to disk
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="session")
 def admin_auth_state(browser_instance: Browser) -> Path:
     AUTH_DIR.mkdir(exist_ok=True)
 
-    # Reuse existing valid session if available
     if _is_valid_state_file(ADMIN_STATE):
-        print(f"\n[Auth] Reusing saved session: {ADMIN_STATE}")
         return ADMIN_STATE
 
-    print(f"\n[Auth] No valid session found — performing fresh login...")
     context = browser_instance.new_context(
         base_url=BASE_URL,
         viewport={"width": 1280, "height": 800},
     )
     page = context.new_page()
-
     login = LoginPage(page)
     login.goto()
     login.login(ADMIN_EMAIL, ADMIN_PASSWORD)
     login.wait_for_successful_login()
-
     context.storage_state(path=str(ADMIN_STATE))
     context.close()
-
-    print(f"[Auth] Session saved to {ADMIN_STATE}")
     return ADMIN_STATE
 
 
 @pytest.fixture(scope="session")
 def non_admin_auth_state(browser_instance: Browser) -> Path:
     AUTH_DIR.mkdir(exist_ok=True)
-
     if not NON_ADMIN_EMAIL:
         pytest.skip("NON_ADMIN_EMAIL not configured")
-
     if _is_valid_state_file(NON_ADMIN_STATE):
         return NON_ADMIN_STATE
-
     context = browser_instance.new_context(base_url=BASE_URL)
     page = context.new_page()
     login = LoginPage(page)
@@ -122,10 +108,11 @@ def non_admin_auth_state(browser_instance: Browser) -> Path:
 
 
 # ---------------------------------------------------------------------------
-# Per-test context — fresh isolated context with saved auth cookies
+# Context — SESSION scope (one context for all tests — faster)
+# Isolation is handled by navigate_to_profile() at start of each test
 # ---------------------------------------------------------------------------
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def admin_context(browser_instance: Browser, admin_auth_state: Path) -> BrowserContext:
     context = browser_instance.new_context(
         base_url=BASE_URL,
@@ -137,7 +124,7 @@ def admin_context(browser_instance: Browser, admin_auth_state: Path) -> BrowserC
     context.close()
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def non_admin_context(browser_instance: Browser, non_admin_auth_state: Path) -> BrowserContext:
     context = browser_instance.new_context(
         base_url=BASE_URL,
@@ -149,10 +136,16 @@ def non_admin_context(browser_instance: Browser, non_admin_auth_state: Path) -> 
     context.close()
 
 
+# ---------------------------------------------------------------------------
+# Page — FUNCTION scope (new tab per test — ~10ms, gives URL isolation)
+# ---------------------------------------------------------------------------
+
 @pytest.fixture()
 def admin_page(admin_context: BrowserContext) -> Page:
+    """New tab per test — cheap isolation without context overhead."""
     page = admin_context.new_page()
     yield page
+    # Close tab after test — keeps context clean
     if not page.is_closed():
         page.close()
 
