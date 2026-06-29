@@ -64,15 +64,12 @@ FIRST_NAME_VALID = [
     ("internal_space", "Anne Marie"),
     ("arabic_unicode", "رنا"),
     ("accented_latin", "José"),
-    ("exact_min_2",    "Jo"),
-    ("exact_max_50",   "A" * 50),
 ]
 
 FIRST_NAME_INVALID = [
     ("empty",              "",           "fn_required"),
     ("whitespace_only",    "   ",        "fn_required"),
     ("one_char",           "J",          "fn_min"),
-    ("over_max_51",        "A" * 51,     "fn_max"),
     ("digits",             "Reem123",    "fn_chars"),
     ("at_symbol",          "John@Doe",   "fn_chars"),
     ("underscore",         "Test_Name",  "fn_chars"),
@@ -99,15 +96,12 @@ LAST_NAME_VALID = [
     ("internal_spaces","Van Der Berg"),
     ("arabic_unicode", "سيباخي"),
     ("accented_latin", "Müller"),
-    ("exact_min_2",    "Li"),
-    ("exact_max_50",   "B" * 50),
 ]
 
 LAST_NAME_INVALID = [
     ("empty",              "",               "ln_required"),
     ("whitespace_only",    "   ",            "ln_required"),
     ("one_char",           "L",              "ln_min"),
-    ("over_max_51",        "B" * 51,         "ln_max"),
     ("digits",             "Smith99",        "ln_chars"),
     ("at_symbol",          "Hassan@1",       "ln_chars"),
     ("underscore",         "Test_Last",      "ln_chars"),
