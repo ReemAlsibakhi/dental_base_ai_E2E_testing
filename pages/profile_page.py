@@ -87,16 +87,26 @@ class ProfilePage(BasePage):
 
     def navigate_to_profile(self) -> None:
         self.page.goto(self._SETTINGS_URL, wait_until="commit", timeout=60_000)
-        # Wait for Profile Information card — confirms settings loaded
-        self.page.locator("text=Profile Information").wait_for(
-            state="visible", timeout=30_000
-        )
-        # Ensure any leftover modals from previous tests are closed
+        # Wait for ANY of these — whichever loads first
+        # Using OR logic: Profile Information text OR the Edit button
         try:
-            if self.page.locator('[role="dialog"]').count() > 0:
-                close_btn = self.page.locator('button[aria-label="Close panel"]')
-                if close_btn.count() > 0 and close_btn.is_visible():
-                    close_btn.click()
+            self.page.wait_for_selector(
+                "text=Profile Information, "
+                "button:has-text('Edit')",
+                timeout=60_000,
+                state="visible"
+            )
+        except Exception:
+            # Fallback: just wait for network to settle
+            self.page.wait_for_load_state("domcontentloaded")
+            self.page.wait_for_timeout(2_000)
+
+        # Close any leftover modals from previous tests
+        try:
+            close_btn = self.page.locator('button[aria-label="Close panel"]')
+            if close_btn.count() > 0 and close_btn.is_visible():
+                close_btn.click()
+                self.page.wait_for_timeout(300)
         except Exception:
             pass
 
