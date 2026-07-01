@@ -129,7 +129,8 @@ class PracticeProfilePage(BasePage):
         import time
         end = time.time() + 60
         while time.time() < end:
-            if self.page.locator('button:has-text("Profile")').is_visible():
+            # exact=True prevents matching "Practice Profile & Hours"
+            if self.page.get_by_role("button", name="Profile", exact=True).is_visible():
                 break
             time.sleep(0.5)
         # Click Practice Profile & Hours tab
