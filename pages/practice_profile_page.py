@@ -124,18 +124,22 @@ class PracticeProfilePage(BasePage):
     # ===================================================================
 
     def navigate_to_practice_profile(self) -> None:
-        self.page.goto(self._SETTINGS_URL, wait_until="commit", timeout=60_000)
-        # Wait for spinner to resolve — same pattern as Module 1
-        # Poll until the tab bar appears (any tab button visible)
         import time
+        self.page.goto(self._SETTINGS_URL, wait_until="commit", timeout=60_000)
+
+        # Step 1: Poll until Profile tab appears (spinner done)
         end = time.time() + 60
         while time.time() < end:
-            # exact=True prevents matching "Practice Profile & Hours"
             if self.page.get_by_role("button", name="Profile", exact=True).is_visible():
                 break
             time.sleep(0.5)
-        # Click Practice Profile & Hours tab
-        self.page.locator(self._PRACTICE_PROFILE_TAB).first.click()
+
+        # Step 2: Wait for Practice Profile & Hours tab to be visible
+        tab = self.page.get_by_role("button", name="Practice Profile & Hours", exact=True)
+        tab.wait_for(state="visible", timeout=15_000)
+
+        # Step 3: Click it
+        tab.click()
         self.page.wait_for_timeout(1500)
 
     def open_edit_form(self) -> None:
