@@ -25,8 +25,8 @@ class PracticeProfilePage(BasePage):
 
     # Navigation
     _SETTINGS_URL          = "/settings"
-    _PRACTICE_PROFILE_TAB  = 'button:has-text("Practice Profile")'
-    _EDIT_BUTTON           = 'button:has-text("Edit Practice Information")'
+    _PRACTICE_PROFILE_TAB  = 'button:has-text("Practice Profile & Hours")'
+    _EDIT_BUTTON           = 'button:has-text("Edit")'
 
     # Edit form — confirmed name attributes
     _LEGAL_NAME_INPUT      = '[name="legalName"]'
@@ -121,9 +121,14 @@ class PracticeProfilePage(BasePage):
 
     def navigate_to_practice_profile(self) -> None:
         self.page.goto(self._SETTINGS_URL, wait_until="commit", timeout=60_000)
+        # Wait for settings to load first
+        self.page.wait_for_selector(
+            'button:has-text("Practice Profile & Hours")',
+            timeout=30_000,
+            state="visible"
+        )
         self.page.locator(self._PRACTICE_PROFILE_TAB).first.click()
-        self.page.wait_for_load_state("domcontentloaded")
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(1500)
 
     def open_edit_form(self) -> None:
         self.page.locator(self._EDIT_BUTTON).first.click()
