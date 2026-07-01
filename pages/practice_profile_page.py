@@ -148,6 +148,7 @@ class PracticeProfilePage(BasePage):
     # ===================================================================
 
     def fill_and_blur(self, locator: Locator, value: str) -> None:
+        locator.scroll_into_view_if_needed()
         locator.clear()
         locator.fill(value)
         locator.press("Tab")

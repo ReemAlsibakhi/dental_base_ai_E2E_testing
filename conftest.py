@@ -105,7 +105,7 @@ def admin_context(browser_instance: Browser, admin_auth_state: Path) -> BrowserC
     context = browser_instance.new_context(
         base_url=BASE_URL,
         storage_state=str(admin_auth_state),
-        viewport={"width": 1280, "height": 800},
+        viewport={"width": 1920, "height": 1080},
     )
     context.set_default_timeout(20_000)
     yield context
