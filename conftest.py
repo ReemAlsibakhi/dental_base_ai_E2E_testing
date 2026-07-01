@@ -300,3 +300,35 @@ def pytest_sessionfinish(session, exitstatus):
     report_path.write_text("\n".join(lines))
     print(f"\n📋 Bug report generated: {report_path}")
     print(f"   {len(_failures)} failures documented")
+
+
+# ---------------------------------------------------------------------------
+# Practice Profile fixtures
+# ---------------------------------------------------------------------------
+
+from pages.practice_profile_page import PracticeProfilePage
+
+
+@pytest.fixture()
+def practice_profile_page(admin_page: Page) -> PracticeProfilePage:
+    """Navigate to Practice Profile tab and open Edit form."""
+    pp = PracticeProfilePage(admin_page)
+    pp.navigate_to_practice_profile()
+    pp.open_edit_form()
+    return pp
+
+
+@pytest.fixture(scope="module")
+def practice_profile_form_open(admin_context: BrowserContext) -> PracticeProfilePage:
+    """Practice Profile edit form open for entire module — no re-navigation per test."""
+    page = admin_context.new_page()
+    pp = PracticeProfilePage(page)
+    pp.navigate_to_practice_profile()
+    pp.open_edit_form()
+    yield pp
+    try:
+        pp.cancel()
+    except Exception:
+        pass
+    if not page.is_closed():
+        page.close()
