@@ -22,7 +22,7 @@ cp .env.example .env
 `.env` contents:
 ```env
 BASE_URL=https://dentalbase-dev-v2.vercel.app
-ADMIN_EMAIL=reem_user
+ADMIN_EMAIL=
 ADMIN_PASSWORD=your_password
 NON_ADMIN_EMAIL=
 NON_ADMIN_PASSWORD=
