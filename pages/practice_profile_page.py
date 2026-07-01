@@ -124,12 +124,15 @@ class PracticeProfilePage(BasePage):
 
     def navigate_to_practice_profile(self) -> None:
         self.page.goto(self._SETTINGS_URL, wait_until="commit", timeout=60_000)
-        # Wait for settings to load first
-        self.page.wait_for_selector(
-            'button:has-text("Practice Profile & Hours")',
-            timeout=30_000,
-            state="visible"
-        )
+        # Wait for spinner to resolve — same pattern as Module 1
+        # Poll until the tab bar appears (any tab button visible)
+        import time
+        end = time.time() + 60
+        while time.time() < end:
+            if self.page.locator('button:has-text("Profile")').is_visible():
+                break
+            time.sleep(0.5)
+        # Click Practice Profile & Hours tab
         self.page.locator(self._PRACTICE_PROFILE_TAB).first.click()
         self.page.wait_for_timeout(1500)
 
