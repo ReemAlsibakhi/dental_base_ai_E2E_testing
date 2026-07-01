@@ -29,7 +29,7 @@ class PracticeProfilePage(BasePage):
     # Edit button scoped to Practice Information section
     # 23 Edit buttons exist — only 1 is visible (the Practice Info one)
     # Grandparent contains "Practice Information" text
-    _EDIT_BUTTON           = 'div:has-text("Practice Information") button:has-text("Edit")'
+    _EDIT_BUTTON           = '[class*="min-w-\\[74px\\]"] button'
 
     # Edit form — confirmed name attributes
     _LEGAL_NAME_INPUT      = '[name="legalName"]'
@@ -134,11 +134,10 @@ class PracticeProfilePage(BasePage):
         self.page.wait_for_timeout(1500)
 
     def open_edit_form(self) -> None:
-        # Find the visible Edit button in Practice Information section
-        edit_btn = self.page.locator(self._EDIT_BUTTON).filter(has_text="Edit")
-        # Scroll into view and click
-        edit_btn.first.scroll_into_view_if_needed()
-        edit_btn.first.click()
+        # Get the first VISIBLE Edit button using get_by_role
+        edit_btn = self.page.get_by_role("button", name="Edit").first
+        edit_btn.scroll_into_view_if_needed()
+        edit_btn.click()
         self.page.wait_for_selector(self._LEGAL_NAME_INPUT, timeout=10_000)
 
     # ===================================================================
