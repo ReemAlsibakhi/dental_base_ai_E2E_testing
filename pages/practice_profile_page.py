@@ -43,10 +43,11 @@ class PracticeProfilePage(BasePage):
     _DESCRIPTION_INPUT     = '[name="description"]'
     _ADDITIONAL_NOTES      = '[name="practiceInfoAdditionalNotes"]'
 
-    # Selects — no name/id, use label
-    _PRACTICE_TYPE_SELECT  = 'label:has-text("Practice Type") + * select, select[name="practiceType"]'
-    _STATE_SELECT          = 'label:has-text("State") + * select'
-    _TIMEZONE_SELECT       = 'label:has-text("Timezone") + * select'
+    # Selects — no id/name confirmed from DOM
+    # Order inside dialog: [0]=Practice Type, [1]=State, [2]=Timezone
+    _PRACTICE_TYPE_SELECT  = 'select'   # nth(0)
+    _STATE_SELECT          = 'select'   # nth(1)
+    _TIMEZONE_SELECT       = 'select'   # nth(2)
 
     # Phone — type=tel, located by label
     _MAIN_PHONE_INPUT      = 'input[type="tel"]:near(label:has-text("Main Phone"))'
@@ -94,10 +95,10 @@ class PracticeProfilePage(BasePage):
         self.emergency_phone_input: Locator = page.locator(self._EMERGENCY_PHONE_INPUT)
         self.parking_toggle: Locator        = page.locator(self._PARKING_TOGGLE)
 
-        # Selects
-        self.practice_type_select: Locator  = page.locator(self._PRACTICE_TYPE_SELECT).first
-        self.state_select: Locator          = page.locator(self._STATE_SELECT).first
-        self.timezone_select: Locator       = page.locator(self._TIMEZONE_SELECT).first
+        # Selects — nth(0/1/2) confirmed from live DOM
+        self.practice_type_select: Locator  = page.locator('select').nth(0)
+        self.state_select: Locator          = page.locator('select').nth(1)
+        self.timezone_select: Locator       = page.locator('select').nth(2)
 
         # Buttons
         self.save_button: Locator           = page.locator(self._SAVE_BUTTON)
