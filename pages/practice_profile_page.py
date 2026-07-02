@@ -127,20 +127,22 @@ class PracticeProfilePage(BasePage):
         import time
         self.page.goto(self._SETTINGS_URL, wait_until="commit", timeout=60_000)
 
-        # Step 1: Poll until Profile tab appears (spinner done)
-        end = time.time() + 60
+        # Poll until BOTH tabs are visible — same proven pattern as Module 1
+        # "Practice Profile & Hours" contains "Profile" so we check it directly
+        end = time.time() + 120
         while time.time() < end:
-            if self.page.get_by_role("button", name="Profile", exact=True).is_visible():
-                break
+            tab = self.page.get_by_role(
+                "button", name="Practice Profile & Hours", exact=True
+            )
+            if tab.is_visible():
+                tab.click()
+                self.page.wait_for_timeout(1500)
+                return
             time.sleep(0.5)
 
-        # Step 2: Wait for Practice Profile & Hours tab to be visible
-        tab = self.page.get_by_role("button", name="Practice Profile & Hours", exact=True)
-        tab.wait_for(state="visible", timeout=15_000)
-
-        # Step 3: Click it
-        tab.click()
-        self.page.wait_for_timeout(1500)
+        raise RuntimeError(
+            "Practice Profile & Hours tab never appeared after 120s"
+        )
 
     def open_edit_form(self) -> None:
         # Get the first VISIBLE Edit button using get_by_role
