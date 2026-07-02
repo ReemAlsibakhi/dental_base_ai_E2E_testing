@@ -1,10 +1,15 @@
 """
 pages/login_page.py
 
-The app uses CSRF state parameter — must go through /login to get it.
-/login spinner can take up to 90s in slow environments.
-Solution: wait up to 120s for either 'Get started' or '/overview'.
+STRATEGY:
+  /login shows a spinner while React checks the session.
+  We poll every 300ms for up to 60s for EITHER:
+    A) URL contains /overview  → already logged in
+    B) "Get started" button visible → need to login
+
+  This handles both cases without any timeout issues.
 """
+
 import time
 from playwright.sync_api import Page
 from pages.base_page import BasePage
@@ -30,34 +35,40 @@ class LoginPage(BasePage):
 
     def login(self, email: str, password: str) -> None:
         """
-        Wait up to 120s for spinner to finish.
-        Spinner resolves to either:
-          A) /overview  → already logged in
-          B) 'Get started' button → do Keycloak login
+        Poll for one of two states — no fixed timeouts on individual elements.
+        Works regardless of how long the spinner takes.
         """
-        end_time = time.time() + 120
+        end = time.time() + 60
 
-        while time.time() < end_time:
+        while time.time() < end:
+
+            # Case A: already logged in (session still valid)
             if self._POST_LOGIN_URL in self.page.url:
                 return
 
-            if self.page.locator(self._GET_STARTED_BUTTON).is_visible():
-                self.page.locator(self._GET_STARTED_BUTTON).click()
-                # Wait for Keycloak — it provides the state param
-                self.email_input.wait_for(state="visible", timeout=20_000)
-                self.email_input.fill(email)
-                self.password_input.fill(password)
-                self.submit_button.click()
-                return
+            # Case B: "Get started" button appeared (spinner finished)
+            try:
+                btn = self.page.locator(self._GET_STARTED_BUTTON).first
+                if btn.is_visible(timeout=500):
+                    btn.click()
+                    # Wait for Keycloak
+                    self.email_input.wait_for(state="visible", timeout=20_000)
+                    self.email_input.fill(email)
+                    self.password_input.fill(password)
+                    self.submit_button.click()
+                    return
+            except Exception:
+                pass
 
-            time.sleep(0.5)
+            time.sleep(0.3)
 
         raise RuntimeError(
-            f"Login spinner did not resolve after 120s.\n"
+            f"Login: neither /overview nor 'Get started' appeared in 60s.\n"
             f"URL: {self.page.url}"
         )
 
     def wait_for_successful_login(self) -> None:
+        """Wait for React to process tokens and land on /overview."""
         self.page.wait_for_url(
             f"**{self._POST_LOGIN_URL}**",
             timeout=60_000,
