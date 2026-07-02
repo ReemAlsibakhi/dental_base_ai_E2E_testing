@@ -60,13 +60,42 @@ def browser_instance():
 # Auth state
 # ---------------------------------------------------------------------------
 
+def _is_session_still_valid(browser_instance: Browser, state_path: Path) -> bool:
+    """
+    Verify saved session is still active on the live site.
+    Loads the saved cookies and tries to reach /settings directly.
+    If redirected to /login — session expired.
+    """
+    import time
+    try:
+        context = browser_instance.new_context(
+            base_url=BASE_URL,
+            storage_state=str(state_path),
+            viewport={"width": 1920, "height": 1080},
+        )
+        page = context.new_page()
+        page.goto("/settings", wait_until="commit", timeout=20_000)
+        time.sleep(2)
+        valid = "/settings" in page.url or "/overview" in page.url
+        context.close()
+        return valid
+    except Exception:
+        return False
+
+
 @pytest.fixture(scope="session")
 def admin_auth_state(browser_instance: Browser) -> Path:
     AUTH_DIR.mkdir(exist_ok=True)
-    if _is_valid_state_file(ADMIN_STATE):
+
+    # Reuse saved session only if it is still valid on the live site
+    if _is_valid_state_file(ADMIN_STATE) and \
+       _is_session_still_valid(browser_instance, ADMIN_STATE):
         return ADMIN_STATE
+
+    # Session missing or expired — do fresh login
     context = browser_instance.new_context(
-        base_url=BASE_URL, viewport={"width": 1280, "height": 800}
+        base_url=BASE_URL,
+        viewport={"width": 1920, "height": 1080},
     )
     page = context.new_page()
     login = LoginPage(page)
