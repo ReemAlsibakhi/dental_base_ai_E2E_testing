@@ -72,7 +72,7 @@ class PracticeProfilePage(BasePage):
     _DESCRIPTION_ERROR     = '[name="description"] + p, [name="description"] ~ p.text-red-500'
 
     # Success toast
-    _SUCCESS_TOAST         = 'p:has-text("updated successfully"), p:has-text("saved successfully")'
+    _SUCCESS_TOAST         = 'text=Update in progress'
 
     # Description counter
     _DESCRIPTION_COUNTER   = 'span:has-text("/500")'

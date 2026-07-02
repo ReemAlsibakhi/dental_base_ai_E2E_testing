@@ -14,18 +14,18 @@ PP_ERR = {
     # Legal Name (PP·R1)
     "ln_required":    "Legal name is required",
     "ln_min":         "Legal name must be at least 2 characters",
-    "ln_max":         "Legal name cannot exceed 150 characters",
+    "ln_max":         "Legal name must be under 150 characters",
     "ln_chars":       "Legal name contains invalid characters",
     "ln_consecutive": "Legal name must not contain consecutive special characters",
-    "ln_start_end":   "Legal name must start and end with a letter or number",
+    "ln_start_end":   "Legal name must start with a letter or number and",
 
     # DBA Name (PP·R2)
-    "dba_required":    "DBA name is required",
-    "dba_min":         "DBA name must be at least 2 characters",
-    "dba_max":         "DBA name cannot exceed 150 characters",
-    "dba_chars":       "DBA name contains invalid characters",
-    "dba_consecutive": "DBA name must not contain consecutive special characters",
-    "dba_start_end":   "DBA name must start and end with a letter or number",
+    "dba_required":    "DBA / Trade Name is required",
+    "dba_min":         "DBA / Trade Name must be at least 2 characters",
+    "dba_max":         "DBA / Trade Name must be under 150 characters",
+    "dba_chars":       "DBA / Trade Name may only contain letters, numbers, spaces, and",
+    "dba_consecutive": "DBA / Trade Name must not contain consecutive special characters",
+    "dba_start_end":   "DBA / Trade Name must start with a letter or number and end with",
 
     # Phone (PP·R4/R5)
     "phone_required": "phone is required",
