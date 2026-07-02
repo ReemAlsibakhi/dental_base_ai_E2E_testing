@@ -125,15 +125,29 @@ class PracticeProfilePage(BasePage):
 
     def navigate_to_practice_profile(self) -> None:
         """
-        Navigate directly to /settings — session already has the tab selected.
-        No spinner wait needed because we reuse a saved session state
-        (saved via save_practice_session.py — same pattern as Module 1).
+        Navigate to /settings and click Practice Profile & Hours tab.
+
+        With a valid saved session (admin.json), the page loads instantly
+        with no spinner — same behaviour as Module 1 navigate_to_profile().
+        The tab click takes <1s after the page loads.
         """
+        import time
         self.page.goto(self._SETTINGS_URL, wait_until="commit", timeout=60_000)
-        # Wait for the edit button to confirm we are on Practice Profile tab
-        self.page.get_by_role(
-            "button", name="Practice Profile & Hours", exact=True
-        ).wait_for(state="visible", timeout=30_000)
+
+        # Wait for any settings tab to appear — confirms page loaded
+        end = time.time() + 30
+        while time.time() < end:
+            if self.page.get_by_role(
+                "button", name="Practice Profile & Hours", exact=True
+            ).is_visible():
+                self.page.get_by_role(
+                    "button", name="Practice Profile & Hours", exact=True
+                ).click()
+                self.page.wait_for_timeout(1000)
+                return
+            time.sleep(0.3)
+
+        raise RuntimeError("Settings page did not load within 30s")
 
     def open_edit_form(self) -> None:
         # Get the first VISIBLE Edit button using get_by_role

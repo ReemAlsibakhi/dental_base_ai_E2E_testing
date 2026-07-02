@@ -335,35 +335,14 @@ def practice_profile_form_open(admin_context: BrowserContext) -> PracticeProfile
 
 
 # ---------------------------------------------------------------------------
-# Practice Profile — saved session (tab already selected)
+# Practice Profile — uses same admin_context (one session for entire site)
 # ---------------------------------------------------------------------------
-
-PRACTICE_STATE = AUTH_DIR / "practice_profile.json"
-
-
-@pytest.fixture(scope="session")
-def practice_profile_context(browser_instance: Browser) -> BrowserContext:
-    """
-    Session-scoped context using saved Practice Profile session.
-    Run save_practice_session.py once before running Module 2 tests.
-    Same pattern as admin_context in Module 1.
-    """
-    state = str(PRACTICE_STATE) if _is_valid_state_file(PRACTICE_STATE) \
-            else str(ADMIN_STATE)
-
-    context = browser_instance.new_context(
-        base_url=BASE_URL,
-        storage_state=state,
-        viewport={"width": 1920, "height": 1080},
-    )
-    context.set_default_timeout(20_000)
-    yield context
-    context.close()
 
 
 @pytest.fixture()
-def practice_profile_page(practice_profile_context: BrowserContext) -> PracticeProfilePage:
-    page = practice_profile_context.new_page()
+def practice_profile_page(admin_context: BrowserContext) -> PracticeProfilePage:
+    """Navigate to Practice Profile tab and open Edit form."""
+    page = admin_context.new_page()
     pp = PracticeProfilePage(page)
     pp.navigate_to_practice_profile()
     pp.open_edit_form()
@@ -377,9 +356,9 @@ def practice_profile_page(practice_profile_context: BrowserContext) -> PracticeP
 
 
 @pytest.fixture(scope="module")
-def practice_profile_form_open(practice_profile_context: BrowserContext) -> PracticeProfilePage:
+def practice_profile_form_open(admin_context: BrowserContext) -> PracticeProfilePage:
     """Practice Profile edit form open for entire module — no re-navigation per test."""
-    page = practice_profile_context.new_page()
+    page = admin_context.new_page()
     pp = PracticeProfilePage(page)
     pp.navigate_to_practice_profile()
     pp.open_edit_form()
