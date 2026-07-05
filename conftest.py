@@ -63,8 +63,9 @@ def browser_instance():
 def _is_session_still_valid(browser_instance: Browser, state_path: Path) -> bool:
     """
     Verify saved session is still active.
-    Navigates to /settings and polls for up to 15s.
-    Valid = lands on /settings. Expired = redirected to /login.
+    With valid session: /settings loads in <5s (no spinner).
+    With expired session: redirects to /login and stays there.
+    Poll for up to 30s — stops as soon as /settings is reached.
     """
     import time
     try:
@@ -76,18 +77,14 @@ def _is_session_still_valid(browser_instance: Browser, state_path: Path) -> bool
         page = context.new_page()
         page.goto("/settings", wait_until="commit", timeout=30_000)
 
-        # Poll for up to 15s — /settings loads fast with valid session
-        end = time.time() + 15
+        end = time.time() + 30
         while time.time() < end:
-            url = page.url
-            if "/settings" in url:
+            if "/settings" in page.url:
                 context.close()
                 return True
-            if "/login" in url:
-                context.close()
-                return False
             time.sleep(0.5)
 
+        # Still not on /settings after 30s → session expired
         context.close()
         return False
     except Exception:

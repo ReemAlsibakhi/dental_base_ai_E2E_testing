@@ -38,7 +38,7 @@ class LoginPage(BasePage):
         Poll for one of two states — no fixed timeouts on individual elements.
         Works regardless of how long the spinner takes.
         """
-        end = time.time() + 60
+        end = time.time() + 180  # dev spinner can take up to 2 minutes
 
         while time.time() < end:
 
