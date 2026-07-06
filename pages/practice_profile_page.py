@@ -73,7 +73,7 @@ class PracticeProfilePage(BasePage):
     _DESCRIPTION_ERROR     = '[name="description"] ~ p[id$="-error"]'
 
     # Success toast
-    _SUCCESS_TOAST         = '[data-sonner-toast], text=Update in progress, text=updated, text=saved'
+    # No toast on save — confirmation = panel closes automatically
 
     # Description counter
     _DESCRIPTION_COUNTER   = 'span:has-text("/500")'
@@ -118,7 +118,7 @@ class PracticeProfilePage(BasePage):
         self.description_error: Locator     = page.locator(self._DESCRIPTION_ERROR).first
 
         # Toast + counter
-        self.success_toast: Locator         = page.locator(self._SUCCESS_TOAST)
+        # No toast locator needed — panel close is the success signal
         self.description_counter: Locator   = page.locator(self._DESCRIPTION_COUNTER)
 
     # ===================================================================
@@ -204,8 +204,16 @@ class PracticeProfilePage(BasePage):
     # ===================================================================
 
     def save_and_assert_success(self) -> None:
+        """
+        Save and verify success.
+        Practice Profile has no toast — confirmation is:
+        1. Save button text changes to "Saving..." briefly
+        2. Panel closes automatically after save
+        We wait for the edit form to disappear (panel closed).
+        """
         self.save_button.click()
-        expect(self.success_toast).to_be_visible(timeout=10_000)
+        # Wait for the legal name input to disappear — panel closed = success
+        self.legal_name_input.wait_for(state="hidden", timeout=15_000)
 
     def cancel(self) -> None:
         self.cancel_button.click()
