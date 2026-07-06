@@ -239,3 +239,15 @@ The tests reflect the correct requirements — not the current implementation.
 **Actual:** No error shown — trailing period accepted silently
 
 **Impact:** Legal names can end with special characters, violating PP·R1g.
+
+## DEF-PP-07 — Text areas accept XSS script tags
+
+**Severity:** 🔴 High
+**Fields affected:** Description, Landmarks, Additional Notes
+**Discovered by:** test_*_xss_rejected tests
+
+**Expected:** `<script>alert(1)</script>` → ❌ Rejected with error
+**Actual:** Script tag accepted silently — no validation error shown
+
+**Impact:** Potential XSS vulnerability in practice profile text fields.
+**Action required:** Add server-side and client-side sanitization.

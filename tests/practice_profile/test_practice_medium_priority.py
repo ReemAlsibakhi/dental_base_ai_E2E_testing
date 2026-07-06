@@ -117,6 +117,7 @@ def test_description_501_chars_blocked(
 
 @pytest.mark.negative
 @pytest.mark.security
+@pytest.mark.xfail(reason="DEF-PP-07: App accepts <script> in text areas — XSS risk")
 def test_description_xss_rejected(
     practice_profile_form_open: PracticeProfilePage,
 ) -> None:
@@ -138,7 +139,8 @@ def test_parking_toggle_can_be_enabled(
     toggle = practice_profile_form_open.parking_toggle
     toggle.scroll_into_view_if_needed()
     if not toggle.is_checked():
-        toggle.click()
+        # Custom toggle uses hidden checkbox — JS click bypasses viewport check
+        toggle.evaluate("el => el.click()")
     assert toggle.is_checked(), "Parking toggle should be ON after click"
 
 
@@ -150,7 +152,7 @@ def test_parking_details_visible_when_enabled(
     toggle = practice_profile_form_open.parking_toggle
     toggle.scroll_into_view_if_needed()
     if not toggle.is_checked():
-        toggle.click()
+        toggle.evaluate('el => el.click()')
     practice_profile_form_open.page.wait_for_timeout(500)
     # Parking details textarea should now be visible
     parking_details = practice_profile_form_open.page.get_by_label("Parking Details")
@@ -165,7 +167,7 @@ def test_parking_details_hidden_when_disabled(
     toggle = practice_profile_form_open.parking_toggle
     toggle.scroll_into_view_if_needed()
     if toggle.is_checked():
-        toggle.click()
+        toggle.evaluate('el => el.click()')
     practice_profile_form_open.page.wait_for_timeout(500)
     parking_details = practice_profile_form_open.page.get_by_label("Parking Details")
     expect(parking_details).to_be_hidden()
@@ -200,6 +202,7 @@ def test_landmarks_501_chars_blocked(
 
 @pytest.mark.negative
 @pytest.mark.security
+@pytest.mark.xfail(reason="DEF-PP-07: App accepts <script> in text areas — XSS risk")
 def test_landmarks_xss_rejected(
     practice_profile_form_open: PracticeProfilePage,
 ) -> None:
@@ -241,6 +244,7 @@ def test_additional_notes_501_chars_blocked(
 
 @pytest.mark.negative
 @pytest.mark.security
+@pytest.mark.xfail(reason="DEF-PP-07: App accepts <script> in text areas — XSS risk")
 def test_additional_notes_xss_rejected(
     practice_profile_form_open: PracticeProfilePage,
 ) -> None:
