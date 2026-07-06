@@ -54,7 +54,9 @@ class PracticeProfilePage(BasePage):
     _EMERGENCY_PHONE_INPUT = '#emergencyPhone'
 
     # Parking toggle
-    _PARKING_TOGGLE        = 'input[type="checkbox"]'
+    # Parking toggle: Radix UI Switch — actual clickable element is button[role='switch']
+    # The input[type='checkbox'] is aria-hidden and not interactive
+    _PARKING_TOGGLE        = 'button[role="switch"]'
 
     # Buttons
     _SAVE_BUTTON           = 'button:has-text("Save")'

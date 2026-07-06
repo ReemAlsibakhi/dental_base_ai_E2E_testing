@@ -138,10 +138,10 @@ def test_parking_toggle_can_be_enabled(
     """TC-F-PP-06: Parking toggle can be switched ON."""
     toggle = practice_profile_form_open.parking_toggle
     toggle.scroll_into_view_if_needed()
-    if not toggle.is_checked():
-        # Custom toggle uses hidden checkbox — JS click bypasses viewport check
-        toggle.evaluate("el => el.click()")
-    assert toggle.is_checked(), "Parking toggle should be ON after click"
+    if toggle.get_attribute("data-state") != "checked":
+        toggle.click()
+    practice_profile_form_open.page.wait_for_timeout(300)
+    assert toggle.get_attribute("data-state") == "checked"
 
 
 @pytest.mark.functional
@@ -151,8 +151,8 @@ def test_parking_details_visible_when_enabled(
     """TC-U-PP-05: Parking details textarea appears when toggle is ON."""
     toggle = practice_profile_form_open.parking_toggle
     toggle.scroll_into_view_if_needed()
-    if not toggle.is_checked():
-        toggle.evaluate('el => el.click()')
+    if toggle.get_attribute('data-state') != 'checked':
+        toggle.click()
     practice_profile_form_open.page.wait_for_timeout(500)
     # Parking details textarea should now be visible
     parking_details = practice_profile_form_open.page.get_by_label("Parking Details")
@@ -166,10 +166,10 @@ def test_parking_details_hidden_when_disabled(
     """TC-U-PP-05: Parking details hidden when toggle is OFF."""
     toggle = practice_profile_form_open.parking_toggle
     toggle.scroll_into_view_if_needed()
-    if toggle.is_checked():
-        toggle.evaluate('el => el.click()')
+    if toggle.get_attribute('data-state') == 'checked':
+        toggle.click()
     practice_profile_form_open.page.wait_for_timeout(500)
-    parking_details = practice_profile_form_open.page.get_by_label("Parking Details")
+    parking_details = practice_profile_form_open.page.get_by_label('Parking Details')
     expect(parking_details).to_be_hidden()
 
 
