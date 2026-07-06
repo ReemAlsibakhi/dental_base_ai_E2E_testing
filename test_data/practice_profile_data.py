@@ -15,7 +15,7 @@ PP_ERR = {
     "ln_required":    "Legal name is required",
     "ln_min":         "Legal name must be at least 2 characters",
     "ln_max":         "Legal name must be under 150 characters",
-    "ln_chars":       "Legal name contains invalid characters",
+    "ln_chars":       "Legal name may only contain letters, numbers, spaces, and",
     "ln_consecutive": "Legal name must not contain consecutive special characters",
     "ln_start_end":   "Legal name must start with a letter or number and",
 
@@ -36,7 +36,7 @@ PP_ERR = {
 
     # Website (PP·R7)
     "website_scheme": "Website must start with http:// or https://",
-    "website_max":    "Website URL is too long",
+    "website_max":    "Website URL cannot exceed 2048 characters",
 
     # Street (PP·R8)
     "street_required": "Street address is required",

@@ -203,3 +203,39 @@ leading to user confusion.
 
 Once bugs are fixed, all automated tests are expected to pass without modification.
 The tests reflect the correct requirements — not the current implementation.
+
+---
+
+## Module 2 — Practice Profile & Hours Bugs
+
+| ID | Severity | Feature | Status |
+|----|----------|---------|--------|
+| DEF-PP-03 | 🟡 Medium | Website max length < 2048 chars | Open |
+| DEF-PP-04 | 🟡 Medium | trailing period in Legal Name not rejected | Open |
+
+---
+
+## DEF-PP-03 — Website: max length less than 2048 chars
+
+**Severity:** 🟡 Medium
+**Discovered by:** `test_website_max_2048_chars_accepted`
+**Rule violated:** PP·R7d (max 2048 chars)
+
+**Expected:** URL of exactly 2048 chars → ✅ Accepted
+**Actual:** URL of 2048 chars → ❌ "Website URL cannot exceed 2048 characters"
+
+**Impact:** Valid long URLs rejected. Max is enforced at a lower limit than specified.
+**Action:** Confirm actual max with dev team and update PP·R7d accordingly.
+
+---
+
+## DEF-PP-04 — Legal Name: trailing period not rejected
+
+**Severity:** 🟡 Medium
+**Discovered by:** `test_practice_name_invalid_shows_error[ln-trailing_period]`
+**Rule violated:** PP·R1g (must start and end with letter or number)
+
+**Expected:** `DentiVoice.` → ❌ Error (trailing period)
+**Actual:** No error shown — trailing period accepted silently
+
+**Impact:** Legal names can end with special characters, violating PP·R1g.

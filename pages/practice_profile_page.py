@@ -50,8 +50,8 @@ class PracticeProfilePage(BasePage):
     _TIMEZONE_SELECT       = 'select'   # nth(2)
 
     # Phone — type=tel, located by label
-    _MAIN_PHONE_INPUT      = 'input[type="tel"]:near(label:has-text("Main Phone"))'
-    _EMERGENCY_PHONE_INPUT = 'input[type="tel"]:near(label:has-text("Emergency Phone"))'
+    _MAIN_PHONE_INPUT      = '#phone'
+    _EMERGENCY_PHONE_INPUT = '#emergencyPhone'
 
     # Parking toggle
     _PARKING_TOGGLE        = 'input[type="checkbox"]'
@@ -63,7 +63,7 @@ class PracticeProfilePage(BasePage):
     # Inline errors — adjacent sibling p (same pattern as Profile module)
     _LEGAL_NAME_ERROR      = '[name="legalName"] ~ p[id$="-error"]'
     _DBA_NAME_ERROR        = '[name="dbaName"] ~ p[id$="-error"]'
-    _MAIN_PHONE_ERROR      = 'input[type="tel"] ~ p[id$="-error"]'
+    _MAIN_PHONE_ERROR      = '#phone ~ p[id$="-error"]'
     _EMAIL_ERROR           = '[name="email"] ~ p[id$="-error"]'
     _WEBSITE_ERROR         = '[name="website"] ~ p[id$="-error"]'
     _STREET_ERROR          = '[name="address.street"] ~ p[id$="-error"]'

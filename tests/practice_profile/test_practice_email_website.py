@@ -106,8 +106,11 @@ def test_website_invalid_scheme_shows_error(
 
 
 @pytest.mark.boundary
+@pytest.mark.xfail(reason="DEF-PP-03: Website rejects 2048-char URL — actual max < 2048 (violates PP·R7d)")
 def test_website_max_2048_chars_accepted(practice_profile_form_open: PracticeProfilePage) -> None:
-    """TC-B-PP-NEW-05: 2048-char URL (max) accepted."""
+    """TC-B-PP-NEW-05: 2048-char URL (max) accepted per PP·R7d.
+    KNOWN BUG: App rejects URLs before reaching 2048 chars.
+    """
     _fill(practice_profile_form_open, practice_profile_form_open.website_input, WEBSITE_MAX_VALID)
     expect(practice_profile_form_open.website_error).to_be_hidden()
 
