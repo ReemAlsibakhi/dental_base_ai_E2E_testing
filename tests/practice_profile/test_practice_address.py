@@ -55,7 +55,6 @@ def test_street_min_5_chars_accepted(practice_profile_form_open: PracticeProfile
 
 
 @pytest.mark.boundary
-@pytest.mark.xfail(reason="DEF-PP-06: Street min may not be 5 chars — needs confirmation")
 def test_street_4_chars_triggers_min_error(practice_profile_form_open: PracticeProfilePage) -> None:
     _fill(practice_profile_form_open, practice_profile_form_open.street_input, STREET_MIN_INVALID)
     expect(practice_profile_form_open.street_error).to_be_visible()
