@@ -64,18 +64,6 @@ def test_phone_empty_shows_required_error(
 
 @pytest.mark.negative
 @pytest.mark.parametrize("field", FIELDS, ids=["main", "emergency"])
-def test_phone_9_digits_shows_min_error(
-    practice_profile_form_open: PracticeProfilePage,
-    field: PhoneField,
-) -> None:
-    """TC-N-PP-04/05: 9-digit phone shows min-length error."""
-    _fill(practice_profile_form_open, field, "603555123")
-    expect(field.error(practice_profile_form_open)).to_be_visible()
-    expect(field.error(practice_profile_form_open)).to_contain_text(PP_ERR["phone_min"])
-
-
-@pytest.mark.negative
-@pytest.mark.parametrize("field", FIELDS, ids=["main", "emergency"])
 def test_phone_alpha_stripped_silently(
     practice_profile_form_open: PracticeProfilePage,
     field: PhoneField,

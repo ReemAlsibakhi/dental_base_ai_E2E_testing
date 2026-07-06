@@ -64,6 +64,7 @@ class PracticeProfilePage(BasePage):
     _LEGAL_NAME_ERROR      = '[name="legalName"] ~ p[id$="-error"]'
     _DBA_NAME_ERROR        = '[name="dbaName"] ~ p[id$="-error"]'
     _MAIN_PHONE_ERROR      = '#phone ~ p[id$="-error"]'
+    _EMERGENCY_PHONE_ERROR = '#emergencyPhone ~ p[id$="-error"]'
     _EMAIL_ERROR           = '[name="email"] ~ p[id$="-error"]'
     _WEBSITE_ERROR         = '[name="website"] ~ p[id$="-error"]'
     _STREET_ERROR          = '[name="address.street"] ~ p[id$="-error"]'
@@ -108,6 +109,7 @@ class PracticeProfilePage(BasePage):
         self.legal_name_error: Locator      = page.locator(self._LEGAL_NAME_ERROR).first
         self.dba_name_error: Locator        = page.locator(self._DBA_NAME_ERROR).first
         self.main_phone_error: Locator      = page.locator(self._MAIN_PHONE_ERROR).first
+        self.emergency_phone_error: Locator = page.locator(self._EMERGENCY_PHONE_ERROR).first
         self.email_error: Locator           = page.locator(self._EMAIL_ERROR).first
         self.website_error: Locator         = page.locator(self._WEBSITE_ERROR).first
         self.street_error: Locator          = page.locator(self._STREET_ERROR).first
