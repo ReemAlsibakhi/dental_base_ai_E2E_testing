@@ -206,14 +206,12 @@ class PracticeProfilePage(BasePage):
     def save_and_assert_success(self) -> None:
         """
         Save and verify success.
-        Practice Profile has no toast — confirmation is:
-        1. Save button text changes to "Saving..." briefly
-        2. Panel closes automatically after save
-        We wait for the edit form to disappear (panel closed).
+        Practice Profile has no toast — confirmation is the panel closing.
+        We click Save and wait for the save button to disappear.
         """
         self.save_button.click()
-        # Wait for the legal name input to disappear — panel closed = success
-        self.legal_name_input.wait_for(state="hidden", timeout=15_000)
+        # Panel closes after save — save button disappears
+        self.save_button.wait_for(state="hidden", timeout=15_000)
 
     def cancel(self) -> None:
         self.cancel_button.click()
