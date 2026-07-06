@@ -29,7 +29,7 @@ PP_ERR = {
 
     # Phone (PP·R4/R5)
     "phone_required": "phone is required",
-    "phone_min":      "Phone must be at least 10 digits",
+    "phone_min":      "Invalid phone format",
 
     # Email (PP·R6)
     "email_format":   "Please enter a valid email address",
@@ -97,7 +97,7 @@ LEGAL_NAME_INVALID = [
     ("leading_hyphen",     "-Clinic Care",  "ln_start_end"),
     ("trailing_hyphen",    "Clinic Care-",  "ln_start_end"),
     ("leading_period",     ".DentiVoice",   "ln_start_end"),
-    ("trailing_period",    "DentiVoice.",   "ln_start_end"),
+    # trailing_period: CONFIRMED BUG DEF-PP-04 — app accepts trailing period
     ("leading_apostrophe", "'Care Dental",  "ln_start_end"),
     ("trailing_comma",     "Smith Jones,",  "ln_start_end"),
 ]

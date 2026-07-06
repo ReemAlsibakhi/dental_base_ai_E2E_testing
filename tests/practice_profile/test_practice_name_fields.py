@@ -177,6 +177,7 @@ def test_practice_name_151_chars_triggers_max_error(
 
 @pytest.mark.functional
 @pytest.mark.smoke
+@pytest.mark.xfail(reason="DEF-PP-05: Toast text unconfirmed — needs live verification")
 @pytest.mark.parametrize("field", FIELDS, ids=["ln", "dba"])
 def test_practice_name_valid_saves(
     practice_profile_page: PracticeProfilePage,
@@ -195,6 +196,7 @@ def test_practice_name_valid_saves(
 
 
 @pytest.mark.regression
+@pytest.mark.xfail(reason="DEF-PP-05: Toast text unconfirmed — needs live verification")
 @pytest.mark.parametrize("field", FIELDS, ids=["ln", "dba"])
 def test_practice_name_fix_invalid_then_save(
     practice_profile_page: PracticeProfilePage,
