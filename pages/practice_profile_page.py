@@ -61,15 +61,15 @@ class PracticeProfilePage(BasePage):
     _CANCEL_BUTTON         = 'button:has-text("Cancel")'
 
     # Inline errors — adjacent sibling p (same pattern as Profile module)
-    _LEGAL_NAME_ERROR      = '[name="legalName"] + p, [name="legalName"] ~ p.text-red-500'
-    _DBA_NAME_ERROR        = '[name="dbaName"] + p, [name="dbaName"] ~ p.text-red-500'
-    _MAIN_PHONE_ERROR      = 'input[type="tel"] + p'
-    _EMAIL_ERROR           = '[name="email"] + p, [name="email"] ~ p.text-red-500'
-    _WEBSITE_ERROR         = '[name="website"] + p, [name="website"] ~ p.text-red-500'
-    _STREET_ERROR          = '[name="address.street"] + p, [name="address.street"] ~ p.text-red-500'
-    _CITY_ERROR            = '[name="address.city"] + p, [name="address.city"] ~ p.text-red-500'
-    _ZIP_ERROR             = '[name="address.zipCode"] + p, [name="address.zipCode"] ~ p.text-red-500'
-    _DESCRIPTION_ERROR     = '[name="description"] + p, [name="description"] ~ p.text-red-500'
+    _LEGAL_NAME_ERROR      = '[name="legalName"] ~ p[id$="-error"]'
+    _DBA_NAME_ERROR        = '[name="dbaName"] ~ p[id$="-error"]'
+    _MAIN_PHONE_ERROR      = 'input[type="tel"] ~ p[id$="-error"]'
+    _EMAIL_ERROR           = '[name="email"] ~ p[id$="-error"]'
+    _WEBSITE_ERROR         = '[name="website"] ~ p[id$="-error"]'
+    _STREET_ERROR          = '[name="address.street"] ~ p[id$="-error"]'
+    _CITY_ERROR            = '[name="address.city"] ~ p[id$="-error"]'
+    _ZIP_ERROR             = '[name="address.zipCode"] ~ p[id$="-error"]'
+    _DESCRIPTION_ERROR     = '[name="description"] ~ p[id$="-error"]'
 
     # Success toast
     _SUCCESS_TOAST         = 'text=Update in progress'
