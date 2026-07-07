@@ -251,3 +251,19 @@ The tests reflect the correct requirements — not the current implementation.
 
 **Impact:** Potential XSS vulnerability in practice profile text fields.
 **Action required:** Add server-side and client-side sanitization.
+
+## DEF-PP-08 — Parking toggle does not reveal dedicated "Parking Details" field
+
+**Severity:** 🟡 Medium
+**Discovered by:** `test_parking_details_visible_when_enabled`
+
+**Expected (per requirements PP·R14):**
+Enabling "Parking Available" toggle → reveals a "Parking Details" textarea
+
+**Actual:**
+Toggle switches ON/OFF correctly (data-state changes) but no dedicated
+"Parking Details" textarea appears. The label shown after toggle is
+"Additional Notes" — likely a label assignment bug in the component.
+
+**Action:** Dev team to verify if Parking Details textarea is missing
+or mislabeled in the form component.
