@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 2 * * *'   # Nightly 2AM UTC
+    - cron: '0 2 * * *'
   workflow_dispatch:
 
 env:
@@ -17,10 +17,6 @@ env:
   SLOW_MO:        0
 
 jobs:
-  # ─────────────────────────────────────────────────────────────
-  # Job 1: Smoke — runs on every push/PR (~5 min)
-  # Covers both Module 1 (Profile) and Module 2 (Practice Profile)
-  # ─────────────────────────────────────────────────────────────
   smoke:
     name: Smoke Tests
     runs-on: ubuntu-latest
@@ -39,10 +35,7 @@ jobs:
           pip install -r requirements.txt
           playwright install chromium --with-deps
 
-      - name: Save session
-        run: python3 save_session.py
-
-      - name: Run smoke tests — Module 1 + Module 2
+      - name: Run smoke tests
         run: |
           mkdir -p reports
           pytest -m smoke -v \
@@ -57,9 +50,6 @@ jobs:
           path: reports/
           retention-days: 7
 
-  # ─────────────────────────────────────────────────────────────
-  # Job 2: Module 1 Regression — Profile
-  # ─────────────────────────────────────────────────────────────
   regression_module1:
     name: Regression — Module 1 (Profile)
     runs-on: ubuntu-latest
@@ -78,9 +68,6 @@ jobs:
         run: |
           pip install -r requirements.txt
           playwright install chromium --with-deps
-
-      - name: Save session
-        run: python3 save_session.py
 
       - name: Run Module 1 tests
         run: |
@@ -115,9 +102,6 @@ jobs:
               });
             }
 
-  # ─────────────────────────────────────────────────────────────
-  # Job 3: Module 2 Regression — Practice Profile & Hours
-  # ─────────────────────────────────────────────────────────────
   regression_module2:
     name: Regression — Module 2 (Practice Profile & Hours)
     runs-on: ubuntu-latest
@@ -136,9 +120,6 @@ jobs:
         run: |
           pip install -r requirements.txt
           playwright install chromium --with-deps
-
-      - name: Save session
-        run: python3 save_session.py
 
       - name: Run Module 2 tests
         run: |
