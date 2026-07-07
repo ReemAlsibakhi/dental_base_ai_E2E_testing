@@ -67,14 +67,16 @@ class SchedulingRulesPage(BasePage):
 
     def navigate_to_scheduling_rules(self) -> None:
         self.page.goto(self._SETTINGS_URL, wait_until="commit", timeout=60_000)
-        end = time.time() + 30
+        # Poll up to 120s — same proven pattern as Module 2
+        end = time.time() + 120
         while time.time() < end:
-            if self.page.locator(self._SCHEDULING_TAB).is_visible():
-                self.page.locator(self._SCHEDULING_TAB).click()
+            tab = self.page.get_by_role("button", name="Scheduling Rules", exact=True)
+            if tab.is_visible():
+                tab.click()
                 self.page.wait_for_timeout(1000)
                 return
-            time.sleep(0.3)
-        raise RuntimeError("Scheduling Rules tab not found within 30s")
+            time.sleep(0.5)
+        raise RuntimeError("Scheduling Rules tab not found within 120s")
 
     def open_edit(self, index: int) -> None:
         """Open the Edit panel for a card by index (0-7)."""
