@@ -406,3 +406,22 @@ def practice_profile_form_open(admin_context: BrowserContext) -> PracticeProfile
         pass
     if not page.is_closed():
         page.close()
+
+
+# ---------------------------------------------------------------------------
+# Scheduling Rules — uses same admin_context (one session for entire site)
+# ---------------------------------------------------------------------------
+
+from pages.scheduling_rules_page import SchedulingRulesPage
+
+
+@pytest.fixture()
+def scheduling_rules_page(admin_context: BrowserContext) -> SchedulingRulesPage:
+    """Navigate to Scheduling Rules tab."""
+    page = admin_context.new_page()
+    sr = SchedulingRulesPage(page)
+    sr.navigate_to_scheduling_rules()
+    yield sr
+    sr.cancel()
+    if not page.is_closed():
+        page.close()
