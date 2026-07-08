@@ -109,24 +109,36 @@ class SchedulingRulesPage(BasePage):
     def fill_number(self, value: str) -> None:
         """
         Fill a React-controlled number input and trigger validation.
-        Uses native input value setter + dispatchEvent to bypass
-        React's synthetic event system — same technique as Module 2 parking toggle.
+
+        Strategy:
+        1. First set a temporary different value to ensure React detects a change
+        2. Then set the actual target value
+        This guarantees Save button activates regardless of current field value.
         """
         self.number_input.scroll_into_view_if_needed()
         self.number_input.click()
 
-        # Use JS to set value via native setter — triggers React onChange
-        self.number_input.evaluate(f"""el => {{
-            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-                window.HTMLInputElement.prototype, 'value'
-            ).set;
-            nativeInputValueSetter.call(el, '{value}');
-            el.dispatchEvent(new Event('input', {{ bubbles: true }}));
-            el.dispatchEvent(new Event('change', {{ bubbles: true }}));
-        }}""")
+        def _set_value(val: str) -> None:
+            self.number_input.evaluate(f"""el => {{
+                const setter = Object.getOwnPropertyDescriptor(
+                    window.HTMLInputElement.prototype, 'value'
+                ).set;
+                setter.call(el, '{val}');
+                el.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                el.dispatchEvent(new Event('change', {{ bubbles: true }}));
+            }}""")
+            self.page.wait_for_timeout(200)
+
+        # Set temporary value first to ensure React detects change
+        current = self.number_input.input_value()
+        temp = "999" if current != "999" else "998"
+        _set_value(temp)
+
+        # Now set the actual target value
+        _set_value(value)
 
         self.number_input.press("Tab")
-        self.page.wait_for_timeout(1000)
+        self.page.wait_for_timeout(800)
 
     # ===================================================================
     # SAVE / CANCEL

@@ -32,10 +32,14 @@ CARD = {
 }
 
 # Valid values
-LEAD_TIME_VALID    = "60"
+# Use values different from known defaults to ensure Save button activates
+# Lead Time default: 50 → use 60
+# Cancellation default: 24 → use 48
+# No-Show default: 30 → use 45
+LEAD_TIME_VALID       = "60"
 ADVANCE_BOOKING_VALID = "90"
-CANCELLATION_VALID = "24"
-NO_SHOW_VALID      = "30"
+CANCELLATION_VALID    = "48"   # different from default 24
+NO_SHOW_VALID         = "45"   # different from default 30
 
 # Boundary values
 LEAD_TIME_MIN_VALID    = "1"
