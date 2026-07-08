@@ -117,7 +117,7 @@ class SchedulingRulesPage(BasePage):
             self.number_input.press("Control+a")
             self.number_input.press("Delete")
         self.number_input.press("Tab")
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(1000)  # Wait for React validation to fire
 
     # ===================================================================
     # SAVE / CANCEL
