@@ -107,17 +107,26 @@ class SchedulingRulesPage(BasePage):
     # ===================================================================
 
     def fill_number(self, value: str) -> None:
+        """
+        Fill a React-controlled number input and trigger validation.
+        Uses native input value setter + dispatchEvent to bypass
+        React's synthetic event system — same technique as Module 2 parking toggle.
+        """
         self.number_input.scroll_into_view_if_needed()
-        self.number_input.click(click_count=3)
-        # Use type() instead of fill() to trigger React onChange events
-        if value:
-            self.number_input.press("Control+a")
-            self.number_input.type(value)
-        else:
-            self.number_input.press("Control+a")
-            self.number_input.press("Delete")
+        self.number_input.click()
+
+        # Use JS to set value via native setter — triggers React onChange
+        self.number_input.evaluate(f"""el => {{
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, 'value'
+            ).set;
+            nativeInputValueSetter.call(el, '{value}');
+            el.dispatchEvent(new Event('input', {{ bubbles: true }}));
+            el.dispatchEvent(new Event('change', {{ bubbles: true }}));
+        }}""")
+
         self.number_input.press("Tab")
-        self.page.wait_for_timeout(1000)  # Wait for React validation to fire
+        self.page.wait_for_timeout(1000)
 
     # ===================================================================
     # SAVE / CANCEL
