@@ -98,7 +98,6 @@ def test_lead_time_fix_invalid_then_save(scheduling_rules_page):
 
 
 @pytest.mark.negative
-@pytest.mark.xfail(reason="DEF-SR-01: Lead Time defaults to 0 on enable (min=1 violated)")
 def test_lead_time_default_on_enable_is_not_zero(scheduling_rules_page):
     """DEF-SR-01: Default on enable should be ≥ 1."""
     scheduling_rules_page.open_edit(CARD["lead_time"])
