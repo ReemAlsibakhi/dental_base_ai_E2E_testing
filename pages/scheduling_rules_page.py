@@ -160,6 +160,15 @@ class SchedulingRulesPage(BasePage):
         page_text = self.page.content()
         assert "error" not in page_text.lower() or                self.error.count() == 0 or                not self.error.is_visible(), "Error appeared after save"
 
+    def save_toggle_only(self) -> None:
+        """Save for toggle-only panels (no number input — Override PMS)."""
+        self.save_button.scroll_into_view_if_needed()
+        # Wait for Save to be enabled after toggle click
+        self.save_button.wait_for(state="visible", timeout=5_000)
+        self.page.wait_for_timeout(500)
+        self.save_button.click(force=True)
+        self.page.wait_for_timeout(2000)
+
     def cancel(self) -> None:
         try:
             self.cancel_button.click()
