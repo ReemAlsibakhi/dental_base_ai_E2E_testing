@@ -18,33 +18,18 @@ env:
 
 jobs:
   smoke:
-    name: Smoke Tests
+    name: Smoke Tests (All Modules)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          playwright install chromium --with-deps
-
-      - name: Run smoke tests
-        run: |
-          mkdir -p reports
-          pytest -m smoke -v \
-            --html=reports/smoke_report.html \
-            --self-contained-html
-
-      - name: Upload smoke report
+      - run: pip install -r requirements.txt && playwright install chromium --with-deps
+      - run: mkdir -p reports && pytest -m smoke -v --html=reports/smoke_report.html --self-contained-html
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
           name: smoke-report-${{ github.run_number }}
           path: reports/
@@ -55,49 +40,29 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          playwright install chromium --with-deps
-
-      - name: Run Module 1 tests
-        run: |
-          mkdir -p reports
-          pytest tests/profile/ -v \
-            --html=reports/module1_report.html \
-            --self-contained-html
-
-      - name: Upload report
+      - run: pip install -r requirements.txt && playwright install chromium --with-deps
+      - run: mkdir -p reports && pytest tests/profile/ -v --html=reports/module1_report.html --self-contained-html
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
           name: module1-report-${{ github.run_number }}
           path: reports/
           retention-days: 30
-
-      - name: Open issue on failure
-        if: failure()
+      - if: failure()
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const path = 'reports/bug_report.md';
-            if (fs.existsSync(path)) {
-              const body = fs.readFileSync(path, 'utf8');
+            if (fs.existsSync('reports/bug_report.md')) {
               github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
+                owner: context.repo.owner, repo: context.repo.repo,
                 title: `🐛 Module 1 Failures — Run #${context.runNumber}`,
-                body: body,
+                body: fs.readFileSync('reports/bug_report.md', 'utf8'),
                 labels: ['bug', 'automation', 'module-1']
               });
             }
@@ -107,49 +72,61 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          playwright install chromium --with-deps
-
-      - name: Run Module 2 tests
-        run: |
-          mkdir -p reports
-          pytest tests/practice_profile/ -v \
-            --html=reports/module2_report.html \
-            --self-contained-html
-
-      - name: Upload report
+      - run: pip install -r requirements.txt && playwright install chromium --with-deps
+      - run: mkdir -p reports && pytest tests/practice_profile/ -v --html=reports/module2_report.html --self-contained-html
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
           name: module2-report-${{ github.run_number }}
           path: reports/
           retention-days: 30
-
-      - name: Open issue on failure
-        if: failure()
+      - if: failure()
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
-            const path = 'reports/bug_report.md';
-            if (fs.existsSync(path)) {
-              const body = fs.readFileSync(path, 'utf8');
+            if (fs.existsSync('reports/bug_report.md')) {
               github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
+                owner: context.repo.owner, repo: context.repo.repo,
                 title: `🐛 Module 2 Failures — Run #${context.runNumber}`,
-                body: body,
+                body: fs.readFileSync('reports/bug_report.md', 'utf8'),
                 labels: ['bug', 'automation', 'module-2']
+              });
+            }
+
+  regression_module3:
+    name: Regression — Module 3 (Scheduling Rules)
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt && playwright install chromium --with-deps
+      - run: mkdir -p reports && pytest tests/scheduling_rules/ -v --html=reports/module3_report.html --self-contained-html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: module3-report-${{ github.run_number }}
+          path: reports/
+          retention-days: 30
+      - if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('reports/bug_report.md')) {
+              github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: `🐛 Module 3 Failures — Run #${context.runNumber}`,
+                body: fs.readFileSync('reports/bug_report.md', 'utf8'),
+                labels: ['bug', 'automation', 'module-3']
               });
             }
