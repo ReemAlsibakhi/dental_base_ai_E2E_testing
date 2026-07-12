@@ -112,38 +112,42 @@ class PatientOutreachPage(BasePage):
             'button[type="button"]'
         ).filter(has=self.page.locator('[class*="h-5"][class*="w-10"]'))
 
+    def _get_hours_toggle_elements(self) -> list:
+        """Get all day toggles by evaluating classes in JS — avoids CSS space issue."""
+        return self.page.evaluate("""() => {
+            return [...document.querySelectorAll('button[type="button"]')]
+                .filter(b => b.className.includes('h-5') && b.className.includes('w-10')
+                          && b.getBoundingClientRect().width > 0)
+                .map((b, i) => i);
+        }""")
+
     def is_hours_toggle_on(self, day_index: int) -> bool:
-        """Check day toggle state via bg class."""
-        toggles = self.page.locator('button').filter(
-            has=self.page.locator('[class*="h-5 w-10"]')
-        )
-        btn = toggles.nth(day_index)
-        classes = btn.evaluate("el => el.className")
+        """Check day toggle state via bg class using JS evaluation."""
+        classes = self.page.evaluate(f"""() => {{
+            const btns = [...document.querySelectorAll('button[type="button"]')]
+                .filter(b => b.className.includes('h-5') && b.className.includes('w-10')
+                          && b.getBoundingClientRect().width > 0);
+            return btns[{day_index}]?.className || '';
+        }}""")
         return "bg-indigo" in classes
 
     def click_hours_toggle(self, day_index: int) -> None:
-        """Click a day toggle in Preferred Hours panel."""
-        # Find toggles by their visual size (h-5 w-10 = small toggle buttons)
-        all_btns = self.page.locator('button[type="button"]').all()
-        hours_toggles = [
-            b for b in all_btns
-            if "h-5" in (b.get_attribute("class") or "") and
-               "w-10" in (b.get_attribute("class") or "") and
-               b.bounding_box() is not None
-        ]
-        if day_index < len(hours_toggles):
-            hours_toggles[day_index].click()
-            self.page.wait_for_timeout(300)
+        """Click a day toggle using JS to find and click."""
+        self.page.evaluate(f"""() => {{
+            const btns = [...document.querySelectorAll('button[type="button"]')]
+                .filter(b => b.className.includes('h-5') && b.className.includes('w-10')
+                          && b.getBoundingClientRect().width > 0);
+            btns[{day_index}]?.click();
+        }}""")
+        self.page.wait_for_timeout(300)
 
     def get_hours_toggle_count(self) -> int:
-        """Count day toggles in Preferred Hours panel."""
-        all_btns = self.page.locator('button[type="button"]').all()
-        return len([
-            b for b in all_btns
-            if "h-5" in (b.get_attribute("class") or "") and
-               "w-10" in (b.get_attribute("class") or "") and
-               b.bounding_box() is not None
-        ])
+        """Count day toggles using JS."""
+        return self.page.evaluate("""() => {
+            return [...document.querySelectorAll('button[type="button"]')]
+                .filter(b => b.className.includes('h-5') && b.className.includes('w-10')
+                          && b.getBoundingClientRect().width > 0).length;
+        }""")
 
     # ===================================================================
     # SAVE / CANCEL / DISCARD
