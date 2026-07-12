@@ -184,9 +184,10 @@ def test_min_days_exactly_1_accepted(patient_outreach_page):
 def test_message_500_chars_accepted(patient_outreach_page):
     """TC-B-FL-07: Message exactly 500 chars — max valid."""
     _open(patient_outreach_page)
-    patient_outreach_page.message_textarea.scroll_into_view_if_needed()
-    patient_outreach_page.message_textarea.click(click_count=3)
-    patient_outreach_page.message_textarea.press("Control+a")
+    # Clear textarea via JS then type 500 chars
+    patient_outreach_page.message_textarea.evaluate(
+        "el => { el.value = ''; el.dispatchEvent(new Event('input', {bubbles:true})); }"
+    )
     patient_outreach_page.message_textarea.type(MSG_MAX_VALID)
     value = patient_outreach_page.message_textarea.input_value()
     assert len(value) <= 500
@@ -197,9 +198,9 @@ def test_message_500_chars_accepted(patient_outreach_page):
 def test_message_501_chars_blocked(patient_outreach_page):
     """TC-B-FL-08: Message 501 chars — above max."""
     _open(patient_outreach_page)
-    patient_outreach_page.message_textarea.scroll_into_view_if_needed()
-    patient_outreach_page.message_textarea.click(click_count=3)
-    patient_outreach_page.message_textarea.press("Control+a")
+    patient_outreach_page.message_textarea.evaluate(
+        "el => { el.value = ''; el.dispatchEvent(new Event('input', {bubbles:true})); }"
+    )
     patient_outreach_page.message_textarea.type(MSG_MAX_INVALID)
     value = patient_outreach_page.message_textarea.input_value()
     error_visible = patient_outreach_page.error.is_visible()
