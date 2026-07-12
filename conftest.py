@@ -425,3 +425,22 @@ def scheduling_rules_page(admin_context: BrowserContext) -> SchedulingRulesPage:
     sr.cancel()
     if not page.is_closed():
         page.close()
+
+
+# ---------------------------------------------------------------------------
+# Patient Outreach — uses same admin_context
+# ---------------------------------------------------------------------------
+
+from pages.patient_outreach_page import PatientOutreachPage
+
+
+@pytest.fixture()
+def patient_outreach_page(admin_context: BrowserContext) -> PatientOutreachPage:
+    """Navigate to Patient Outreach tab."""
+    page = admin_context.new_page()
+    po = PatientOutreachPage(page)
+    po.navigate_to_patient_outreach()
+    yield po
+    po.cancel()
+    if not page.is_closed():
+        page.close()
