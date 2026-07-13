@@ -147,7 +147,6 @@ def test_min_days_negative_shows_error(patient_outreach_page):
 
 
 @pytest.mark.negative
-@pytest.mark.xfail(reason="DEF-PO-05: Action timing defaults to 0 — invalid, should be ≥ 1")
 def test_action_timing_default_zero_invalid(patient_outreach_page):
     """DEF-PO-05: Default timing of 0 hours should be invalid."""
     _open(patient_outreach_page)
@@ -184,13 +183,17 @@ def test_min_days_exactly_1_accepted(patient_outreach_page):
 def test_message_500_chars_accepted(patient_outreach_page):
     """TC-B-FL-07: Message exactly 500 chars — max valid."""
     _open(patient_outreach_page)
-    # Clear textarea via JS then type 500 chars
-    patient_outreach_page.message_textarea.evaluate(
-        "el => { el.value = ''; el.dispatchEvent(new Event('input', {bubbles:true})); }"
-    )
-    patient_outreach_page.message_textarea.type(MSG_MAX_VALID)
+    # Use native setter to clear React textarea then set exactly 500 chars
+    patient_outreach_page.message_textarea.evaluate(f"""el => {{
+        const setter = Object.getOwnPropertyDescriptor(
+            window.HTMLTextAreaElement.prototype, 'value').set;
+        setter.call(el, '{"A" * 500}');
+        el.dispatchEvent(new Event('input', {{bubbles: true}}));
+        el.dispatchEvent(new Event('change', {{bubbles: true}}));
+    }}""")
+    patient_outreach_page.page.wait_for_timeout(300)
     value = patient_outreach_page.message_textarea.input_value()
-    assert len(value) <= 500
+    assert len(value) <= 500, f"Expected ≤500 chars, got {len(value)}"
     patient_outreach_page.cancel()
 
 
