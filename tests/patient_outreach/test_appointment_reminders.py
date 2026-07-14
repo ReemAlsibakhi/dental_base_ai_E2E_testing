@@ -42,8 +42,10 @@ def test_reminders_disable_flow(patient_outreach_page):
 def test_select_all_operatories(patient_outreach_page):
     """TC-F-FL-03: Select All operatories."""
     _open(patient_outreach_page)
+    patient_outreach_page.turn_toggle_on(0)  # Enable flow first
+    patient_outreach_page.page.wait_for_timeout(300)
     patient_outreach_page.select_all_btn.scroll_into_view_if_needed()
-    patient_outreach_page.select_all_btn.click()
+    patient_outreach_page.select_all_btn.click(force=True)
     patient_outreach_page.page.wait_for_timeout(300)
     # Verify checkboxes are checked
     checkboxes = patient_outreach_page.page.locator('input[type="checkbox"]')
@@ -56,8 +58,10 @@ def test_select_all_operatories(patient_outreach_page):
 def test_clear_all_operatories_shows_hint(patient_outreach_page):
     """TC-F-FL-04: Clear All → hint text appears."""
     _open(patient_outreach_page)
+    patient_outreach_page.turn_toggle_on(0)  # Enable flow first
+    patient_outreach_page.page.wait_for_timeout(300)
     patient_outreach_page.clear_all_btn.scroll_into_view_if_needed()
-    patient_outreach_page.clear_all_btn.click()
+    patient_outreach_page.clear_all_btn.click(force=True)
     patient_outreach_page.page.wait_for_timeout(300)
     hint = patient_outreach_page.page.locator(
         'text=No operatories selected'
