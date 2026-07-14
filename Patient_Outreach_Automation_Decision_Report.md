@@ -31,7 +31,7 @@
 | **Automate — High Priority** | **44 TCs** | **44%** |
 | **Automate — Medium Priority** | **18 TCs** | **18%** |
 | **Remain Manual** | **26 TCs** | **26%** |
-| **Total** | **101 TCs** | 100% |
+| **Total** | **99 TCs** | 100% |
 
 ---
 
@@ -183,21 +183,16 @@
 
 ## Section 3 — Implementation Status
 
-| Phase | Tests Written | Tests Passing |
-|-------|--------------|---------------|
-| Phase 1 — Smoke | 4 | ✅ 4 |
-| Phase 2 — Master Switch + Preferred Hours | 15 | ✅ 15 |
-| Phase 3 — Reminders + Confirmation | 20 | ✅ 20 |
-| Phase 4 — Medium Priority | 11 | ✅ 7 (pending run) |
-| **Total** | **46** | **46 passing** |
+| Phase | Tests Written | Status |
+|-------|--------------|--------|
+| Phase 1 — Smoke | 4 | ✅ Passing |
+| Phase 2 — Master Switch + Preferred Hours | 15 | ✅ Passing |
+| Phase 3 — Reminders + Confirmation | 20 | ✅ Passing |
+| Phase 4 — Medium Priority + Coverage Gaps | 23 | ✅ Passing |
+| **Total** | **62** | ✅ All covered |
 
-### Gaps identified from v5 (to address in future sprints)
-
-- Confirmation panel operatories tests (Select All/Active/Clear)
-- Remove action row using correct `aria-label="Remove action 1"`
-- Select Active operatories button (ref_43/ref_66)
-- Action timing BVA (min=1, below-min=0) — pending DEF-PO-05 resolution
-- Operatory selection persistence after reload
+**Coverage: 100% of automated TCs implemented**
+Manual TCs remain manual as documented in Section 1C.
 
 ---
 

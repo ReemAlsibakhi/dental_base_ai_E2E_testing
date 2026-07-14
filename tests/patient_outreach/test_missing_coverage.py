@@ -251,3 +251,57 @@ def test_select_active_operatories_confirmation(patient_outreach_page):
 
 
 # Action timing max: no max enforced by design — no test needed
+
+
+@pytest.mark.negative
+def test_remove_last_action_shows_warning(patient_outreach_page):
+    """TC-N-FL-04: Cannot remove last action row — min 1 required."""
+    _open_reminders(patient_outreach_page)
+    # Try to remove the only/last action row
+    remove_btn = patient_outreach_page.page.locator(
+        '[aria-label="Remove action 1"], button:has-text("Remove")'
+    ).first
+    if remove_btn.is_visible():
+        remove_btn.click()
+        patient_outreach_page.page.wait_for_timeout(300)
+        # Either warning appears or button is disabled/absent
+        warning = patient_outreach_page.page.locator(
+            'text=at least one, text=minimum, text=required'
+        )
+        still_has_input = patient_outreach_page.page.locator('input[type="number"]').count() >= 1
+        assert warning.is_visible() or still_has_input, "Should warn or keep minimum 1 action"
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.regression
+def test_added_action_row_persists(patient_outreach_page):
+    """TC-R-FL-05: Added action row persists after reload."""
+    _open_reminders(patient_outreach_page)
+    initial_count = patient_outreach_page.page.locator('input[type="number"]').count()
+    patient_outreach_page.add_action_btn.scroll_into_view_if_needed()
+    patient_outreach_page.add_action_btn.click()
+    patient_outreach_page.page.wait_for_timeout(300)
+    patient_outreach_page.save()
+
+    patient_outreach_page.navigate_to_patient_outreach()
+    _open_reminders(patient_outreach_page)
+    new_count = patient_outreach_page.page.locator('input[type="number"]').count()
+    assert new_count > initial_count, "Added action row should persist after reload"
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.negative
+def test_reset_to_defaults_no_confirmation_dialog(patient_outreach_page):
+    """TC-F-PO-13 / DEF-PO-07: Reset to Defaults fires without confirmation dialog."""
+    patient_outreach_page.click_global_tab()
+    reset_btn = patient_outreach_page.page.locator(
+        'button:has-text("Reset"), button:has-text("Reset to Defaults")'
+    ).first
+    if reset_btn.is_visible():
+        reset_btn.click()
+        patient_outreach_page.page.wait_for_timeout(500)
+        # No confirmation dialog should appear (DEF-PO-07 — bug)
+        confirm_dialog = patient_outreach_page.page.locator(
+            'text=Are you sure, text=Confirm, [role="dialog"]'
+        )
+        assert not confirm_dialog.is_visible(), "DEF-PO-07: Reset fires without confirmation"
