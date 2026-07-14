@@ -1,6 +1,8 @@
 """
 tests/patient_outreach/test_appointment_confirmation.py — Phase 3
 Appointment Confirmation Flow (FL·R11/R12) — Flows tab, Edit index 1
+
+Note: Master Switch must be ON for flow toggles to be enabled.
 """
 import pytest
 from playwright.sync_api import expect
@@ -13,17 +15,25 @@ def _open(po):
     po.open_edit(FLOW_CARD["confirmation"])
 
 
+def _ensure_master_on(po):
+    """Master Switch must be ON for flow toggles to be enabled."""
+    po.click_global_tab()
+    po.open_edit(0)
+    po.turn_toggle_on(0)
+    po.save()
+    po.page.wait_for_timeout(500)
+
+
 @pytest.mark.functional
 @pytest.mark.smoke
 def test_confirmation_enable_flow(patient_outreach_page):
     """TC-F-FL-21: Enable Confirmation flow."""
+    _ensure_master_on(patient_outreach_page)
     _open(patient_outreach_page)
     patient_outreach_page.turn_toggle_on(0)
     patient_outreach_page.save()
 
 
-@pytest.mark.functional
-@pytest.mark.functional
 @pytest.mark.functional
 def test_confirmation_message_editable(patient_outreach_page):
     """TC-F-FL-25: Confirmation message textarea is editable."""
