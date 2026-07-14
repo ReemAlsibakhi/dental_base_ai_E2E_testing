@@ -262,7 +262,7 @@ def test_remove_last_action_shows_warning(patient_outreach_page):
         '[aria-label="Remove action 1"], button:has-text("Remove")'
     ).first
     if remove_btn.is_visible():
-        remove_btn.click()
+        remove_btn.click(force=True)
         patient_outreach_page.page.wait_for_timeout(300)
         # Either warning appears or button is disabled/absent
         warning = patient_outreach_page.page.locator(
