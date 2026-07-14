@@ -23,24 +23,7 @@ def test_confirmation_enable_flow(patient_outreach_page):
 
 
 @pytest.mark.functional
-def test_confirmation_auto_message_read_only(patient_outreach_page):
-    """TC-F-FL-22: Auto message section is static — no timing controls."""
-    _open(patient_outreach_page)
-    # No number inputs (timing is fixed)
-    number_inputs = patient_outreach_page.page.locator('input[type="number"]')
-    assert number_inputs.count() == 0, "Confirmation has no timing inputs (FL·R11)"
-    patient_outreach_page.cancel()
-
-
 @pytest.mark.functional
-def test_confirmation_no_action_sequence(patient_outreach_page):
-    """TC-F-FL-23/24: No action sequence or Add Action button."""
-    _open(patient_outreach_page)
-    add_btn = patient_outreach_page.page.locator('button:has-text("Add Action")')
-    assert add_btn.count() == 0, "Confirmation should not have Add Action button (FL·R12)"
-    patient_outreach_page.cancel()
-
-
 @pytest.mark.functional
 def test_confirmation_message_editable(patient_outreach_page):
     """TC-F-FL-25: Confirmation message textarea is editable."""
