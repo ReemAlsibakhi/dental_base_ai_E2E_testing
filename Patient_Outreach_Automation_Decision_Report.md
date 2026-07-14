@@ -183,7 +183,7 @@
 | Action timing max | ✅ No max enforced — any large value accepted (by design) |
 | Message char counter | ✅ Shows X/500 |
 | Default Reminders message | ✅ 156 chars |
-| Default Confirmation message | ⚠️ 145 chars, placeholder only |
+
 | Save confirmation | ✅ Silent — no toast |
 
 ---
@@ -193,7 +193,8 @@
 | ID | Severity | Status | Description |
 |----|----------|--------|-------------|
 | DEF-PO-03 | 🟡 Medium | Open | Office name repeats ~12× in header |
-| DEF-PO-05 | 🔴 High | ⚠️ Possibly resolved | Action timing defaults to 0 hours |
+| DEF-PO-05 | 🔴 High | ⚠️ XPASSED — resolved in dev, verify on staging | Action timing defaults to 0 hours |
+| DEF-PO-12 | 🟡 Medium | Open | Default Confirmation message is placeholder only (145 chars) |
 | DEF-PO-06 | 🟡 Medium | Open | Both operatories labeled "new operatory" |
 | DEF-PO-07 | 🔴 High | Open | Reset to Defaults fires without confirmation |
 | DEF-PO-08 | 🟡 Medium | Open | Reset tooltip mentions "retry settings" |
