@@ -172,3 +172,4 @@ def test_min_days_persists_after_reload(patient_outreach_page):
     value = patient_outreach_page.min_days_input.input_value()
     assert value == "5", f"Expected 5, got {value}"
     patient_outreach_page.cancel()
+

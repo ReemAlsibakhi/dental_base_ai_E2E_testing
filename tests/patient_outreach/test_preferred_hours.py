@@ -91,3 +91,17 @@ def test_preferred_hours_persist_after_reload(patient_outreach_page):
     is_on_now = patient_outreach_page.is_hours_toggle_on(0)
     assert is_on_now != was_on, "Monday toggle state should have changed"
     patient_outreach_page.cancel()
+
+
+@pytest.mark.functional
+def test_disable_active_day_hides_time_inputs(patient_outreach_page):
+    """TC-F-PO-07: Disable active day (Tue=index 1) → time inputs decrease."""
+    patient_outreach_page.click_global_tab()
+    patient_outreach_page.open_edit(GLOBAL_CARD["preferred_hours"])
+    initial_time_count = patient_outreach_page.page.locator('input[type="time"]').count()
+    if patient_outreach_page.is_hours_toggle_on(1):
+        patient_outreach_page.click_hours_toggle(1)
+        patient_outreach_page.page.wait_for_timeout(500)
+    new_time_count = patient_outreach_page.page.locator('input[type="time"]').count()
+    assert new_time_count < initial_time_count
+    patient_outreach_page.cancel()

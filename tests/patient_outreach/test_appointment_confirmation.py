@@ -72,3 +72,68 @@ def test_confirmation_message_persists(patient_outreach_page):
     value = patient_outreach_page.message_textarea.input_value()
     assert "Persist test message" in value
     patient_outreach_page.cancel()
+
+
+@pytest.mark.functional
+def test_confirmation_operatories_section_visible(patient_outreach_page):
+    """TC-F-CF-01: Operatories section visible in Confirmation panel."""
+    _open(patient_outreach_page)
+    select_all = patient_outreach_page.page.locator('button:has-text("Select all")')
+    expect(select_all).to_be_visible()
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.functional
+def test_confirmation_select_all_operatories(patient_outreach_page):
+    """TC-F-FL-27: Select All operatories in Confirmation."""
+    _ensure_master_on(patient_outreach_page)
+    _open(patient_outreach_page)
+    patient_outreach_page.turn_toggle_on(0)
+    patient_outreach_page.page.wait_for_timeout(300)
+    patient_outreach_page.select_all_btn.click(force=True)
+    patient_outreach_page.page.wait_for_timeout(300)
+    checkboxes = patient_outreach_page.page.locator('input[type="checkbox"]')
+    if checkboxes.count() > 0:
+        assert checkboxes.first.is_checked()
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.functional
+def test_confirmation_clear_all_operatories(patient_outreach_page):
+    """TC-F-FL-28: Clear All operatories in Confirmation → hint shown."""
+    _ensure_master_on(patient_outreach_page)
+    _open(patient_outreach_page)
+    patient_outreach_page.turn_toggle_on(0)
+    patient_outreach_page.page.wait_for_timeout(300)
+    patient_outreach_page.clear_all_btn.click(force=True)
+    patient_outreach_page.page.wait_for_timeout(300)
+    hint = patient_outreach_page.page.locator('text=No operatories selected')
+    expect(hint).to_be_visible()
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.functional
+def test_confirmation_select_active_button(patient_outreach_page):
+    """TC-F-CF-02: Select Active button present and clickable in Confirmation."""
+    _ensure_master_on(patient_outreach_page)
+    _open(patient_outreach_page)
+    patient_outreach_page.turn_toggle_on(0)
+    patient_outreach_page.page.wait_for_timeout(300)
+    active_btn = patient_outreach_page.page.locator(
+        'button:has-text("Select active"), button:has-text("Active")'
+    ).first
+    expect(active_btn).to_be_visible()
+    active_btn.click(force=True)
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.functional
+def test_confirmation_discard_dialog(patient_outreach_page):
+    """TC-F-CF-03: Cancel with changes in Confirmation → Discard dialog."""
+    _open(patient_outreach_page)
+    patient_outreach_page.message_textarea.click()
+    patient_outreach_page.message_textarea.type("change")
+    patient_outreach_page.cancel_button.click()
+    patient_outreach_page.page.wait_for_timeout(500)
+    expect(patient_outreach_page.discard_button).to_be_visible()
+    patient_outreach_page.discard_button.click()

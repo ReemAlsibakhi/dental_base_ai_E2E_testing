@@ -91,3 +91,29 @@ def test_master_state_persists_after_reload(patient_outreach_page):
     patient_outreach_page.open_edit(GLOBAL_CARD["master_switch"])
     assert patient_outreach_page.is_toggle_on(MASTER_TOGGLE), "Master toggle should still be ON"
     patient_outreach_page.cancel()
+
+
+@pytest.mark.functional
+def test_reset_to_defaults_button_exists(patient_outreach_page):
+    """TC-F-PO-13: Reset to Defaults button is present in Global tab."""
+    patient_outreach_page.click_global_tab()
+    reset_btn = patient_outreach_page.page.locator(
+        'button:has-text("Reset"), button:has-text("Reset to Defaults")'
+    ).first
+    expect(reset_btn).to_be_visible()
+
+
+@pytest.mark.negative
+def test_reset_to_defaults_no_confirmation_dialog(patient_outreach_page):
+    """DEF-PO-07: Reset to Defaults fires without confirmation dialog."""
+    patient_outreach_page.click_global_tab()
+    reset_btn = patient_outreach_page.page.locator(
+        'button:has-text("Reset"), button:has-text("Reset to Defaults")'
+    ).first
+    if reset_btn.is_visible():
+        reset_btn.click()
+        patient_outreach_page.page.wait_for_timeout(500)
+        confirm_dialog = patient_outreach_page.page.locator(
+            '[role="dialog"]:has-text("sure"), [role="dialog"]:has-text("Confirm")'
+        )
+        assert not confirm_dialog.is_visible(), "DEF-PO-07: Reset fires without confirmation"

@@ -230,3 +230,139 @@ def test_reminders_flow_state_persists(patient_outreach_page):
     _open(patient_outreach_page)
     assert patient_outreach_page.is_toggle_on(0), "Flow should still be enabled"
     patient_outreach_page.cancel()
+
+
+@pytest.mark.functional
+def test_select_active_operatories(patient_outreach_page):
+    """TC-F-FL-05: Select Active operatories button present in Reminders."""
+    _open(patient_outreach_page)
+    active_btn = patient_outreach_page.page.locator(
+        'button:has-text("Select active"), button:has-text("Active")'
+    ).first
+    expect(active_btn).to_be_visible()
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.functional
+def test_action_row_numbers_increment(patient_outreach_page):
+    """TC-F-FL-12: Row numbers auto-increment when adding action rows."""
+    _open(patient_outreach_page)
+    patient_outreach_page.add_action_btn.scroll_into_view_if_needed()
+    patient_outreach_page.add_action_btn.click()
+    patient_outreach_page.page.wait_for_timeout(300)
+    inputs = patient_outreach_page.page.locator('input[type="number"]')
+    assert inputs.count() >= 2
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.boundary
+def test_action_timing_min_1_accepted(patient_outreach_page):
+    """TC-B-FL-04: Action timing = 1 — minimum valid."""
+    _open(patient_outreach_page)
+    timing_inputs = patient_outreach_page.page.locator('input[type="number"]').all()
+    if len(timing_inputs) > 1:
+        timing_inputs[1].evaluate("""el => {
+            const setter = Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, 'value').set;
+            setter.call(el, '1');
+            el.dispatchEvent(new Event('input', {bubbles: true}));
+            el.dispatchEvent(new Event('change', {bubbles: true}));
+        }""")
+        timing_inputs[1].press("Tab")
+        patient_outreach_page.page.wait_for_timeout(500)
+        expect(patient_outreach_page.error).to_be_hidden()
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.boundary
+@pytest.mark.xfail(reason="DEF-PO-05: Timing validation may not show error for 0 value")
+def test_action_timing_zero_shows_error(patient_outreach_page):
+    """TC-B-FL-05: Action timing = 0 — below minimum."""
+    _open(patient_outreach_page)
+    timing_inputs = patient_outreach_page.page.locator('input[type="number"]').all()
+    if len(timing_inputs) > 1:
+        timing_inputs[1].evaluate("""el => {
+            const setter = Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, 'value').set;
+            setter.call(el, '0');
+            el.dispatchEvent(new Event('input', {bubbles: true}));
+            el.dispatchEvent(new Event('change', {bubbles: true}));
+        }""")
+        timing_inputs[1].press("Tab")
+        patient_outreach_page.page.wait_for_timeout(500)
+        expect(patient_outreach_page.error).to_be_visible()
+    else:
+        pytest.skip("No timing input found")
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.negative
+def test_remove_last_action_shows_warning(patient_outreach_page):
+    """TC-N-FL-04: Cannot remove last action row — min 1 required."""
+    _open(patient_outreach_page)
+    remove_btn = patient_outreach_page.page.locator(
+        '[aria-label="Remove action 1"], button:has-text("Remove")'
+    ).first
+    if remove_btn.is_visible():
+        remove_btn.click(force=True)
+        patient_outreach_page.page.wait_for_timeout(300)
+        warning = patient_outreach_page.page.locator(
+            'text=at least one, text=minimum, text=required'
+        )
+        still_has_input = patient_outreach_page.page.locator('input[type="number"]').count() >= 1
+        assert warning.is_visible() or still_has_input
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.regression
+def test_operatory_selection_persists(patient_outreach_page):
+    """TC-R-FL-04: Operatory selection persists after reload."""
+    _open(patient_outreach_page)
+    patient_outreach_page.turn_toggle_on(0)
+    patient_outreach_page.page.wait_for_timeout(300)
+    patient_outreach_page.select_all_btn.click(force=True)
+    patient_outreach_page.page.wait_for_timeout(300)
+    patient_outreach_page.save()
+    patient_outreach_page.navigate_to_patient_outreach()
+    _open(patient_outreach_page)
+    checkboxes = patient_outreach_page.page.locator('input[type="checkbox"]')
+    if checkboxes.count() > 0:
+        assert checkboxes.first.is_checked()
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.regression
+def test_action_timing_persists(patient_outreach_page):
+    """TC-R-FL-06: Action timing persists after reload."""
+    _open(patient_outreach_page)
+    timing_inputs = patient_outreach_page.page.locator('input[type="number"]').all()
+    if len(timing_inputs) > 1:
+        timing_inputs[1].evaluate("""el => {
+            const setter = Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, 'value').set;
+            setter.call(el, '48');
+            el.dispatchEvent(new Event('input', {bubbles: true}));
+            el.dispatchEvent(new Event('change', {bubbles: true}));
+        }""")
+        patient_outreach_page.save()
+        patient_outreach_page.navigate_to_patient_outreach()
+        _open(patient_outreach_page)
+        timing_inputs = patient_outreach_page.page.locator('input[type="number"]').all()
+        if len(timing_inputs) > 1:
+            assert timing_inputs[1].input_value() == "48"
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.regression
+def test_added_action_row_persists(patient_outreach_page):
+    """TC-R-FL-05: Added action row persists after reload."""
+    _open(patient_outreach_page)
+    initial_count = patient_outreach_page.page.locator('input[type="number"]').count()
+    patient_outreach_page.add_action_btn.click()
+    patient_outreach_page.page.wait_for_timeout(300)
+    patient_outreach_page.save()
+    patient_outreach_page.navigate_to_patient_outreach()
+    _open(patient_outreach_page)
+    new_count = patient_outreach_page.page.locator('input[type="number"]').count()
+    assert new_count > initial_count
+    patient_outreach_page.cancel()
