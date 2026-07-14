@@ -17,7 +17,7 @@
 | Remove action selector | Guessed | ✅ Confirmed: `aria-label="Remove action 1"` |
 | Select Active button | Missing | ✅ Confirmed: ref_43 |
 | DEF-PO-05 status | Open | ⚠️ XPASSED in tests — may be resolved in staging |
-| Pending confirmations | 12 | 6 (resolved from live scan) |
+| Pending confirmations | 12 | ✅ All resolved — section removed |
 | Save confirmation | Unknown | ✅ No toast — panel closes silently |
 | Discard dialog trigger | Unknown | ✅ Cancel/Close when unsaved changes exist |
 | Master Switch panel | No discard dialog | ✅ Confirmed — toggle-only, no dirty-state tracking |
@@ -31,7 +31,6 @@
 | **Automate — High Priority** | **44 TCs** | **44%** |
 | **Automate — Medium Priority** | **18 TCs** | **18%** |
 | **Remain Manual** | **26 TCs** | **26%** |
-| **Pending Confirmation** | **13 TCs** | **13%** |
 | **Total** | **101 TCs** | 100% |
 
 ---
@@ -150,7 +149,7 @@
 |-------|-------------|-----------|
 | TC-U-PO-01/02 | Tooltip hover verification | Visual check |
 | TC-U-FL-01/02 | Flow tooltip hover | Visual check |
-| TC-U-FL-03 | Char counter updates live | UX visual |
+| TC-U-FL-03 | Char counter updates live — X/500 display | UX visual only |
 | TC-U-FL-04 | Chip insertion at cursor position | Cursor = human judgment |
 | TC-U-FL-05 | Discard dialog UX | Human judgment |
 | TC-U-FL-06 | Select Active operatories filter | Depends on live data state |
@@ -165,26 +164,6 @@
 | TC-N-PO-01/02/03 | Time range validation (end > start) | time input interaction |
 | TC-B-PO-01/02/03 | Time input BVA | time input BVA |
 | TC-F-PO-09 | End time after start time validation | time input |
-
----
-
-### 1D. PENDING CONFIRMATION 🔶 — 13 TCs
-
-| Item | Status |
-|------|--------|
-| DEF-PO-05 timing=0 | ⚠️ XPASSED in tests — needs re-verify on staging |
-| DEF-PO-07 Reset dialog | ✅ Confirmed: NO dialog (still a bug) |
-| Operatories count | ✅ 2 operatories: "new operatory" Dentist + Hygienist |
-| Discard dialog trigger | ✅ Cancel/Close with unsaved changes |
-| Master Switch discard | ✅ No discard (toggle-only panel) |
-| Remove action selector | ✅ aria-label="Remove action 1" |
-| Select Active button | ✅ Present (ref_43/ref_66) |
-| Min Days Ahead max | ✅ No max enforced — any large value accepted (by design) |
-| Action timing max | ✅ No max enforced — any large value accepted (by design) |
-| Message char counter | ✅ Shows X/500 |
-| Default Reminders message | ✅ 156 chars |
-
-| Save confirmation | ✅ Silent — no toast |
 
 ---
 

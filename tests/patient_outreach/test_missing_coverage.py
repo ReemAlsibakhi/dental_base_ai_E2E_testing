@@ -229,3 +229,37 @@ def test_action_timing_persists(patient_outreach_page):
             value = timing_inputs[1].input_value()
             assert value == "48", f"Expected 48, got {value}"
     patient_outreach_page.cancel()
+
+
+# ===========================================================================
+# Previously Pending — now confirmed and automated
+# ===========================================================================
+
+@pytest.mark.functional
+def test_select_active_operatories_confirmation(patient_outreach_page):
+    """Select Active button present and clickable in Confirmation panel."""
+    _open_confirmation(patient_outreach_page)
+    patient_outreach_page.turn_toggle_on(0)
+    patient_outreach_page.page.wait_for_timeout(300)
+    active_btn = patient_outreach_page.page.locator(
+        'button:has-text("Select active"), button:has-text("Active")'
+    ).first
+    expect(active_btn).to_be_visible()
+    active_btn.click(force=True)
+    patient_outreach_page.page.wait_for_timeout(300)
+    patient_outreach_page.cancel()
+
+
+@pytest.mark.boundary
+def test_action_timing_large_value_accepted(patient_outreach_page):
+    """Action timing — no max enforced, large value (720) accepted."""
+    _open_reminders(patient_outreach_page)
+    timing_inputs = patient_outreach_page.page.locator('input[type="number"]').all()
+    if len(timing_inputs) > 1:
+        _set_number_input(patient_outreach_page, timing_inputs[1], "720")
+        timing_inputs[1].press("Tab")
+        patient_outreach_page.page.wait_for_timeout(500)
+        expect(patient_outreach_page.error).to_be_hidden()
+        patient_outreach_page.save()
+    else:
+        pytest.skip("No timing input found")
