@@ -104,8 +104,6 @@
 | TC ID | Description | Why Automate |
 |-------|-------------|--------------|
 | TC-F-FL-21 | Enable Confirmation flow | Toggle |
-| TC-F-FL-22 | No number inputs (timing fixed — FL·R11) | Read-only check |
-| TC-F-FL-23 | No Add Action button (FL·R12) | Read-only check |
 | TC-F-FL-25 | Message textarea editable | Textarea |
 | TC-F-FL-26 | Reset to default message | Reset button |
 | TC-F-FL-27 | Select All operatories in Confirmation | Checkbox group |
