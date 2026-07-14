@@ -179,8 +179,8 @@
 | Master Switch discard | ✅ No discard (toggle-only panel) |
 | Remove action selector | ✅ aria-label="Remove action 1" |
 | Select Active button | ✅ Present (ref_43/ref_66) |
-| Min Days Ahead max | ❓ Not confirmed |
-| Action timing max | ❓ Not confirmed |
+| Min Days Ahead max | ✅ No max enforced — any large value accepted (by design) |
+| Action timing max | ✅ No max enforced — any large value accepted (by design) |
 | Message char counter | ✅ Shows X/500 |
 | Default Reminders message | ✅ 156 chars |
 | Default Confirmation message | ⚠️ 145 chars, placeholder only |
