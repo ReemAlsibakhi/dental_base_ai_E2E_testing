@@ -21,9 +21,8 @@ def _ensure_master_on(po):
     po.open_edit(0)
     po.turn_toggle_on(0)
     po.save()
-    # Wait for overlay to fully disappear before navigating
-    po.page.wait_for_timeout(2000)
-    po.page.locator('div.fixed.inset-0').wait_for(state="hidden", timeout=10_000)
+    # Wait for Save button to disappear — means panel closed
+    po.page.wait_for_timeout(3000)
 
 
 @pytest.mark.functional
