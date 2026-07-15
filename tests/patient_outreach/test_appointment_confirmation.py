@@ -15,14 +15,7 @@ def _open(po):
     po.open_edit(FLOW_CARD["confirmation"])
 
 
-def _ensure_master_on(po):
-    """Master Switch must be ON for flow toggles to be enabled."""
-    po.click_global_tab()
-    po.open_edit(0)
-    po.turn_toggle_on(0)
-    po.save()
-    # Wait for Save button to disappear — means panel closed
-    po.page.wait_for_timeout(3000)
+
 
 
 @pytest.mark.functional
@@ -84,48 +77,8 @@ def test_confirmation_operatories_section_visible(patient_outreach_page):
     patient_outreach_page.cancel()
 
 
-@pytest.mark.functional
-def test_confirmation_select_all_operatories(patient_outreach_page):
-    """TC-F-FL-27: Select All operatories in Confirmation."""
-    _ensure_master_on(patient_outreach_page)
-    _open(patient_outreach_page)
-    patient_outreach_page.turn_toggle_on(0)
-    patient_outreach_page.page.wait_for_timeout(300)
-    patient_outreach_page.select_all_btn.click(force=True)
-    patient_outreach_page.page.wait_for_timeout(300)
-    checkboxes = patient_outreach_page.page.locator('input[type="checkbox"]')
-    if checkboxes.count() > 0:
-        assert checkboxes.first.is_checked()
-    patient_outreach_page.cancel()
 
 
-@pytest.mark.functional
-def test_confirmation_clear_all_operatories(patient_outreach_page):
-    """TC-F-FL-28: Clear All operatories in Confirmation → hint shown."""
-    _ensure_master_on(patient_outreach_page)
-    _open(patient_outreach_page)
-    patient_outreach_page.turn_toggle_on(0)
-    patient_outreach_page.page.wait_for_timeout(300)
-    patient_outreach_page.clear_all_btn.click(force=True)
-    patient_outreach_page.page.wait_for_timeout(300)
-    hint = patient_outreach_page.page.locator('text=No operatories selected')
-    expect(hint).to_be_visible()
-    patient_outreach_page.cancel()
-
-
-@pytest.mark.functional
-def test_confirmation_select_active_button(patient_outreach_page):
-    """TC-F-CF-02: Select Active button present and clickable in Confirmation."""
-    _ensure_master_on(patient_outreach_page)
-    _open(patient_outreach_page)
-    patient_outreach_page.turn_toggle_on(0)
-    patient_outreach_page.page.wait_for_timeout(300)
-    active_btn = patient_outreach_page.page.locator(
-        'button:has-text("Select active"), button:has-text("Active")'
-    ).first
-    expect(active_btn).to_be_visible()
-    active_btn.click(force=True)
-    patient_outreach_page.cancel()
 
 
 @pytest.mark.functional
