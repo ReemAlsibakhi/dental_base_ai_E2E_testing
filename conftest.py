@@ -444,3 +444,22 @@ def patient_outreach_page(admin_context: BrowserContext) -> PatientOutreachPage:
     po.cancel()
     if not page.is_closed():
         page.close()
+
+
+# ---------------------------------------------------------------------------
+# DentiVoice — uses same admin_context
+# ---------------------------------------------------------------------------
+
+from pages.dentivoice_page import DentiVoicePage
+
+
+@pytest.fixture()
+def dentivoice_page(admin_context: BrowserContext) -> DentiVoicePage:
+    """Navigate to DentiVoice tab."""
+    page = admin_context.new_page()
+    dv = DentiVoicePage(page)
+    dv.navigate_to_dentivoice()
+    yield dv
+    dv.cancel()
+    if not page.is_closed():
+        page.close()
