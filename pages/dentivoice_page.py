@@ -129,23 +129,27 @@ class DentiVoicePage(BasePage):
     # ===================================================================
 
     def fill_ai_name(self, value: str) -> None:
-        """Fill Assistant Name — clears field then types to trigger React dirty state."""
+        """Fill Assistant Name — always changes value via temp trick to ensure dirty state."""
         self.ai_name_input.scroll_into_view_if_needed()
-        # First: set a temp value to ensure dirty state is triggered
+        # Step 1: set temp value different from current → guarantees dirty state
         self.ai_name_input.evaluate("""el => {
             const setter = Object.getOwnPropertyDescriptor(
                 window.HTMLInputElement.prototype, 'value').set;
-            setter.call(el, '_tmp_');
+            const temp = el.value === '__tmp__' ? '__tmp2__' : '__tmp__';
+            setter.call(el, temp);
             el.dispatchEvent(new Event('input', {bubbles: true}));
             el.dispatchEvent(new Event('change', {bubbles: true}));
         }""")
         self.page.wait_for_timeout(200)
-        # Then: select all and type the actual value
-        self.ai_name_input.click(click_count=3)
-        if value:
-            self.ai_name_input.press_sequentially(value, delay=30)
-        else:
-            self.ai_name_input.press("Backspace")
+        # Step 2: set actual value
+        escaped = value.replace('\\', '\\\\').replace("'", "\\'")
+        self.ai_name_input.evaluate(f"""el => {{
+            const setter = Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, 'value').set;
+            setter.call(el, '{escaped}');
+            el.dispatchEvent(new Event('input', {{bubbles: true}}));
+            el.dispatchEvent(new Event('change', {{bubbles: true}}));
+        }}""")
         self.page.wait_for_timeout(300)
 
     def fill_textarea(self, locator: Locator, value: str) -> None:
