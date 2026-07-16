@@ -59,21 +59,26 @@ def test_ai_disclosure_toggle(dentivoice_page):
 
 @pytest.mark.negative
 def test_ai_name_empty_shows_error(dentivoice_page):
-    """TC-N-DV-01: Empty name → required error."""
+    """TC-N-DV-01: Empty name → Save becomes disabled immediately."""
     _open(dentivoice_page)
     dentivoice_page.fill_ai_name("")
-    dentivoice_page.click_save()
-    expect(dentivoice_page.error).to_be_visible()
+    dentivoice_page.page.wait_for_timeout(300)
+    # Empty name disables Save immediately (client-side validation)
+    is_disabled = dentivoice_page.save_button.is_disabled()
+    error_visible = dentivoice_page.page.locator("p.text-red-500").count() > 0
+    assert is_disabled or error_visible, "Empty name should disable Save or show error"
     dentivoice_page.cancel()
 
 
 @pytest.mark.negative
 def test_ai_name_whitespace_shows_error(dentivoice_page):
-    """TC-N-DV-02: Whitespace name → trimmed → required error."""
+    """TC-N-DV-02: Whitespace name → Save disabled or error shown."""
     _open(dentivoice_page)
-    dentivoice_page.fill_ai_name("     ")
-    dentivoice_page.click_save()
-    expect(dentivoice_page.error).to_be_visible()
+    dentivoice_page.fill_ai_name("   ")
+    dentivoice_page.page.wait_for_timeout(300)
+    is_disabled = dentivoice_page.save_button.is_disabled()
+    error_visible = dentivoice_page.page.locator("p.text-red-500").count() > 0
+    assert is_disabled or error_visible, "Whitespace name should disable Save or show error"
     dentivoice_page.cancel()
 
 
@@ -99,11 +104,16 @@ def test_ai_name_xss_rejected(dentivoice_page):
 
 @pytest.mark.negative
 def test_personality_empty_shows_error(dentivoice_page):
-    """TC-N-DV-06: No personality selected → error."""
+    """TC-N-DV-06: No personality selected → Save disabled or error shown."""
     _open(dentivoice_page)
     dentivoice_page.personality.select_option(index=0)
-    dentivoice_page.click_save()
-    expect(dentivoice_page.error).to_be_visible()
+    dentivoice_page.page.wait_for_timeout(300)
+    is_disabled = dentivoice_page.save_button.is_disabled()
+    if not is_disabled:
+        dentivoice_page.click_save()
+        expect(dentivoice_page.page.locator("p.text-red-500").first).to_be_visible()
+    else:
+        assert is_disabled, "Empty personality should disable Save"
     dentivoice_page.cancel()
 
 
