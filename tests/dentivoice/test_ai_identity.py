@@ -135,13 +135,14 @@ def test_ai_name_2_chars_accepted(dentivoice_page):
 
 
 @pytest.mark.boundary
-@pytest.mark.xfail(reason="DEF-DV-03: Min 2 chars not enforced — 1-char name accepted")
 def test_ai_name_1_char_rejected(dentivoice_page):
-    """TC-B-DV-02: Name = 1 char → min error."""
+    """TC-B-DV-02: Name = 1 char → rejected (DEF-DV-03 resolved)."""
     _open(dentivoice_page)
     dentivoice_page.fill_ai_name(AI_NAME_MIN_BELOW)
-    dentivoice_page.click_save()
-    expect(dentivoice_page.error).to_contain_text(DV_ERR["name_min"])
+    dentivoice_page.page.wait_for_timeout(1000)
+    is_disabled = dentivoice_page.save_button.is_disabled()
+    error_count = dentivoice_page.page.locator("p.text-red-500").count()
+    assert is_disabled or error_count > 0, "1-char name should be rejected"
     dentivoice_page.cancel()
 
 
