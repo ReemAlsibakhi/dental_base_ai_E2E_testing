@@ -129,27 +129,22 @@ class DentiVoicePage(BasePage):
     # ===================================================================
 
     def fill_ai_name(self, value: str) -> None:
-        """Fill Assistant Name — always changes value via temp trick to ensure dirty state."""
+        """Fill Assistant Name using execCommand to trigger React dirty state."""
         self.ai_name_input.scroll_into_view_if_needed()
-        # Step 1: set temp value different from current → guarantees dirty state
+        self.ai_name_input.focus()
+        # Select all existing text and replace with new value via execCommand
         self.ai_name_input.evaluate("""el => {
-            const setter = Object.getOwnPropertyDescriptor(
-                window.HTMLInputElement.prototype, 'value').set;
-            const temp = el.value === '__tmp__' ? '__tmp2__' : '__tmp__';
-            setter.call(el, temp);
-            el.dispatchEvent(new Event('input', {bubbles: true}));
-            el.dispatchEvent(new Event('change', {bubbles: true}));
+            el.focus();
+            el.select();
+            document.execCommand('selectAll', false, null);
+            document.execCommand('delete', false, null);
         }""")
-        self.page.wait_for_timeout(200)
-        # Step 2: set actual value
-        escaped = value.replace('\\', '\\\\').replace("'", "\\'")
-        self.ai_name_input.evaluate(f"""el => {{
-            const setter = Object.getOwnPropertyDescriptor(
-                window.HTMLInputElement.prototype, 'value').set;
-            setter.call(el, '{escaped}');
-            el.dispatchEvent(new Event('input', {{bubbles: true}}));
-            el.dispatchEvent(new Event('change', {{bubbles: true}}));
-        }}""")
+        self.page.wait_for_timeout(100)
+        if value:
+            self.ai_name_input.evaluate(f"""el => {{
+                el.focus();
+                document.execCommand('insertText', false, {repr(value)});
+            }}""")
         self.page.wait_for_timeout(300)
 
     def fill_textarea(self, locator: Locator, value: str) -> None:
