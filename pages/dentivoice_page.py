@@ -129,23 +129,23 @@ class DentiVoicePage(BasePage):
     # ===================================================================
 
     def fill_ai_name(self, value: str) -> None:
-        """Fill Assistant Name — select all then type to trigger React dirty state."""
+        """Fill Assistant Name using execCommand to clear + type new value."""
         self.ai_name_input.scroll_into_view_if_needed()
-        # Select all text and delete it first
-        self.ai_name_input.click(click_count=3)
-        self.page.wait_for_timeout(100)
-        self.ai_name_input.press("Control+a")
-        self.page.wait_for_timeout(50)
-        # Type new value — triggers React onChange via real keyboard events
+        # Step 1: clear using execCommand (confirmed working in Console)
+        self.ai_name_input.evaluate("""el => {
+            el.focus();
+            el.setSelectionRange(0, el.value.length);
+            document.execCommand('delete', false, null);
+        }""")
+        # Step 2: wait for React debounce (~500ms confirmed)
+        self.page.wait_for_timeout(800)
+        # Step 3: type new value if provided
         if value:
-            self.ai_name_input.press_sequentially(value, delay=50)
-        else:
-            # For empty: delete all chars one by one
-            current = self.ai_name_input.input_value()
-            for _ in range(len(current) + 5):
-                self.ai_name_input.press("Backspace")
-            self.page.wait_for_timeout(100)
-        self.page.wait_for_timeout(300)
+            self.ai_name_input.evaluate(f"""el => {{
+                el.focus();
+                document.execCommand('insertText', false, {repr(value)});
+            }}""")
+            self.page.wait_for_timeout(800)
 
     def fill_textarea(self, locator: Locator, value: str) -> None:
         """Fill a textarea using native setter to trigger React onChange."""
