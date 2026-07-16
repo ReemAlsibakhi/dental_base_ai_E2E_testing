@@ -59,26 +59,37 @@ def test_ai_disclosure_toggle(dentivoice_page):
 
 @pytest.mark.negative
 def test_ai_name_empty_shows_error(dentivoice_page):
-    """TC-N-DV-01: Empty name → Save becomes disabled immediately."""
+    """TC-N-DV-01: Empty name → Save disabled or error visible."""
     _open(dentivoice_page)
-    dentivoice_page.fill_ai_name("")
-    dentivoice_page.page.wait_for_timeout(300)
-    # Empty name disables Save immediately (client-side validation)
+    # Clear the field completely using keyboard
+    dentivoice_page.ai_name_input.click(click_count=3)
+    dentivoice_page.ai_name_input.press("Control+a")
+    dentivoice_page.ai_name_input.press("Backspace")
+    # Delete any remaining chars
+    for _ in range(30):
+        dentivoice_page.ai_name_input.press("Backspace")
+    dentivoice_page.page.wait_for_timeout(500)
+    current = dentivoice_page.ai_name_input.input_value()
+    assert current.strip() == "", f"Field should be empty, got: '{current}'"
     is_disabled = dentivoice_page.save_button.is_disabled()
-    error_visible = dentivoice_page.page.locator("p.text-red-500").count() > 0
-    assert is_disabled or error_visible, "Empty name should disable Save or show error"
+    error_count = dentivoice_page.page.locator("p.text-red-500").count()
+    assert is_disabled or error_count > 0, "Empty name should disable Save or show error"
     dentivoice_page.cancel()
 
 
 @pytest.mark.negative
 def test_ai_name_whitespace_shows_error(dentivoice_page):
-    """TC-N-DV-02: Whitespace name → Save disabled or error shown."""
+    """TC-N-DV-02: Whitespace-only name → Save disabled or error visible."""
     _open(dentivoice_page)
-    dentivoice_page.fill_ai_name("   ")
-    dentivoice_page.page.wait_for_timeout(300)
+    # Clear then type whitespace
+    dentivoice_page.ai_name_input.click(click_count=3)
+    dentivoice_page.ai_name_input.press("Control+a")
+    dentivoice_page.ai_name_input.press("Backspace")
+    dentivoice_page.ai_name_input.press_sequentially("   ", delay=50)
+    dentivoice_page.page.wait_for_timeout(500)
     is_disabled = dentivoice_page.save_button.is_disabled()
-    error_visible = dentivoice_page.page.locator("p.text-red-500").count() > 0
-    assert is_disabled or error_visible, "Whitespace name should disable Save or show error"
+    error_count = dentivoice_page.page.locator("p.text-red-500").count()
+    assert is_disabled or error_count > 0, "Whitespace name should disable Save or show error"
     dentivoice_page.cancel()
 
 
