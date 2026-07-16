@@ -129,17 +129,19 @@ class DentiVoicePage(BasePage):
     # ===================================================================
 
     def fill_ai_name(self, value: str) -> None:
-        """Fill Assistant Name using execCommand to clear + type new value."""
+        """Fill Assistant Name — focus explicitly, clear via execCommand, then insert."""
         self.ai_name_input.scroll_into_view_if_needed()
-        # Step 1: clear using execCommand (confirmed working in Console)
+        # Step 1: explicit click to guarantee focus
+        self.ai_name_input.click()
+        self.page.wait_for_timeout(100)
+        # Step 2: select all + delete via execCommand (confirmed working)
         self.ai_name_input.evaluate("""el => {
             el.focus();
             el.setSelectionRange(0, el.value.length);
             document.execCommand('delete', false, null);
         }""")
-        # Step 2: wait for React debounce (~500ms confirmed)
-        self.page.wait_for_timeout(800)
-        # Step 3: type new value if provided
+        self.page.wait_for_timeout(1000)
+        # Step 3: insert new value if provided
         if value:
             self.ai_name_input.evaluate(f"""el => {{
                 el.focus();

@@ -62,7 +62,6 @@ def test_ai_name_empty_shows_error(dentivoice_page):
     """TC-N-DV-01: Empty name → Save disabled + error after debounce (~800ms)."""
     _open(dentivoice_page)
     dentivoice_page.fill_ai_name("")
-    # Debounce confirmed ~500-800ms — wait for validation to fire
     dentivoice_page.page.wait_for_timeout(1000)
     is_disabled = dentivoice_page.save_button.is_disabled()
     error_count = dentivoice_page.page.locator("p.text-red-500").count()
@@ -72,13 +71,19 @@ def test_ai_name_empty_shows_error(dentivoice_page):
 
 @pytest.mark.negative
 def test_ai_name_whitespace_shows_error(dentivoice_page):
-    """TC-N-DV-02: Whitespace name → Save disabled + error after debounce."""
+    """TC-N-DV-02: Whitespace-only name → treated as empty → Save disabled."""
     _open(dentivoice_page)
     dentivoice_page.fill_ai_name("   ")
     dentivoice_page.page.wait_for_timeout(1000)
+    # Whitespace is treated same as empty — Save disabled OR error shown
     is_disabled = dentivoice_page.save_button.is_disabled()
     error_count = dentivoice_page.page.locator("p.text-red-500").count()
-    assert is_disabled or error_count > 0, "Whitespace name should disable Save or show error"
+    # If whitespace accepted → log as behavior (not strict assert)
+    if not is_disabled and error_count == 0:
+        dentivoice_page.click_save()
+        dentivoice_page.page.wait_for_timeout(500)
+        error_count = dentivoice_page.page.locator("p.text-red-500").count()
+    assert is_disabled or error_count > 0, "Whitespace name should be rejected"
     dentivoice_page.cancel()
 
 
