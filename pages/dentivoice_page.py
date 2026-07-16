@@ -167,8 +167,14 @@ class DentiVoicePage(BasePage):
     def save_and_assert_success(self) -> None:
         """Save and verify toast 'Settings saved successfully!'"""
         self.save_button.scroll_into_view_if_needed()
-        self.save_button.click()
+        self.save_button.click(force=True)
         expect(self.success_toast).to_be_visible(timeout=10_000)
+
+    def click_save(self) -> None:
+        """Click Save button with force=True — validation is post-click."""
+        self.save_button.scroll_into_view_if_needed()
+        self.save_button.click(force=True)
+        self.page.wait_for_timeout(500)
 
     def cancel(self) -> None:
         try:

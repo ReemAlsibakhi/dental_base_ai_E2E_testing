@@ -59,7 +59,7 @@ def test_initial_greeting_501_chars_rejected(dentivoice_page):
     """TC-N-DV-09: Initial greeting 501 chars → error."""
     _open(dentivoice_page)
     dentivoice_page.fill_textarea(dentivoice_page.first_message, GREETING_MAX_INVALID)
-    dentivoice_page.save_button.click()
+    dentivoice_page.click_save()
     expect(dentivoice_page.error).to_be_visible()
     dentivoice_page.cancel()
 
@@ -69,7 +69,7 @@ def test_after_hours_501_chars_rejected(dentivoice_page):
     """TC-N-DV-10: After-hours greeting 501 chars → error."""
     _open(dentivoice_page)
     dentivoice_page.fill_textarea(dentivoice_page.after_hours, GREETING_MAX_INVALID)
-    dentivoice_page.save_button.click()
+    dentivoice_page.click_save()
     expect(dentivoice_page.error).to_be_visible()
     dentivoice_page.cancel()
 

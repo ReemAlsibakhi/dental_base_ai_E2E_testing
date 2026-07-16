@@ -62,7 +62,7 @@ def test_ai_name_empty_shows_error(dentivoice_page):
     """TC-N-DV-01: Empty name → required error."""
     _open(dentivoice_page)
     dentivoice_page.fill_ai_name("")
-    dentivoice_page.save_button.click()
+    dentivoice_page.click_save()
     expect(dentivoice_page.error).to_be_visible()
     dentivoice_page.cancel()
 
@@ -72,7 +72,7 @@ def test_ai_name_whitespace_shows_error(dentivoice_page):
     """TC-N-DV-02: Whitespace name → trimmed → required error."""
     _open(dentivoice_page)
     dentivoice_page.fill_ai_name("     ")
-    dentivoice_page.save_button.click()
+    dentivoice_page.click_save()
     expect(dentivoice_page.error).to_be_visible()
     dentivoice_page.cancel()
 
@@ -82,7 +82,7 @@ def test_ai_name_numbers_rejected(dentivoice_page):
     """TC-N-DV-04: Numbers in name → chars error."""
     _open(dentivoice_page)
     dentivoice_page.fill_ai_name("Sofia123")
-    dentivoice_page.save_button.click()
+    dentivoice_page.click_save()
     expect(dentivoice_page.error).to_contain_text(DV_ERR["name_chars"])
     dentivoice_page.cancel()
 
@@ -92,7 +92,7 @@ def test_ai_name_xss_rejected(dentivoice_page):
     """TC-N-DV-05: XSS in name → chars error."""
     _open(dentivoice_page)
     dentivoice_page.fill_ai_name("<script>alert(1)</script>")
-    dentivoice_page.save_button.click()
+    dentivoice_page.click_save()
     expect(dentivoice_page.error).to_be_visible()
     dentivoice_page.cancel()
 
@@ -102,7 +102,7 @@ def test_personality_empty_shows_error(dentivoice_page):
     """TC-N-DV-06: No personality selected → error."""
     _open(dentivoice_page)
     dentivoice_page.personality.select_option(index=0)
-    dentivoice_page.save_button.click()
+    dentivoice_page.click_save()
     expect(dentivoice_page.error).to_be_visible()
     dentivoice_page.cancel()
 
@@ -125,7 +125,7 @@ def test_ai_name_1_char_rejected(dentivoice_page):
     """TC-B-DV-02: Name = 1 char → min error."""
     _open(dentivoice_page)
     dentivoice_page.fill_ai_name(AI_NAME_MIN_BELOW)
-    dentivoice_page.save_button.click()
+    dentivoice_page.click_save()
     expect(dentivoice_page.error).to_contain_text(DV_ERR["name_min"])
     dentivoice_page.cancel()
 
@@ -143,6 +143,6 @@ def test_ai_name_31_chars_rejected(dentivoice_page):
     """TC-B-DV-04: Name = 31 pronounceable chars → max length error."""
     _open(dentivoice_page)
     dentivoice_page.fill_ai_name(AI_NAME_MAX_PLUS1)
-    dentivoice_page.save_button.click()
+    dentivoice_page.click_save()
     expect(dentivoice_page.error).to_contain_text(DV_ERR["name_max"])
     dentivoice_page.cancel()
