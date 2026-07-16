@@ -137,13 +137,15 @@ class DentiVoicePage(BasePage):
 
     def fill_textarea(self, locator: Locator, value: str) -> None:
         """Fill a textarea using native setter to trigger React onChange."""
-        locator.evaluate(f"""el => {{
+        escaped = value.replace("\\", "\\\\").replace("'", "\\'")
+        js = f"""el => {{
             const setter = Object.getOwnPropertyDescriptor(
                 window.HTMLTextAreaElement.prototype, 'value').set;
-            setter.call(el, '{value.replace("'", "\\'")}');
+            setter.call(el, '{escaped}');
             el.dispatchEvent(new Event('input', {{bubbles: true}}));
             el.dispatchEvent(new Event('change', {{bubbles: true}}));
-        }}""")
+        }}"""
+        locator.evaluate(js)
         self.page.wait_for_timeout(300)
 
     # ===================================================================
