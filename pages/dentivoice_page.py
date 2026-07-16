@@ -129,17 +129,23 @@ class DentiVoicePage(BasePage):
     # ===================================================================
 
     def fill_ai_name(self, value: str) -> None:
-        """Fill Assistant Name — uses native setter to trigger React onChange."""
+        """Fill Assistant Name — clears field then types to trigger React dirty state."""
         self.ai_name_input.scroll_into_view_if_needed()
-        escaped = value.replace("\\", "\\\\").replace("'", "\\'")
-        js = f"""el => {{
+        # First: set a temp value to ensure dirty state is triggered
+        self.ai_name_input.evaluate("""el => {
             const setter = Object.getOwnPropertyDescriptor(
                 window.HTMLInputElement.prototype, 'value').set;
-            setter.call(el, '{escaped}');
-            el.dispatchEvent(new Event('input', {{bubbles: true}}));
-            el.dispatchEvent(new Event('change', {{bubbles: true}}));
-        }}"""
-        self.ai_name_input.evaluate(js)
+            setter.call(el, '_tmp_');
+            el.dispatchEvent(new Event('input', {bubbles: true}));
+            el.dispatchEvent(new Event('change', {bubbles: true}));
+        }""")
+        self.page.wait_for_timeout(200)
+        # Then: select all and type the actual value
+        self.ai_name_input.click(click_count=3)
+        if value:
+            self.ai_name_input.press_sequentially(value, delay=30)
+        else:
+            self.ai_name_input.press("Backspace")
         self.page.wait_for_timeout(300)
 
     def fill_textarea(self, locator: Locator, value: str) -> None:
