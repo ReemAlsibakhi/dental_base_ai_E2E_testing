@@ -4,6 +4,7 @@ DV_ERR = {
     "name_required":   "Assistant name is required",
     "name_min":        "Assistant name must be at least 2 characters",
     "name_max":        "Name must be 30 characters or less",
+    "name_pronounce":  "Name is hard to pronounce",
     "name_chars":      "Name can only contain letters and spaces",
     "personality":     "Please select a personality type",
     "greeting_max":    "Greeting must be 500 characters or less",

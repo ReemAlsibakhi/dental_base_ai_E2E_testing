@@ -267,3 +267,11 @@ Toggle switches ON/OFF correctly (data-state changes) but no dedicated
 
 **Action:** Dev team to verify if Parking Details textarea is missing
 or mislabeled in the form component.
+
+## DEF-DV-07
+**Module:** DentiVoice — AI Identity
+**Severity:** 🟡 Medium
+**Description:** Max 30 chars validation error message is misleading — shows "Name is hard to pronounce — try a simpler name" instead of "Name must be 30 characters or less"
+**Steps:** Enter 31+ repeated chars (e.g., "A"x31) → Save
+**Expected:** "Name must be 30 characters or less"
+**Actual:** "Name is hard to pronounce — try a simpler name"
