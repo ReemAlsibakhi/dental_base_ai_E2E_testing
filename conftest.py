@@ -72,7 +72,7 @@ def _is_session_still_valid(browser_instance: Browser, state_path: Path) -> bool
         context = browser_instance.new_context(
             base_url=BASE_URL,
             storage_state=str(state_path),
-            viewport={"width": 1920, "height": 1080},
+            viewport={"width": 1280, "height": 800},
         )
         page = context.new_page()
         page.goto("/settings", wait_until="commit", timeout=30_000)
@@ -103,7 +103,7 @@ def admin_auth_state(browser_instance: Browser) -> Path:
     # Session missing or expired — do fresh login
     context = browser_instance.new_context(
         base_url=BASE_URL,
-        viewport={"width": 1920, "height": 1080},
+        viewport={"width": 1280, "height": 800},
     )
     page = context.new_page()
     login = LoginPage(page)
@@ -142,7 +142,7 @@ def admin_context(browser_instance: Browser, admin_auth_state: Path) -> BrowserC
     context = browser_instance.new_context(
         base_url=BASE_URL,
         storage_state=str(admin_auth_state),
-        viewport={"width": 1920, "height": 1080},
+        viewport={"width": 1280, "height": 800},
     )
     context.set_default_timeout(20_000)
     yield context
