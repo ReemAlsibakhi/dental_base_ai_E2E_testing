@@ -5,7 +5,6 @@ Language Support (DV·R3) — checkboxes in AI Identity panel
 import pytest
 from playwright.sync_api import expect
 from pages.dentivoice_page import DentiVoicePage
-from test_data.dentivoice_data import DV_ERR
 
 
 def _open(dv):
@@ -13,12 +12,12 @@ def _open(dv):
 
 
 @pytest.mark.functional
-def test_english_only_accepted(dentivoice_page):
-    """TC-F-DV-05: English only (default) → accepted."""
+def test_english_default_checked(dentivoice_page):
+    """TC-F-DV-05: English is checked by default."""
     _open(dentivoice_page)
-    # English should be checked by default
     checkboxes = dentivoice_page.page.locator('input[type="checkbox"]')
     assert checkboxes.count() >= 1
+    assert checkboxes.first.is_checked(), "English should be checked by default"
     dentivoice_page.cancel()
 
 
@@ -27,8 +26,7 @@ def test_multiple_languages_selectable(dentivoice_page):
     """TC-F-DV-04: Multiple languages can be selected."""
     _open(dentivoice_page)
     checkboxes = dentivoice_page.page.locator('input[type="checkbox"]')
-    count = checkboxes.count()
-    assert count >= 2, "Expected at least 2 language options"
+    assert checkboxes.count() >= 2, "Expected at least 2 language options"
     dentivoice_page.cancel()
 
 
@@ -42,5 +40,5 @@ def test_language_selection_persists(dentivoice_page):
     dentivoice_page.navigate_to_dentivoice()
     _open(dentivoice_page)
     checkboxes = dentivoice_page.page.locator('input[type="checkbox"]')
-    assert checkboxes.count() >= 1
+    assert checkboxes.first.is_checked()
     dentivoice_page.cancel()
