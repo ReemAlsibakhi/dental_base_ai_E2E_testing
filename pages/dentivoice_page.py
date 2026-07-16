@@ -129,22 +129,15 @@ class DentiVoicePage(BasePage):
     # ===================================================================
 
     def fill_ai_name(self, value: str) -> None:
-        """Fill Assistant Name using execCommand to trigger React dirty state."""
+        """Fill Assistant Name — triple click to select all, then type via keyboard."""
         self.ai_name_input.scroll_into_view_if_needed()
-        self.ai_name_input.focus()
-        # Select all existing text and replace with new value via execCommand
-        self.ai_name_input.evaluate("""el => {
-            el.focus();
-            el.select();
-            document.execCommand('selectAll', false, null);
-            document.execCommand('delete', false, null);
-        }""")
+        self.ai_name_input.click(click_count=3)
+        self.page.wait_for_timeout(100)
+        self.ai_name_input.press("Control+a")
+        self.ai_name_input.press("Backspace")
         self.page.wait_for_timeout(100)
         if value:
-            self.ai_name_input.evaluate(f"""el => {{
-                el.focus();
-                document.execCommand('insertText', false, {repr(value)});
-            }}""")
+            self.ai_name_input.press_sequentially(value, delay=50)
         self.page.wait_for_timeout(300)
 
     def fill_textarea(self, locator: Locator, value: str) -> None:
