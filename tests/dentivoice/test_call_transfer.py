@@ -34,10 +34,10 @@ def _click_add_rule(dv):
     dv.page.wait_for_timeout(500)
 
 
-def _fill_text(dv, index, value):
-    """Fill input[type=text] by index inside modal."""
+def _fill_by_placeholder(dv, placeholder_fragment, value):
+    """Fill input by placeholder text inside modal."""
     modal = _get_modal(dv)
-    field = modal.locator('input[type="text"]').nth(index)
+    field = modal.locator(f'input[placeholder*="{placeholder_fragment}"]').first
     field.click()
     dv.page.wait_for_timeout(100)
     field.evaluate("""el => {
@@ -108,11 +108,13 @@ def test_add_rule_reveals_fields(dentivoice_page):
     _ensure_toggle(dentivoice_page, True)
     _click_add_rule(dentivoice_page)
     modal = _get_modal(dentivoice_page)
-    # Verify rule fields appear after Add
-    text_inputs = modal.locator('input[type="text"]')
-    textarea = modal.locator('textarea')
-    assert text_inputs.count() >= 2, "Name and Phone fields should appear"
-    assert textarea.count() >= 1, "Condition textarea should appear"
+    # Verify rule fields appear after Add — use placeholder selectors
+    name_field = modal.locator('input[placeholder*="Office Reception"]')
+    phone_field = modal.locator('input[placeholder*="555"]')
+    condition_field = modal.locator('textarea[placeholder*="When a patient"]')
+    assert name_field.count() >= 1, "Name field should appear"
+    assert phone_field.count() >= 1, "Phone field should appear"
+    assert condition_field.count() >= 1, "Condition field should appear"
     dentivoice_page.cancel()
 
 
