@@ -129,3 +129,54 @@ def test_add_rule_save_disabled_when_empty(dentivoice_page):
     is_disabled = dentivoice_page.save_button.is_disabled()
     assert is_disabled, "Save should be disabled with empty rule fields"
     dentivoice_page.cancel()
+
+
+@pytest.mark.negative
+def test_rule_phone_invalid_blocked(dentivoice_page):
+    """TC-N-DV-21: Invalid phone format → Save disabled."""
+    _open(dentivoice_page)
+    _ensure_toggle(dentivoice_page, True)
+    _click_add_rule(dentivoice_page)
+    _fill_by_placeholder(dentivoice_page, "Office Reception", "Front Desk")
+    _fill_by_placeholder(dentivoice_page, "555", "not-a-phone!!!")
+    dentivoice_page.page.wait_for_timeout(800)
+    is_disabled = dentivoice_page.save_button.is_disabled()
+    errors = dentivoice_page.page.locator("p.text-red-500").count()
+    assert is_disabled or errors > 0, "Invalid phone should be blocked"
+    dentivoice_page.cancel()
+
+
+@pytest.mark.negative
+def test_rule_condition_empty_blocked(dentivoice_page):
+    """TC-N-DV-22: Rule condition empty → Save disabled."""
+    _open(dentivoice_page)
+    _ensure_toggle(dentivoice_page, True)
+    _click_add_rule(dentivoice_page)
+    _fill_by_placeholder(dentivoice_page, "Office Reception", "Front Desk")
+    _fill_by_placeholder(dentivoice_page, "555", "555-123-4567")
+    # Leave condition empty
+    dentivoice_page.page.wait_for_timeout(500)
+    is_disabled = dentivoice_page.save_button.is_disabled()
+    errors = dentivoice_page.page.locator("p.text-red-500").count()
+    assert is_disabled or errors > 0, "Empty condition should block save"
+    dentivoice_page.cancel()
+
+
+@pytest.mark.boundary
+def test_rule_condition_500_chars_accepted(dentivoice_page):
+    """TC-B-DV-13: Rule condition 500 chars (max valid) → saves."""
+    _open(dentivoice_page)
+    _ensure_toggle(dentivoice_page, True)
+    _click_add_rule(dentivoice_page)
+    _fill_by_placeholder(dentivoice_page, "Office Reception", "Front Desk")
+    _fill_by_placeholder(dentivoice_page, "555", "555-123-4567")
+    # Fill condition with 500 chars
+    modal = _get_modal(dentivoice_page)
+    condition = modal.locator('textarea[placeholder*="When a patient"]').first
+    condition.click()
+    condition.evaluate(f"""el => {{
+        el.focus();
+        document.execCommand('insertText', false, {'A' * 500!r});
+    }}""")
+    dentivoice_page.page.wait_for_timeout(500)
+    dentivoice_page.save_and_assert_success()
