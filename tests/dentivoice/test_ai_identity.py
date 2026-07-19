@@ -27,8 +27,11 @@ def _open(dv):
 @pytest.mark.smoke
 def test_ai_name_valid_saves(dentivoice_page):
     """TC-F-DV-01: Valid assistant name saves successfully."""
+    import random
     _open(dentivoice_page)
-    dentivoice_page.fill_ai_name(VALID_AI_NAME)
+    # Use random suffix to guarantee dirty state regardless of current value
+    name = f"Sofia{random.randint(10, 99)}"
+    dentivoice_page.fill_ai_name(name)
     dentivoice_page.save_and_assert_success()
 
 
