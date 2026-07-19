@@ -180,3 +180,17 @@ def test_rule_condition_500_chars_accepted(dentivoice_page):
     }}""")
     dentivoice_page.page.wait_for_timeout(500)
     dentivoice_page.save_and_assert_success()
+
+
+@pytest.mark.negative
+def test_rule_name_101_chars_rejected(dentivoice_page):
+    """TC-N-DV-19: Rule name 101 chars → Save disabled or error."""
+    _open(dentivoice_page)
+    _ensure_toggle(dentivoice_page, True)
+    _click_add_rule(dentivoice_page)
+    _fill_by_placeholder(dentivoice_page, "Office Reception", "A" * 101)
+    dentivoice_page.page.wait_for_timeout(800)
+    is_disabled = dentivoice_page.save_button.is_disabled()
+    errors = dentivoice_page.page.locator("p.text-red-500").count()
+    assert is_disabled or errors > 0, "101-char rule name should be rejected"
+    dentivoice_page.cancel()
