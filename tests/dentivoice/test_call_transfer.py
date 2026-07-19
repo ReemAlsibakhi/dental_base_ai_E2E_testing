@@ -26,8 +26,13 @@ def _get_modal(dv):
 
 
 def _click_add_rule(dv):
-    """Click Add Rule button to reveal rule fields."""
+    """Ensure toggle ON then click Add Rule button."""
     modal = _get_modal(dv)
+    # Add Rule only visible when toggle is ON
+    toggle = modal.locator('button[role="switch"]').nth(0)
+    if toggle.get_attribute("aria-checked") == "false":
+        toggle.click(force=True)
+        dv.page.wait_for_timeout(500)
     add_btn = modal.get_by_role("button", name="Add Rule")
     add_btn.scroll_into_view_if_needed()
     add_btn.click()
@@ -83,14 +88,19 @@ def test_transfer_toggle_on_saves(dentivoice_page):
     _open(dentivoice_page)
     modal = _get_modal(dentivoice_page)
     toggle = modal.locator('button[role="switch"]').nth(0)
-    # Ensure toggle ends up ON
+    # Always: OFF then ON to guarantee dirty state
     if toggle.get_attribute("aria-checked") == "true":
-        # Already ON — turn OFF then ON to create dirty state
         toggle.click(force=True)
         dentivoice_page.page.wait_for_timeout(500)
+        dentivoice_page.save_and_assert_success()
+        # Reopen panel
+        dentivoice_page.cancel()
+        _open(dentivoice_page)
+        modal = _get_modal(dentivoice_page)
+        toggle = modal.locator('button[role="switch"]').nth(0)
     toggle.click(force=True)
     dentivoice_page.page.wait_for_timeout(800)
-    assert toggle.get_attribute("aria-checked") == "true", "Toggle should be ON"
+    assert toggle.get_attribute("aria-checked") == "true"
     dentivoice_page.save_and_assert_success()
 
 
