@@ -74,10 +74,30 @@ def _ensure_toggle(dv, target: bool):
         dv.page.wait_for_timeout(500)
 
 
-def _fill_all_rule_fields(dv, name="Front Desk", phone="555-123-4567", condition="When patient asks"):
+def _open_add_form(dv):
+    """Click Add button to show rule form fields."""
+    modal = _get_modal(dv)
+    # Add button (#2 confirmed from Console) opens the rule form
+    add_btn = modal.get_by_role("button", name="Add").first
+    add_btn.click(force=True)
+    dv.page.wait_for_timeout(500)
+
+
+def _submit_rule(dv):
+    """Click Add Rule button to submit the filled rule."""
+    modal = _get_modal(dv)
+    add_rule_btn = modal.get_by_role("button", name="Add Rule")
+    add_rule_btn.click(force=True)
+    dv.page.wait_for_timeout(500)
+
+
+def _fill_and_add_rule(dv, name="Front Desk", phone="555-123-4567", condition="When patient asks"):
+    """Full flow: open form → fill fields → click Add Rule."""
+    _open_add_form(dv)
     _fill_field(dv, "Office Reception", name)
     _fill_field(dv, "555", phone)
     _fill_condition(dv, condition)
+    _submit_rule(dv)
 
 
 # ===========================================================================
@@ -123,28 +143,26 @@ def test_transfer_toggle_off_saves(dentivoice_page):
 
 @pytest.mark.functional
 def test_rule_fields_visible(dentivoice_page):
-    """TC-F-DV: Rule fields visible when toggle ON."""
+    """TC-F-DV: Rule fields visible after clicking Add."""
     _open(dentivoice_page)
     _ensure_toggle(dentivoice_page, True)
+    _open_add_form(dentivoice_page)
     modal = _get_modal(dentivoice_page)
-    name_field = modal.locator('input[placeholder*="Office Reception"]')
-    phone_field = modal.locator('input[placeholder*="555"]')
-    condition_field = modal.locator('textarea')
-    expect(name_field.first).to_be_visible()
-    expect(phone_field.first).to_be_visible()
-    expect(condition_field.first).to_be_visible()
+    expect(modal.locator('input[placeholder*="Office Reception"]').first).to_be_visible()
+    expect(modal.locator('input[placeholder*="555"]').first).to_be_visible()
+    expect(modal.locator('textarea').first).to_be_visible()
     dentivoice_page.cancel()
 
 
 @pytest.mark.functional
 def test_add_rule_save_disabled_when_empty(dentivoice_page):
-    """TC-N: Rule fields empty → Save disabled."""
+    """TC-N: Form open with empty fields → Add Rule disabled."""
     _open(dentivoice_page)
     _ensure_toggle(dentivoice_page, True)
-    dentivoice_page.page.wait_for_timeout(500)
-    # Don't fill anything — Save should be disabled
-    is_disabled = dentivoice_page.save_button.is_disabled()
-    assert is_disabled, "Save should be disabled when rule fields are empty"
+    _open_add_form(dentivoice_page)
+    modal = _get_modal(dentivoice_page)
+    add_rule_btn = modal.get_by_role("button", name="Add Rule")
+    assert add_rule_btn.is_disabled(), "Add Rule should be disabled when fields empty"
     dentivoice_page.cancel()
 
 
@@ -157,6 +175,7 @@ def test_rule_phone_invalid_blocked(dentivoice_page):
     """TC-N-DV-21: Invalid phone format → Save disabled or error."""
     _open(dentivoice_page)
     _ensure_toggle(dentivoice_page, True)
+    _open_add_form(dentivoice_page)
     _fill_field(dentivoice_page, "Office Reception", "Front Desk")
     _fill_field(dentivoice_page, "555", "not-a-phone!!!")
     _fill_condition(dentivoice_page, "When patient calls")
@@ -175,6 +194,7 @@ def test_rule_condition_empty_blocked(dentivoice_page):
     """TC-N-DV-22: Empty condition → Save disabled."""
     _open(dentivoice_page)
     _ensure_toggle(dentivoice_page, True)
+    _open_add_form(dentivoice_page)
     _fill_field(dentivoice_page, "Office Reception", "Front Desk")
     _fill_field(dentivoice_page, "555", "555-123-4567")
     # Leave condition empty
@@ -189,7 +209,10 @@ def test_rule_name_101_chars_rejected(dentivoice_page):
     """TC-N-DV-19: Rule name 101 chars → Save disabled or error."""
     _open(dentivoice_page)
     _ensure_toggle(dentivoice_page, True)
-    _fill_all_rule_fields(dentivoice_page, name="A" * 101)
+    _open_add_form(dentivoice_page)
+    _fill_field(dentivoice_page, "Office Reception", "A" * 101)
+    _fill_field(dentivoice_page, "555", "555-123-4567")
+    _fill_condition(dentivoice_page, "When patient asks")
     dentivoice_page.page.wait_for_timeout(800)
     is_disabled = dentivoice_page.save_button.is_disabled()
     if not is_disabled:
@@ -209,6 +232,7 @@ def test_rule_condition_500_chars_accepted(dentivoice_page):
     """TC-B-DV-13: Rule condition 500 chars (max valid) → saves."""
     _open(dentivoice_page)
     _ensure_toggle(dentivoice_page, True)
+    _open_add_form(dentivoice_page)
     _fill_field(dentivoice_page, "Office Reception", "Front Desk")
     _fill_field(dentivoice_page, "555", "555-123-4567")
     modal = _get_modal(dentivoice_page)
