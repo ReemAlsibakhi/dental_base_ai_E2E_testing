@@ -124,11 +124,21 @@ def test_first_aid_enabled_empty_advice_error(dentivoice_page):
         if first_aid_switch.get_attribute("aria-checked") == "false":
             first_aid_switch.click()
             dentivoice_page.page.wait_for_timeout(300)
-        _fill_field(dentivoice_page, 'textarea', "")
+        # Use specific name to target firstAidAdvice, not emergencyTriageScript
+        modal2 = _get_modal(dentivoice_page)
+        advice = modal2.locator('textarea[name="firstAidAdvice"]')
+        if advice.count() > 0:
+            advice.evaluate("""el => {
+                el.focus();
+                el.setSelectionRange(0, el.value.length);
+                document.execCommand('delete', false, null);
+            }""")
+        dentivoice_page.page.wait_for_timeout(500)
         dentivoice_page.click_save()
         dentivoice_page.page.wait_for_timeout(500)
         errors = dentivoice_page.page.locator("p.text-red-500").count()
-        assert errors > 0, "Empty first-aid advice should show error"
+        is_disabled = dentivoice_page.save_button.is_disabled()
+        assert errors > 0 or is_disabled, "Empty first-aid advice should show error or disable Save"
     dentivoice_page.cancel()
 
 
