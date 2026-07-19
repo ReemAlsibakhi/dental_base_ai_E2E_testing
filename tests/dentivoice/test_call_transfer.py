@@ -115,14 +115,10 @@ def test_call_transfer_panel_opens(dentivoice_page):
 
 @pytest.mark.functional
 def test_transfer_toggle_on_saves(dentivoice_page):
-    """TC-F-DV-15: Enable Call Transfer (toggle ON) → saves."""
-    _open(dentivoice_page)
-    _ensure_toggle(dentivoice_page, False)
-    dentivoice_page.page.wait_for_timeout(300)
-    dentivoice_page.save_and_assert_success()
+    """TC-F-DV-15: Enable Call Transfer + add rule → saves."""
     _open(dentivoice_page)
     _ensure_toggle(dentivoice_page, True)
-    dentivoice_page.page.wait_for_timeout(300)
+    _fill_and_add_rule(dentivoice_page)
     dentivoice_page.save_and_assert_success()
 
 
@@ -133,7 +129,7 @@ def test_transfer_toggle_off_saves(dentivoice_page):
     _ensure_toggle(dentivoice_page, True)
     dentivoice_page.page.wait_for_timeout(300)
     _ensure_toggle(dentivoice_page, False)
-    dentivoice_page.page.wait_for_timeout(300)
+    dentivoice_page.page.wait_for_timeout(500)
     dentivoice_page.save_and_assert_success()
 
 
