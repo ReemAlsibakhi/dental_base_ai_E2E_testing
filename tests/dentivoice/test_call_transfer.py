@@ -115,21 +115,37 @@ def test_call_transfer_panel_opens(dentivoice_page):
 
 @pytest.mark.functional
 def test_transfer_toggle_on_saves(dentivoice_page):
-    """TC-F-DV-15: Enable Call Transfer + add rule → saves."""
+    """TC-F-DV-15: Call Transfer ON + rule → saves."""
     _open(dentivoice_page)
-    _ensure_toggle(dentivoice_page, True)
+    modal = _get_modal(dentivoice_page)
+    toggle = modal.locator('button[role="switch"]').nth(0)
+    # If OFF → turn ON first
+    if toggle.get_attribute("aria-checked") == "false":
+        toggle.click(force=True)
+        dentivoice_page.page.wait_for_timeout(500)
+    # Add a rule to enable Save button
     _fill_and_add_rule(dentivoice_page)
     dentivoice_page.save_and_assert_success()
 
 
 @pytest.mark.functional
 def test_transfer_toggle_off_saves(dentivoice_page):
-    """TC-F-DV-16: Disable Call Transfer (toggle OFF) → saves."""
+    """TC-F-DV-16: Call Transfer OFF → saves."""
     _open(dentivoice_page)
-    _ensure_toggle(dentivoice_page, True)
-    dentivoice_page.page.wait_for_timeout(300)
-    _ensure_toggle(dentivoice_page, False)
+    modal = _get_modal(dentivoice_page)
+    toggle = modal.locator('button[role="switch"]').nth(0)
+    # If already OFF → turn ON first to create dirty state when we turn OFF
+    if toggle.get_attribute("aria-checked") == "false":
+        toggle.click(force=True)
+        dentivoice_page.page.wait_for_timeout(500)
+        dentivoice_page.save_and_assert_success()
+        # Reopen and turn OFF
+        _open(dentivoice_page)
+        modal = _get_modal(dentivoice_page)
+        toggle = modal.locator('button[role="switch"]').nth(0)
+    toggle.click(force=True)
     dentivoice_page.page.wait_for_timeout(500)
+    assert toggle.get_attribute("aria-checked") == "false"
     dentivoice_page.save_and_assert_success()
 
 
