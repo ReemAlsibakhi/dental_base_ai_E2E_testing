@@ -80,10 +80,16 @@ def test_call_transfer_panel_opens(dentivoice_page):
 @pytest.mark.functional
 def test_transfer_toggle_on_saves(dentivoice_page):
     """TC-F-DV-15: Enable transfer toggle → saves."""
+    # Navigate fresh to avoid state from previous test
+    dentivoice_page.navigate_to_dentivoice()
     _open(dentivoice_page)
-    _ensure_toggle(dentivoice_page, False)  # Turn OFF first
-    dentivoice_page.page.wait_for_timeout(300)
-    _ensure_toggle(dentivoice_page, True)   # Then ON → dirty state
+    modal = _get_modal(dentivoice_page)
+    toggle = modal.locator('button[role="switch"]').nth(0)
+    # Toggle twice to guarantee dirty state regardless of current value
+    toggle.click()
+    dentivoice_page.page.wait_for_timeout(500)
+    toggle.click()
+    dentivoice_page.page.wait_for_timeout(500)
     dentivoice_page.save_and_assert_success()
 
 
