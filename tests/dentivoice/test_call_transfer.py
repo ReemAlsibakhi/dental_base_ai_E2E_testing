@@ -26,9 +26,9 @@ def _get_modal(dv):
 
 
 def _click_add_rule(dv):
-    """Click Add button to reveal rule fields."""
+    """Click Add Rule button to reveal rule fields."""
     modal = _get_modal(dv)
-    add_btn = modal.get_by_role("button", name="Add").first
+    add_btn = modal.get_by_role("button", name="Add Rule")
     add_btn.scroll_into_view_if_needed()
     add_btn.click()
     dv.page.wait_for_timeout(500)
