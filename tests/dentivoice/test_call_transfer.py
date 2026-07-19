@@ -80,16 +80,10 @@ def test_call_transfer_panel_opens(dentivoice_page):
 @pytest.mark.functional
 def test_transfer_toggle_on_saves(dentivoice_page):
     """TC-F-DV-15: Enable transfer toggle → saves."""
-    # Navigate fresh to avoid state from previous test
-    dentivoice_page.navigate_to_dentivoice()
     _open(dentivoice_page)
-    modal = _get_modal(dentivoice_page)
-    toggle = modal.locator('button[role="switch"]').nth(0)
-    # Toggle twice to guarantee dirty state regardless of current value
-    toggle.click()
-    dentivoice_page.page.wait_for_timeout(500)
-    toggle.click()
-    dentivoice_page.page.wait_for_timeout(500)
+    _ensure_toggle(dentivoice_page, False)
+    dentivoice_page.page.wait_for_timeout(300)
+    _ensure_toggle(dentivoice_page, True)
     dentivoice_page.save_and_assert_success()
 
 
@@ -97,9 +91,9 @@ def test_transfer_toggle_on_saves(dentivoice_page):
 def test_transfer_toggle_off_saves(dentivoice_page):
     """TC-F-DV-16: Disable transfer → saves."""
     _open(dentivoice_page)
-    _ensure_toggle(dentivoice_page, True)   # ON first
+    _ensure_toggle(dentivoice_page, True)
     dentivoice_page.page.wait_for_timeout(300)
-    _ensure_toggle(dentivoice_page, False)  # Then OFF → dirty state
+    _ensure_toggle(dentivoice_page, False)
     dentivoice_page.save_and_assert_success()
 
 
@@ -174,16 +168,23 @@ def test_rule_condition_500_chars_accepted(dentivoice_page):
     _open(dentivoice_page)
     _ensure_toggle(dentivoice_page, True)
     _click_add_rule(dentivoice_page)
+    # Fill all required fields
     _fill_by_placeholder(dentivoice_page, "Office Reception", "Front Desk")
     _fill_by_placeholder(dentivoice_page, "555", "555-123-4567")
-    # Fill condition with 500 chars
     modal = _get_modal(dentivoice_page)
-    condition = modal.locator('textarea[placeholder*="When a patient"]').first
+    condition = modal.locator('textarea').first
     condition.click()
-    condition.evaluate(f"""el => {{
+    dentivoice_page.page.wait_for_timeout(100)
+    condition.evaluate("""el => {
         el.focus();
-        document.execCommand('insertText', false, {'A' * 500!r});
-    }}""")
+        el.setSelectionRange(0, el.value.length);
+        document.execCommand('delete', false, null);
+    }""")
+    dentivoice_page.page.wait_for_timeout(200)
+    condition.evaluate("""el => {
+        el.focus();
+        document.execCommand('insertText', false, 'A'.repeat(500));
+    }""")
     dentivoice_page.page.wait_for_timeout(500)
     dentivoice_page.save_and_assert_success()
 
