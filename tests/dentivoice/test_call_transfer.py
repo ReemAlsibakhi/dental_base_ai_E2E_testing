@@ -79,30 +79,35 @@ def test_call_transfer_panel_opens(dentivoice_page):
 
 @pytest.mark.functional
 def test_transfer_toggle_on_saves(dentivoice_page):
-    """TC-F-DV-15: Toggle ON → saves. Reads initial state and changes it."""
+    """TC-F-DV-15: Enable Call Transfer (toggle ON) → saves."""
     _open(dentivoice_page)
     modal = _get_modal(dentivoice_page)
     toggle = modal.locator('button[role="switch"]').nth(0)
-    initial = toggle.get_attribute("aria-checked")
-    # Click once — changes state → Save becomes enabled
+    # Ensure toggle ends up ON
+    if toggle.get_attribute("aria-checked") == "true":
+        # Already ON — turn OFF then ON to create dirty state
+        toggle.click(force=True)
+        dentivoice_page.page.wait_for_timeout(500)
     toggle.click(force=True)
     dentivoice_page.page.wait_for_timeout(800)
-    after = toggle.get_attribute("aria-checked")
-    assert initial != after, "Toggle should change state"
+    assert toggle.get_attribute("aria-checked") == "true", "Toggle should be ON"
     dentivoice_page.save_and_assert_success()
 
 
 @pytest.mark.functional
 def test_transfer_toggle_off_saves(dentivoice_page):
-    """TC-F-DV-16: Toggle OFF → saves. Reads initial state and changes it."""
+    """TC-F-DV-16: Disable Call Transfer (toggle OFF) → saves."""
     _open(dentivoice_page)
     modal = _get_modal(dentivoice_page)
     toggle = modal.locator('button[role="switch"]').nth(0)
-    initial = toggle.get_attribute("aria-checked")
+    # Ensure toggle ends up OFF
+    if toggle.get_attribute("aria-checked") == "false":
+        # Already OFF — turn ON then OFF to create dirty state
+        toggle.click(force=True)
+        dentivoice_page.page.wait_for_timeout(500)
     toggle.click(force=True)
     dentivoice_page.page.wait_for_timeout(800)
-    after = toggle.get_attribute("aria-checked")
-    assert initial != after, "Toggle should change state"
+    assert toggle.get_attribute("aria-checked") == "false", "Toggle should be OFF"
     dentivoice_page.save_and_assert_success()
 
 
