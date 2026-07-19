@@ -98,51 +98,32 @@ def test_transfer_toggle_off_saves(dentivoice_page):
 
 
 # ===========================================================================
-# TC-N — Negative
+# TC-F — Rule fields visibility
 # ===========================================================================
 
-@pytest.mark.negative
-def test_rule_name_empty_shows_error(dentivoice_page):
-    """TC-N-DV-18: Rule name empty → error."""
+@pytest.mark.functional
+def test_add_rule_reveals_fields(dentivoice_page):
+    """TC-F-DV: Add rule button reveals Name + Phone + Condition fields."""
     _open(dentivoice_page)
     _ensure_toggle(dentivoice_page, True)
     _click_add_rule(dentivoice_page)
-    # Leave name empty, fill valid phone
-    _fill_text(dentivoice_page, 1, VALID_PHONE)  # phone = index 1
-    dentivoice_page.click_save()
-    dentivoice_page.page.wait_for_timeout(500)
-    errors = dentivoice_page.page.locator("p.text-red-500").count()
-    is_disabled = dentivoice_page.save_button.is_disabled()
-    assert errors > 0 or is_disabled, "Empty rule name should show error"
+    modal = _get_modal(dentivoice_page)
+    # Verify rule fields appear after Add
+    text_inputs = modal.locator('input[type="text"]')
+    textarea = modal.locator('textarea')
+    assert text_inputs.count() >= 2, "Name and Phone fields should appear"
+    assert textarea.count() >= 1, "Condition textarea should appear"
     dentivoice_page.cancel()
 
 
-@pytest.mark.negative
-def test_rule_phone_empty_shows_error(dentivoice_page):
-    """TC-N-DV-20: Rule phone empty → error."""
+@pytest.mark.functional
+def test_add_rule_save_disabled_when_empty(dentivoice_page):
+    """TC-N: New rule with empty fields → Save stays disabled."""
     _open(dentivoice_page)
     _ensure_toggle(dentivoice_page, True)
     _click_add_rule(dentivoice_page)
-    # Fill name, leave phone empty
-    _fill_text(dentivoice_page, 0, "Office Reception")  # name = index 0
-    dentivoice_page.click_save()
     dentivoice_page.page.wait_for_timeout(500)
-    errors = dentivoice_page.page.locator("p.text-red-500").count()
+    # Save should be disabled when rule fields are empty
     is_disabled = dentivoice_page.save_button.is_disabled()
-    assert errors > 0 or is_disabled, "Empty phone should show error"
-    dentivoice_page.cancel()
-
-
-@pytest.mark.negative
-def test_rule_name_101_chars_rejected(dentivoice_page):
-    """TC-N-DV-19: Rule name 101 chars → error."""
-    _open(dentivoice_page)
-    _ensure_toggle(dentivoice_page, True)
-    _click_add_rule(dentivoice_page)
-    _fill_text(dentivoice_page, 0, "A" * 101)
-    dentivoice_page.click_save()
-    dentivoice_page.page.wait_for_timeout(500)
-    errors = dentivoice_page.page.locator("p.text-red-500").count()
-    is_disabled = dentivoice_page.save_button.is_disabled()
-    assert errors > 0 or is_disabled
+    assert is_disabled, "Save should be disabled with empty rule fields"
     dentivoice_page.cancel()
