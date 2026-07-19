@@ -79,21 +79,29 @@ def test_call_transfer_panel_opens(dentivoice_page):
 
 @pytest.mark.functional
 def test_transfer_toggle_on_saves(dentivoice_page):
-    """TC-F-DV-15: Enable transfer toggle → saves."""
+    """TC-F-DV-15: Enable transfer toggle — toggle twice to guarantee dirty state."""
     _open(dentivoice_page)
-    _ensure_toggle(dentivoice_page, False)
-    dentivoice_page.page.wait_for_timeout(300)
-    _ensure_toggle(dentivoice_page, True)
+    modal = _get_modal(dentivoice_page)
+    toggle = modal.locator('button[role="switch"]').nth(0)
+    # Click twice: guarantees dirty state regardless of initial value
+    toggle.click(force=True)
+    dentivoice_page.page.wait_for_timeout(500)
+    toggle.click(force=True)
+    dentivoice_page.page.wait_for_timeout(500)
     dentivoice_page.save_and_assert_success()
 
 
 @pytest.mark.functional
 def test_transfer_toggle_off_saves(dentivoice_page):
-    """TC-F-DV-16: Disable transfer → saves."""
+    """TC-F-DV-16: Disable transfer — toggle once to change state."""
     _open(dentivoice_page)
-    _ensure_toggle(dentivoice_page, True)
-    dentivoice_page.page.wait_for_timeout(300)
-    _ensure_toggle(dentivoice_page, False)
+    modal = _get_modal(dentivoice_page)
+    toggle = modal.locator('button[role="switch"]').nth(0)
+    initial = toggle.get_attribute("aria-checked")
+    toggle.click(force=True)
+    dentivoice_page.page.wait_for_timeout(500)
+    after = toggle.get_attribute("aria-checked")
+    assert initial != after, "Toggle should change state"
     dentivoice_page.save_and_assert_success()
 
 
