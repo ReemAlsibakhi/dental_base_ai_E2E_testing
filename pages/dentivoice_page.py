@@ -188,6 +188,9 @@ class DentiVoicePage(BasePage):
 
     def save_and_assert_success(self) -> None:
         """Save and verify toast 'Settings saved successfully!'"""
+        # Wait until Save button is enabled
+        js = "() => { const b = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Save Changes'); return b && !b.disabled; }"
+        self.page.wait_for_function(js, timeout=10_000)
         self.save_button.scroll_into_view_if_needed()
         self.save_button.click(force=True)
         expect(self.success_toast).to_be_visible(timeout=10_000)
