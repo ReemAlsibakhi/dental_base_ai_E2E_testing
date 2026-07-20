@@ -38,10 +38,10 @@ def _click_option(dv, text):
 def _fill_field(dv, selector, value):
     modal = _get_modal(dv)
     field = modal.locator(selector).first
-    field.click(click_count=3)
+    field.click()
     dv.page.wait_for_timeout(100)
-    field.press("Control+a")
-    field.press("Backspace")
+    # Use fill() for clear — works for all input types including tel
+    field.fill("")
     dv.page.wait_for_timeout(200)
     if value:
         field.press_sequentially(value, delay=30)
@@ -123,7 +123,8 @@ def test_first_aid_enabled_empty_advice_error(dentivoice_page):
             dentivoice_page.page.wait_for_timeout(300)
         advice = modal.locator('textarea[name="firstAidAdvice"]')
         if advice.count() > 0:
-            _fill_field(dentivoice_page, 'textarea[name="firstAidAdvice"]', "")
+            advice.fill("")
+            dentivoice_page.page.wait_for_timeout(300)
         dentivoice_page.click_save()
         dentivoice_page.page.wait_for_timeout(500)
         errors = dentivoice_page.page.locator("p.text-red-500").count()
@@ -153,11 +154,7 @@ def test_first_aid_3000_chars_accepted(dentivoice_page):
     advice = modal.locator('textarea[name="firstAidAdvice"]')
     advice.click()
     dentivoice_page.page.wait_for_timeout(100)
-    advice.evaluate("""el => {
-        el.focus();
-        el.setSelectionRange(0, el.value.length);
-        document.execCommand('delete', false, null);
-    }""")
+    advice.fill("")
     dentivoice_page.page.wait_for_timeout(200)
     advice.evaluate(f"""el => {{
         el.focus();
