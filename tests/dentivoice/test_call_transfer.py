@@ -119,11 +119,22 @@ def test_transfer_toggle_on_saves(dentivoice_page):
     _open(dentivoice_page)
     modal = _get_modal(dentivoice_page)
     toggle = modal.locator('button[role="switch"]').nth(0)
-    # Click once to change state — always dirty
-    initial = toggle.get_attribute("aria-checked")
-    toggle.click(force=True)
-    dentivoice_page.page.wait_for_timeout(500)
-    assert toggle.get_attribute("aria-checked") != initial
+    # Ensure toggle ends ON
+    if toggle.get_attribute("aria-checked") == "false":
+        # OFF → click once → ON (dirty state)
+        toggle.click(force=True)
+        dentivoice_page.page.wait_for_timeout(500)
+    else:
+        # ON → click OFF → save → reopen → click ON
+        toggle.click(force=True)
+        dentivoice_page.page.wait_for_timeout(500)
+        dentivoice_page.save_and_assert_success()
+        _open(dentivoice_page)
+        modal = _get_modal(dentivoice_page)
+        toggle = modal.locator('button[role="switch"]').nth(0)
+        toggle.click(force=True)
+        dentivoice_page.page.wait_for_timeout(500)
+    assert toggle.get_attribute("aria-checked") == "true"
     dentivoice_page.save_and_assert_success()
 
 
