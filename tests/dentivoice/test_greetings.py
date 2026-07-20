@@ -120,11 +120,14 @@ def test_after_hours_500_chars_accepted(dentivoice_page):
 def test_greetings_persist_after_reload(dentivoice_page):
     """TC-R: Greeting persists after reload."""
     _open(dentivoice_page)
-    _fill_greeting(dentivoice_page, dentivoice_page.first_message, "Persist greeting test")
+    # Read current value and use a different one to guarantee dirty state
+    current = dentivoice_page.first_message.input_value()
+    msg = "Persist greeting A" if "Persist greeting B" not in current else "Persist greeting B"
+    _fill_greeting(dentivoice_page, dentivoice_page.first_message, msg)
     dentivoice_page.save_and_assert_success()
 
     dentivoice_page.navigate_to_dentivoice()
     _open(dentivoice_page)
     value = dentivoice_page.first_message.input_value()
-    assert "Persist greeting test" in value
+    assert msg in value
     dentivoice_page.cancel()
