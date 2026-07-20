@@ -112,7 +112,8 @@ def test_greetings_persist_after_reload(dentivoice_page):
     _open(dentivoice_page)
     # Read current value and use a different one to guarantee dirty state
     current = dentivoice_page.first_message.input_value()
-    msg = "Persist greeting A" if "Persist greeting B" not in current else "Persist greeting B"
+    # Use B if current is A, use A if current is B — always different
+    msg = "Persist greeting B" if "Persist greeting A" in current else "Persist greeting A"
     _fill_greeting(dentivoice_page, dentivoice_page.first_message, msg)
     dentivoice_page.save_and_assert_success()
 
