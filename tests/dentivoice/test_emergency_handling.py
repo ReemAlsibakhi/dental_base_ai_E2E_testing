@@ -143,10 +143,23 @@ def test_first_aid_3000_chars_accepted(dentivoice_page):
     modal = _get_modal(dentivoice_page)
     switches = modal.locator('button[role="switch"]')
     if switches.count() > 0:
-        if switches.first.get_attribute("aria-checked") == "false":
-            switches.first.click()
-            dentivoice_page.page.wait_for_timeout(300)
-        _fill_field(dentivoice_page, 'textarea[name="firstAidAdvice"]', FIRST_AID_MAX_VALID)
+        # Toggle twice to guarantee dirty state
+        switches.first.click()
+        dentivoice_page.page.wait_for_timeout(300)
+        switches.first.click()
+        dentivoice_page.page.wait_for_timeout(300)
+        if switches.first.get_attribute("aria-checked") == "true":
+            advice = modal.locator('textarea[name="firstAidAdvice"]')
+            if advice.count() > 0:
+                advice.click(click_count=3)
+                advice.press("Control+a")
+                advice.press("Backspace")
+                dentivoice_page.page.wait_for_timeout(200)
+                advice.evaluate(f"""el => {{
+                    el.focus();
+                    document.execCommand('insertText', false, {'A' * 3000!r});
+                }}""")
+                dentivoice_page.page.wait_for_timeout(500)
     dentivoice_page.save_and_assert_success()
 
 
@@ -161,7 +174,11 @@ def test_first_aid_3000_chars_accepted(dentivoice_page):
 def test_emergency_config_persists(dentivoice_page):
     """TC-R-DV-03: Emergency config persists after reload."""
     _open(dentivoice_page)
-    _click_option(dentivoice_page, "Refer to Emergency Room")
+    # Switch away from current then to On-Call to guarantee dirty state
+    _click_option(dentivoice_page, "Book Earliest Available")
+    dentivoice_page.page.wait_for_timeout(200)
+    _click_option(dentivoice_page, "Connect to On-Call")
+    _fill_field(dentivoice_page, 'input[type="tel"]', "555-999-8888")
     dentivoice_page.save_and_assert_success()
 
     dentivoice_page.navigate_to_dentivoice()
