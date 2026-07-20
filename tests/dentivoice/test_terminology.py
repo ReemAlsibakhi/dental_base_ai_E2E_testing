@@ -101,3 +101,20 @@ def test_send_task_emails_persists(dentivoice_page):
     toggle = _get_toggle(dentivoice_page, 1)
     assert toggle.get_attribute("aria-checked") == new_state
     dentivoice_page.cancel()
+
+
+@pytest.mark.functional
+def test_quick_setup_template_applies(dentivoice_page):
+    """TC-F-DV-19: Quick Setup Template applies preset values."""
+    _open(dentivoice_page)
+    modal = _get_modal(dentivoice_page)
+    # Look for Quick Setup / Template button
+    template_btn = modal.get_by_role("button", name="Quick Setup").first
+    if not template_btn.is_visible():
+        template_btn = modal.get_by_text("Template", exact=False).first
+    if template_btn.is_visible():
+        template_btn.click()
+        dentivoice_page.page.wait_for_timeout(500)
+        dentivoice_page.save_and_assert_success()
+    else:
+        pytest.skip("Quick Setup Template button not found in Terminology panel")

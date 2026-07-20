@@ -212,3 +212,20 @@ def test_triage_script_5001_chars_rejected(dentivoice_page):
     is_disabled = dentivoice_page.save_button.is_disabled()
     assert errors > 0 or is_disabled, "5001-char triage script should be rejected"
     dentivoice_page.cancel()
+
+
+@pytest.mark.negative
+def test_oncall_invalid_phone_shows_error(dentivoice_page):
+    """TC-N-DV-13: On-Call + invalid phone format → error."""
+    _open(dentivoice_page)
+    _click_option(dentivoice_page, "Connect to On-Call")
+    _fill_field(dentivoice_page, 'input[type="tel"]', "not-a-phone!!!")
+    dentivoice_page.page.wait_for_timeout(500)
+    errors = dentivoice_page.page.locator("p.text-red-500").count()
+    is_disabled = dentivoice_page.save_button.is_disabled()
+    if not is_disabled and errors == 0:
+        dentivoice_page.click_save()
+        dentivoice_page.page.wait_for_timeout(500)
+        errors = dentivoice_page.page.locator("p.text-red-500").count()
+    assert errors > 0 or is_disabled, "Invalid phone should show error"
+    dentivoice_page.cancel()

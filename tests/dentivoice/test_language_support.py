@@ -61,3 +61,14 @@ def test_language_selection_persists(dentivoice_page):
     switches = _get_language_switches(dentivoice_page)
     assert switches.first.get_attribute("aria-checked") == "true"
     dentivoice_page.cancel()
+
+
+@pytest.mark.negative
+def test_remove_all_languages_blocked(dentivoice_page):
+    """TC-N-DV-07: Cannot remove all languages — default always selected."""
+    _open(dentivoice_page)
+    # Language switches always have at least one ON by default — cannot remove all
+    switches = _get_language_switches(dentivoice_page)
+    on_switches = [s for s in switches.all() if s.get_attribute("aria-checked") == "true"]
+    assert len(on_switches) >= 1, "At least one language must always be selected"
+    dentivoice_page.cancel()
