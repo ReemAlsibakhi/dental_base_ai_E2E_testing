@@ -63,11 +63,13 @@ def test_emergency_panel_opens(dentivoice_page):
 
 @pytest.mark.functional
 def test_book_earliest_saves(dentivoice_page):
-    """TC-F-DV-10: Book Earliest saves — always switch away first."""
+    """TC-F-DV-10: Book Earliest saves — switch to ER then Book Earliest."""
     _open(dentivoice_page)
-    # Always click a different option first to guarantee dirty state
-    _click_option(dentivoice_page, "Connect to On-Call")
+    _click_option(dentivoice_page, "Refer to Emergency Room")
     dentivoice_page.page.wait_for_timeout(300)
+    dentivoice_page.save_and_assert_success()
+    # Reopen and switch back to Book Earliest
+    _open(dentivoice_page)
     _click_option(dentivoice_page, "Book Earliest Available")
     dentivoice_page.page.wait_for_timeout(300)
     dentivoice_page.save_and_assert_success()
