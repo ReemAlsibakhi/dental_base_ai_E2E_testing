@@ -184,3 +184,31 @@ def test_emergency_config_persists(dentivoice_page):
     _open(dentivoice_page)
     expect(dentivoice_page.cancel_button).to_be_visible()
     dentivoice_page.cancel()
+
+
+@pytest.mark.boundary
+def test_triage_script_5000_chars_accepted(dentivoice_page):
+    """TC-B-DV-11: Triage script 5000 chars (max valid per DV·R16)."""
+    _open(dentivoice_page)
+    modal = _get_modal(dentivoice_page)
+    triage = modal.locator('textarea[name="emergencyTriageScript"]')
+    dentivoice_page.smart_fill(triage, "A" * 5000)
+    dentivoice_page.page.wait_for_timeout(1000)
+    errors = dentivoice_page.page.locator("p.text-red-500").count()
+    assert errors == 0, "5000-char triage script should be accepted"
+    dentivoice_page.save_and_assert_success()
+
+
+@pytest.mark.boundary
+@pytest.mark.xfail(reason="DV·R16: max 5000 chars not enforced in DOM (maxLength=-1)")
+def test_triage_script_5001_chars_rejected(dentivoice_page):
+    """TC-B-DV-12: Triage script 5001 chars → error (per DV·R16)."""
+    _open(dentivoice_page)
+    modal = _get_modal(dentivoice_page)
+    triage = modal.locator('textarea[name="emergencyTriageScript"]')
+    dentivoice_page.smart_fill(triage, "A" * 5001)
+    dentivoice_page.page.wait_for_timeout(1000)
+    errors = dentivoice_page.page.locator("p.text-red-500").count()
+    is_disabled = dentivoice_page.save_button.is_disabled()
+    assert errors > 0 or is_disabled, "5001-char triage script should be rejected"
+    dentivoice_page.cancel()
