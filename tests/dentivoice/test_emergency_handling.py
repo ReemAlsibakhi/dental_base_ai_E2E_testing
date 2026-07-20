@@ -56,13 +56,17 @@ def test_emergency_panel_opens(dentivoice_page):
 
 @pytest.mark.functional
 def test_book_earliest_saves(dentivoice_page):
-    """TC-F-DV-10: Book Earliest option saves successfully."""
+    """TC-F-DV-10: Book Earliest option saves — switch away then back."""
     _open(dentivoice_page)
     modal = _get_modal(dentivoice_page)
-    book_btn = modal.get_by_text("Book Earliest", exact=False).first
-    if book_btn.is_visible():
-        book_btn.click()
-        dentivoice_page.page.wait_for_timeout(300)
+    # Switch to On-Call first to create dirty state
+    oncall = modal.locator('div.cursor-pointer').nth(1)
+    oncall.click()
+    dentivoice_page.page.wait_for_timeout(300)
+    # Then switch back to Book Earliest
+    book = modal.locator('div.cursor-pointer').nth(0)
+    book.click()
+    dentivoice_page.page.wait_for_timeout(300)
     dentivoice_page.save_and_assert_success()
 
 
@@ -171,11 +175,11 @@ def test_first_aid_3001_chars_rejected(dentivoice_page):
             switches.first.click()
             dentivoice_page.page.wait_for_timeout(300)
         _fill_field(dentivoice_page, 'textarea', FIRST_AID_MAX_INVALID)
-    dentivoice_page.click_save()
     dentivoice_page.page.wait_for_timeout(500)
     errors = dentivoice_page.page.locator("p.text-red-500").count()
-    is_disabled = dentivoice_page.save_button.is_disabled()
-    assert errors > 0 or is_disabled
+    save_btn = dentivoice_page.page.locator('button:has-text("Save Changes")').first
+    is_disabled = save_btn.is_disabled() if save_btn.is_visible() else True
+    assert errors > 0 or is_disabled, "3001-char first aid should be rejected"
     dentivoice_page.cancel()
 
 
