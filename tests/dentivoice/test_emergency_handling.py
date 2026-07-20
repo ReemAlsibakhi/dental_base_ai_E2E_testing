@@ -38,20 +38,14 @@ def _click_option(dv, text):
 def _fill_field(dv, selector, value):
     modal = _get_modal(dv)
     field = modal.locator(selector).first
-    field.click()
+    field.click(click_count=3)
     dv.page.wait_for_timeout(100)
-    field.evaluate("""el => {
-        el.focus();
-        el.setSelectionRange(0, el.value.length);
-        document.execCommand('delete', false, null);
-    }""")
-    dv.page.wait_for_timeout(300)
+    field.press("Control+a")
+    field.press("Backspace")
+    dv.page.wait_for_timeout(200)
     if value:
-        field.evaluate(f"""el => {{
-            el.focus();
-            document.execCommand('insertText', false, {repr(value)});
-        }}""")
-        dv.page.wait_for_timeout(300)
+        field.press_sequentially(value, delay=30)
+    dv.page.wait_for_timeout(300)
 
 
 # ===========================================================================
@@ -95,7 +89,7 @@ def test_oncall_with_valid_phone_saves(dentivoice_page):
     """TC-F-DV-11: Connect to On-Call + valid phone → saves."""
     _open(dentivoice_page)
     _click_option(dentivoice_page, "Connect to On-Call")
-    _fill_field(dentivoice_page, 'input[type="text"], input[placeholder*="phone" i]', VALID_PHONE)
+    _fill_field(dentivoice_page, 'input[type="tel"]', VALID_PHONE)
     dentivoice_page.save_and_assert_success()
 
 
@@ -108,7 +102,7 @@ def test_oncall_empty_phone_shows_error(dentivoice_page):
     """TC-N-DV-12: On-Call + empty phone → error."""
     _open(dentivoice_page)
     _click_option(dentivoice_page, "Connect to On-Call")
-    _fill_field(dentivoice_page, 'input[type="text"], input[placeholder*="phone" i]', "")
+    _fill_field(dentivoice_page, 'input[type="tel"]', "")
     dentivoice_page.click_save()
     dentivoice_page.page.wait_for_timeout(500)
     errors = dentivoice_page.page.locator("p.text-red-500").count()
