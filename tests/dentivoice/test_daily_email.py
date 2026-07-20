@@ -18,17 +18,17 @@ def _get_modal(dv):
 
 
 def _fill_email(dv, value):
-    """Fill email input — type=email does not support setSelectionRange."""
+    """Fill email input — use fill() which works for type=email."""
     modal = _get_modal(dv)
     field = modal.locator('input[type="email"], input[placeholder*="email" i]').first
-    # Triple click to select all, then type
-    field.click(click_count=3)
+    field.click()
     dv.page.wait_for_timeout(100)
-    field.press("Control+a")
-    field.press("Backspace")
+    # fill() clears and sets value, works for input[type=email]
+    field.fill(value if value else "temp@temp.com")
     dv.page.wait_for_timeout(200)
-    if value:
-        field.press_sequentially(value, delay=50)
+    if not value:
+        # For empty: clear after fill
+        field.fill("")
     dv.page.wait_for_timeout(300)
 
 
