@@ -15,21 +15,11 @@ def _open(dv):
 
 
 def _fill_greeting(dv, locator, value):
-    """Fill greeting textarea using execCommand."""
-    locator.click()
-    dv.page.wait_for_timeout(100)
-    locator.evaluate("""el => {
-        el.focus();
-        el.setSelectionRange(0, el.value.length);
-        document.execCommand('delete', false, null);
-    }""")
+    """Fill greeting textarea using fill_textarea from POM."""
+    dv.fill_textarea(locator, value if value else " ")
+    if not value:
+        locator.fill("")
     dv.page.wait_for_timeout(300)
-    if value:
-        locator.evaluate(f"""el => {{
-            el.focus();
-            document.execCommand('insertText', false, {repr(value)});
-        }}""")
-        dv.page.wait_for_timeout(300)
 
 
 @pytest.mark.functional
