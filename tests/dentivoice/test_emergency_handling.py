@@ -150,16 +150,11 @@ def test_first_aid_3000_chars_accepted(dentivoice_page):
     switch.click()
     dentivoice_page.page.wait_for_timeout(500)
     assert switch.get_attribute("aria-checked") == "true"
-    # Fill firstAidAdvice with 3000 chars
+    # Fill firstAidAdvice with 3000 chars using fill_textarea pattern
     advice = modal.locator('textarea[name="firstAidAdvice"]')
     advice.click()
     dentivoice_page.page.wait_for_timeout(100)
-    advice.fill("")
-    dentivoice_page.page.wait_for_timeout(200)
-    advice.evaluate(f"""el => {{
-        el.focus();
-        document.execCommand('insertText', false, {'A' * 3000!r});
-    }}""")
+    dentivoice_page.fill_textarea(advice, "A" * 3000)
     dentivoice_page.page.wait_for_timeout(500)
     dentivoice_page.save_and_assert_success()
 
