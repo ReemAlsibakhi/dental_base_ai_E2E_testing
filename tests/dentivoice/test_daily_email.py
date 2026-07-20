@@ -18,22 +18,18 @@ def _get_modal(dv):
 
 
 def _fill_email(dv, value):
+    """Fill email input — type=email does not support setSelectionRange."""
     modal = _get_modal(dv)
     field = modal.locator('input[type="email"], input[placeholder*="email" i]').first
-    field.click()
+    # Triple click to select all, then type
+    field.click(click_count=3)
     dv.page.wait_for_timeout(100)
-    field.evaluate("""el => {
-        el.focus();
-        el.setSelectionRange(0, el.value.length);
-        document.execCommand('delete', false, null);
-    }""")
-    dv.page.wait_for_timeout(300)
+    field.press("Control+a")
+    field.press("Backspace")
+    dv.page.wait_for_timeout(200)
     if value:
-        field.evaluate(f"""el => {{
-            el.focus();
-            document.execCommand('insertText', false, {repr(value)});
-        }}""")
-        dv.page.wait_for_timeout(300)
+        field.press_sequentially(value, delay=50)
+    dv.page.wait_for_timeout(300)
 
 
 # ===========================================================================
@@ -70,9 +66,13 @@ def test_daily_email_toggle_off_saves(dentivoice_page):
     _open(dentivoice_page)
     modal = _get_modal(dentivoice_page)
     toggle = modal.locator('button[role="switch"]').nth(0)
-    if toggle.get_attribute("aria-checked") == "true":
+    # Ensure OFF — if already OFF, turn ON first to create dirty state
+    if toggle.get_attribute("aria-checked") == "false":
         toggle.click()
         dentivoice_page.page.wait_for_timeout(500)
+    toggle.click()
+    dentivoice_page.page.wait_for_timeout(500)
+    assert toggle.get_attribute("aria-checked") == "false"
     dentivoice_page.save_and_assert_success()
 
 
