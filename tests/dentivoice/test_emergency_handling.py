@@ -155,7 +155,8 @@ def test_first_aid_3000_chars_accepted(dentivoice_page):
     advice.click()
     dentivoice_page.page.wait_for_timeout(100)
     dentivoice_page.fill_textarea(advice, "A" * 3000)
-    dentivoice_page.page.wait_for_timeout(500)
+    # Wait for debounce to complete before saving
+    dentivoice_page.page.wait_for_timeout(2000)
     dentivoice_page.save_and_assert_success()
 
 
