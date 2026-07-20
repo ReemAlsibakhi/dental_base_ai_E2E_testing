@@ -150,12 +150,15 @@ def test_first_aid_3000_chars_accepted(dentivoice_page):
     switch.click()
     dentivoice_page.page.wait_for_timeout(500)
     assert switch.get_attribute("aria-checked") == "true"
-    # Fill firstAidAdvice with 3000 chars using fill_textarea pattern
+    # Fill firstAidAdvice — use temp value first to guarantee dirty state
     advice = modal.locator('textarea[name="firstAidAdvice"]')
     advice.click()
     dentivoice_page.page.wait_for_timeout(100)
-    dentivoice_page.fill_textarea(advice, "A" * 3000)
-    # Wait for debounce to complete before saving
+    # Step 1: fill with temp to guarantee change
+    dentivoice_page.fill_textarea(advice, "temp")
+    dentivoice_page.page.wait_for_timeout(500)
+    # Step 2: fill with actual 3000 chars
+    dentivoice_page.fill_textarea(advice, "B" * 3000)
     dentivoice_page.page.wait_for_timeout(2000)
     dentivoice_page.save_and_assert_success()
 
