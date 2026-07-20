@@ -141,25 +141,29 @@ def test_first_aid_3000_chars_accepted(dentivoice_page):
     """TC-B-DV-10: First-aid advice 3000 chars (max valid)."""
     _open(dentivoice_page)
     modal = _get_modal(dentivoice_page)
-    switches = modal.locator('button[role="switch"]')
-    if switches.count() > 0:
-        # Toggle twice to guarantee dirty state
-        switches.first.click()
+    switch = modal.locator('button[role="switch"]').first
+    # Turn OFF if ON, then ON to guarantee dirty + advice field visible
+    if switch.get_attribute("aria-checked") == "true":
+        switch.click()
         dentivoice_page.page.wait_for_timeout(300)
-        switches.first.click()
-        dentivoice_page.page.wait_for_timeout(300)
-        if switches.first.get_attribute("aria-checked") == "true":
-            advice = modal.locator('textarea[name="firstAidAdvice"]')
-            if advice.count() > 0:
-                advice.click(click_count=3)
-                advice.press("Control+a")
-                advice.press("Backspace")
-                dentivoice_page.page.wait_for_timeout(200)
-                advice.evaluate(f"""el => {{
-                    el.focus();
-                    document.execCommand('insertText', false, {'A' * 3000!r});
-                }}""")
-                dentivoice_page.page.wait_for_timeout(500)
+    switch.click()
+    dentivoice_page.page.wait_for_timeout(500)
+    assert switch.get_attribute("aria-checked") == "true"
+    # Fill firstAidAdvice with 3000 chars
+    advice = modal.locator('textarea[name="firstAidAdvice"]')
+    advice.click()
+    dentivoice_page.page.wait_for_timeout(100)
+    advice.evaluate("""el => {
+        el.focus();
+        el.setSelectionRange(0, el.value.length);
+        document.execCommand('delete', false, null);
+    }""")
+    dentivoice_page.page.wait_for_timeout(200)
+    advice.evaluate(f"""el => {{
+        el.focus();
+        document.execCommand('insertText', false, {'A' * 3000!r});
+    }}""")
+    dentivoice_page.page.wait_for_timeout(500)
     dentivoice_page.save_and_assert_success()
 
 
