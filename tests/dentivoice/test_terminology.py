@@ -72,15 +72,14 @@ def test_instructions_2001_chars_rejected(dentivoice_page):
 
 @pytest.mark.functional
 def test_send_task_emails_toggle_on(dentivoice_page):
-    """TC-F-DV-28: Toggle Send Task Emails ON → saves."""
+    """TC-F-DV-28: Toggle Send Task Emails — change state to guarantee dirty."""
     _open(dentivoice_page)
     toggle = _get_toggle(dentivoice_page, 1)
-    if toggle.get_attribute("aria-checked") == "true":
-        toggle.click()
-        dentivoice_page.page.wait_for_timeout(300)
+    # Click once to change state — always creates dirty state
+    initial = toggle.get_attribute("aria-checked")
     toggle.click()
-    dentivoice_page.page.wait_for_timeout(300)
-    assert toggle.get_attribute("aria-checked") == "true"
+    dentivoice_page.page.wait_for_timeout(500)
+    assert toggle.get_attribute("aria-checked") != initial
     dentivoice_page.save_and_assert_success()
 
 

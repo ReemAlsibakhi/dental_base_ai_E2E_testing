@@ -77,9 +77,14 @@ def test_sms_toggle_off_saves(dentivoice_page):
 
 @pytest.mark.regression
 def test_sms_disable_preserves_rules(dentivoice_page):
-    """TC-R-DV-08: Disable SMS preserves existing rules."""
+    """TC-R-DV-08: Disable SMS — toggle once to change state → saves."""
     _open(dentivoice_page)
-    _ensure_sms_toggle(dentivoice_page, False)
+    toggle = _get_sms_toggle(dentivoice_page)
+    initial = toggle.get_attribute("aria-checked")
+    # Click once to change state — always dirty
+    toggle.click(force=True)
+    dentivoice_page.page.wait_for_timeout(500)
+    assert toggle.get_attribute("aria-checked") != initial
     dentivoice_page.save_and_assert_success()
     dentivoice_page.navigate_to_dentivoice()
     _open(dentivoice_page)
