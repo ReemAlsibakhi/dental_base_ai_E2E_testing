@@ -243,8 +243,16 @@ def pytest_runtest_makereport(item, call):
     rep = outcome.get_result()
 
     if rep.when == "call" and rep.failed:
-        # Screenshot
-        page: Page = item.funcargs.get("admin_page") or item.funcargs.get("non_admin_page")
+        # Screenshot — check all possible page-bearing fixtures
+        page: Page = None
+        for fixture_name in ("admin_page", "non_admin_page", "profile_page",
+                             "practice_profile_page", "scheduling_rules_page",
+                             "patient_outreach_page", "dentivoice_page"):
+            fixture_val = item.funcargs.get(fixture_name)
+            if fixture_val is not None:
+                # POM fixtures have .page attribute, raw page fixtures are Page directly
+                page = getattr(fixture_val, "page", fixture_val)
+                break
         screenshot_path = None
         if page and not page.is_closed():
             Path("reports/screenshots").mkdir(parents=True, exist_ok=True)
@@ -346,31 +354,6 @@ def pytest_sessionfinish(session, exitstatus):
 from pages.practice_profile_page import PracticeProfilePage
 
 
-@pytest.fixture()
-def practice_profile_page(admin_page: Page) -> PracticeProfilePage:
-    """Navigate to Practice Profile tab and open Edit form."""
-    pp = PracticeProfilePage(admin_page)
-    pp.navigate_to_practice_profile()
-    pp.open_edit_form()
-    return pp
-
-
-@pytest.fixture(scope="module")
-def practice_profile_form_open(admin_context: BrowserContext) -> PracticeProfilePage:
-    """Practice Profile edit form open for entire module — no re-navigation per test."""
-    page = admin_context.new_page()
-    pp = PracticeProfilePage(page)
-    pp.navigate_to_practice_profile()
-    pp.open_edit_form()
-    yield pp
-    try:
-        pp.cancel()
-    except Exception:
-        pass
-    if not page.is_closed():
-        page.close()
-
-
 # ---------------------------------------------------------------------------
 # Practice Profile — uses same admin_context (one session for entire site)
 # ---------------------------------------------------------------------------
@@ -422,7 +405,11 @@ def scheduling_rules_page(admin_context: BrowserContext) -> SchedulingRulesPage:
     sr = SchedulingRulesPage(page)
     sr.navigate_to_scheduling_rules()
     yield sr
-    sr.cancel()
+    try:
+        if not page.is_closed():
+            sr.cancel()
+    except Exception:
+        pass
     if not page.is_closed():
         page.close()
 
@@ -441,7 +428,11 @@ def patient_outreach_page(admin_context: BrowserContext) -> PatientOutreachPage:
     po = PatientOutreachPage(page)
     po.navigate_to_patient_outreach()
     yield po
-    po.cancel()
+    try:
+        if not page.is_closed():
+            po.cancel()
+    except Exception:
+        pass
     if not page.is_closed():
         page.close()
 
@@ -460,6 +451,10 @@ def dentivoice_page(admin_context: BrowserContext) -> DentiVoicePage:
     dv = DentiVoicePage(page)
     dv.navigate_to_dentivoice()
     yield dv
-    dv.cancel()
+    try:
+        if not page.is_closed():
+            dv.cancel()
+    except Exception:
+        pass
     if not page.is_closed():
         page.close()
