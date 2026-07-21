@@ -31,6 +31,51 @@ class BasePage:
         locator.clear()
         locator.press("Tab")
 
+    def smart_fill(self, locator: Locator, value: str, *, debounce_ms: int = 500) -> None:
+        """
+        Universal fill for React-controlled inputs and textareas.
+
+        Strategy:
+        1. Click to focus
+        2. Read current value
+        3. If same as target → set temp value first (guarantees dirty state)
+        4. Set target value via execCommand (triggers React onChange)
+        5. Wait for debounce
+
+        Works for: input[type=text], textarea
+        Does NOT work for: input[type=email], input[type=tel] → use fill() instead
+        """
+        locator.scroll_into_view_if_needed()
+        locator.click()
+        self.page.wait_for_timeout(100)
+
+        try:
+            current = locator.input_value()
+        except Exception:
+            current = ""
+
+        # If same value → set temp first to guarantee React sees a change
+        if current == value:
+            temp = "__tmp__" if value != "__tmp__" else "__tmp2__"
+            locator.evaluate(f"""el => {{
+                el.focus();
+                if (el.setSelectionRange) el.setSelectionRange(0, el.value.length);
+                document.execCommand('selectAll', false, null);
+                document.execCommand('delete', false, null);
+                document.execCommand('insertText', false, {repr(temp)});
+            }}""")
+            self.page.wait_for_timeout(300)
+
+        # Clear and set target value
+        locator.evaluate(f"""el => {{
+            el.focus();
+            if (el.setSelectionRange) el.setSelectionRange(0, el.value.length);
+            document.execCommand('selectAll', false, null);
+            document.execCommand('delete', false, null);
+            {f"document.execCommand('insertText', false, {repr(value)});" if value else ""}
+        }}""")
+        self.page.wait_for_timeout(debounce_ms)
+
     # ------------------------------------------------------------------
     # Assertions helpers
     # ------------------------------------------------------------------

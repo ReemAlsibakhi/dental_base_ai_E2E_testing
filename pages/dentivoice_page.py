@@ -128,52 +128,6 @@ class DentiVoicePage(BasePage):
     # FILL HELPERS
     # ===================================================================
 
-    def smart_fill(self, locator: Locator, value: str, *, debounce_ms: int = 500) -> None:
-        """
-        Universal fill method for all React-controlled inputs/textareas.
-
-        Strategy:
-        1. Click to focus
-        2. Read current value
-        3. If same as target → set a temp value first (guarantees dirty state)
-        4. Set target value via execCommand (confirmed to trigger React onChange)
-        5. Wait for debounce
-
-        Works for: input[type=text], textarea, input[name=aiName]
-        Does NOT work for: input[type=email], input[type=tel] → use fill() instead
-        """
-        locator.scroll_into_view_if_needed()
-        locator.click()
-        self.page.wait_for_timeout(100)
-
-        # Read current value
-        try:
-            current = locator.input_value()
-        except Exception:
-            current = ""
-
-        # If same value → set temp first to guarantee React sees a change
-        if current == value:
-            temp = "__tmp__" if value != "__tmp__" else "__tmp2__"
-            locator.evaluate(f"""el => {{
-                el.focus();
-                el.setSelectionRange ? el.setSelectionRange(0, el.value.length) : null;
-                document.execCommand('selectAll', false, null);
-                document.execCommand('delete', false, null);
-                document.execCommand('insertText', false, {repr(temp)});
-            }}""")
-            self.page.wait_for_timeout(300)
-
-        # Clear and set target value
-        locator.evaluate(f"""el => {{
-            el.focus();
-            el.setSelectionRange ? el.setSelectionRange(0, el.value.length) : null;
-            document.execCommand('selectAll', false, null);
-            document.execCommand('delete', false, null);
-            {f"document.execCommand('insertText', false, {repr(value)});" if value else ""}
-        }}""")
-        self.page.wait_for_timeout(debounce_ms)
-
     def fill_ai_name(self, value: str) -> None:
         """Fill Assistant Name field."""
         self.smart_fill(self.ai_name_input, value, debounce_ms=800)
