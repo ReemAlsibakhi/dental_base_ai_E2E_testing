@@ -262,3 +262,11 @@ def test_practice_type_all_options_available(practice_profile_form_open):
     )
     for opt in ["general", "pediatric", "orthodontic", "oral_surgery", "periodontic", "endodontic"]:
         assert opt in options
+
+
+@pytest.mark.functional
+def test_practice_type_can_select_pediatric(practice_profile_form_open):
+    """TC-F: Practice Type accepts valid selection."""
+    practice_profile_form_open.practice_type_select.scroll_into_view_if_needed()
+    practice_profile_form_open.practice_type_select.select_option("pediatric")
+    assert practice_profile_form_open.practice_type_select.input_value() == "pediatric"

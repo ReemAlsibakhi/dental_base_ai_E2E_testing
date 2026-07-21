@@ -129,3 +129,23 @@ def test_additional_notes_xss_rejected(practice_profile_form_open):
     _fill(practice_profile_form_open, practice_profile_form_open.additional_notes, "<script>alert(1)</script>")
     error = practice_profile_form_open.page.locator('[name="practiceInfoAdditionalNotes"] ~ p[id$="-error"]')
     expect(error).to_be_visible()
+
+
+@pytest.mark.functional
+def test_parking_details_visible_when_enabled(practice_profile_form_open):
+    toggle = practice_profile_form_open.parking_toggle
+    toggle.scroll_into_view_if_needed()
+    if toggle.get_attribute("data-state") != "checked":
+        toggle.click()
+    practice_profile_form_open.page.wait_for_timeout(300)
+    assert toggle.get_attribute("data-state") == "checked"
+
+
+@pytest.mark.functional
+def test_parking_details_hidden_when_disabled(practice_profile_form_open):
+    toggle = practice_profile_form_open.parking_toggle
+    toggle.scroll_into_view_if_needed()
+    if toggle.get_attribute("data-state") == "checked":
+        toggle.click()
+    practice_profile_form_open.page.wait_for_timeout(300)
+    assert toggle.get_attribute("data-state") == "unchecked"
