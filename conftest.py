@@ -182,55 +182,9 @@ def non_admin_page(non_admin_context: BrowserContext) -> Page:
 
 
 # ---------------------------------------------------------------------------
-# Page object fixtures
+# Page object fixtures — moved to module-level conftest files
+# See: tests/profile/conftest.py, tests/practice_profile/conftest.py, etc.
 # ---------------------------------------------------------------------------
-
-@pytest.fixture()
-def profile_page(admin_page: Page) -> ProfilePage:
-    pp = ProfilePage(admin_page)
-    pp.navigate_to_profile()
-    return pp
-
-
-@pytest.fixture()
-def profile_page_non_admin(non_admin_page: Page) -> ProfilePage:
-    pp = ProfilePage(non_admin_page)
-    pp.navigate_to_profile()
-    return pp
-
-
-@pytest.fixture(scope="module")
-def profile_page_modal_open(admin_context: BrowserContext) -> ProfilePage:
-    """Edit Profile modal open for entire module."""
-    page = admin_context.new_page()
-    pp = ProfilePage(page)
-    pp.navigate_to_profile()
-    pp.open_edit_modal()
-    yield pp
-    try:
-        if pp.edit_modal.is_visible():
-            pp.close_panel_button.click()
-    except Exception:
-        pass
-    if not page.is_closed():
-        page.close()
-
-
-@pytest.fixture(scope="module")
-def add_user_panel_open(admin_context: BrowserContext) -> ProfilePage:
-    """Add User panel open for entire module."""
-    page = admin_context.new_page()
-    pp = ProfilePage(page)
-    pp.navigate_to_profile()
-    pp.open_add_user_form()
-    yield pp
-    try:
-        if pp.add_user_modal.is_visible():
-            pp.add_user_cancel_button.click()
-    except Exception:
-        pass
-    if not page.is_closed():
-        page.close()
 
 
 # ---------------------------------------------------------------------------
@@ -351,110 +305,13 @@ def pytest_sessionfinish(session, exitstatus):
 # Practice Profile fixtures
 # ---------------------------------------------------------------------------
 
-from pages.practice_profile_page import PracticeProfilePage
 
 
-# ---------------------------------------------------------------------------
-# Practice Profile — uses same admin_context (one session for entire site)
-# ---------------------------------------------------------------------------
 
 
-@pytest.fixture()
-def practice_profile_page(admin_context: BrowserContext) -> PracticeProfilePage:
-    """Navigate to Practice Profile tab and open Edit form."""
-    page = admin_context.new_page()
-    pp = PracticeProfilePage(page)
-    pp.navigate_to_practice_profile()
-    pp.open_edit_form()
-    yield pp
-    try:
-        pp.cancel()
-    except Exception:
-        pass
-    if not page.is_closed():
-        page.close()
 
 
-@pytest.fixture(scope="module")
-def practice_profile_form_open(admin_context: BrowserContext) -> PracticeProfilePage:
-    """Practice Profile edit form open for entire module — no re-navigation per test."""
-    page = admin_context.new_page()
-    pp = PracticeProfilePage(page)
-    pp.navigate_to_practice_profile()
-    pp.open_edit_form()
-    yield pp
-    try:
-        pp.cancel()
-    except Exception:
-        pass
-    if not page.is_closed():
-        page.close()
 
 
-# ---------------------------------------------------------------------------
-# Scheduling Rules — uses same admin_context (one session for entire site)
-# ---------------------------------------------------------------------------
-
-from pages.scheduling_rules_page import SchedulingRulesPage
 
 
-@pytest.fixture()
-def scheduling_rules_page(admin_context: BrowserContext) -> SchedulingRulesPage:
-    """Navigate to Scheduling Rules tab."""
-    page = admin_context.new_page()
-    sr = SchedulingRulesPage(page)
-    sr.navigate_to_scheduling_rules()
-    yield sr
-    try:
-        if not page.is_closed():
-            sr.cancel()
-    except Exception:
-        pass
-    if not page.is_closed():
-        page.close()
-
-
-# ---------------------------------------------------------------------------
-# Patient Outreach — uses same admin_context
-# ---------------------------------------------------------------------------
-
-from pages.patient_outreach_page import PatientOutreachPage
-
-
-@pytest.fixture()
-def patient_outreach_page(admin_context: BrowserContext) -> PatientOutreachPage:
-    """Navigate to Patient Outreach tab."""
-    page = admin_context.new_page()
-    po = PatientOutreachPage(page)
-    po.navigate_to_patient_outreach()
-    yield po
-    try:
-        if not page.is_closed():
-            po.cancel()
-    except Exception:
-        pass
-    if not page.is_closed():
-        page.close()
-
-
-# ---------------------------------------------------------------------------
-# DentiVoice — uses same admin_context
-# ---------------------------------------------------------------------------
-
-from pages.dentivoice_page import DentiVoicePage
-
-
-@pytest.fixture()
-def dentivoice_page(admin_context: BrowserContext) -> DentiVoicePage:
-    """Navigate to DentiVoice tab."""
-    page = admin_context.new_page()
-    dv = DentiVoicePage(page)
-    dv.navigate_to_dentivoice()
-    yield dv
-    try:
-        if not page.is_closed():
-            dv.cancel()
-    except Exception:
-        pass
-    if not page.is_closed():
-        page.close()
