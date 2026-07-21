@@ -307,3 +307,160 @@ def pytest_sessionfinish(session, exitstatus):
     report_path.write_text("\n".join(lines))
     print(f"\n📋 Bug report generated: {report_path}")
     print(f"   {len(_failures)} failures documented")
+
+# ---------------------------------------------------------------------------
+# Profile fixtures
+# ---------------------------------------------------------------------------
+
+from pages.profile_page import ProfilePage
+
+
+@pytest.fixture()
+def profile_page(admin_page: Page) -> ProfilePage:
+    pp = ProfilePage(admin_page)
+    pp.navigate_to_profile()
+    return pp
+
+
+@pytest.fixture()
+def profile_page_non_admin(non_admin_page: Page) -> ProfilePage:
+    pp = ProfilePage(non_admin_page)
+    pp.navigate_to_profile()
+    return pp
+
+
+@pytest.fixture(scope="module")
+def profile_page_modal_open(admin_context: BrowserContext) -> ProfilePage:
+    page = admin_context.new_page()
+    pp = ProfilePage(page)
+    pp.navigate_to_profile()
+    pp.open_edit_modal()
+    yield pp
+    try:
+        if pp.edit_modal.is_visible():
+            pp.close_panel_button.click()
+    except Exception:
+        pass
+    if not page.is_closed():
+        page.close()
+
+
+@pytest.fixture(scope="module")
+def add_user_panel_open(admin_context: BrowserContext) -> ProfilePage:
+    page = admin_context.new_page()
+    pp = ProfilePage(page)
+    pp.navigate_to_profile()
+    pp.open_add_user_form()
+    yield pp
+    try:
+        if pp.add_user_modal.is_visible():
+            pp.add_user_cancel_button.click()
+    except Exception:
+        pass
+    if not page.is_closed():
+        page.close()
+
+
+# ---------------------------------------------------------------------------
+# Practice Profile fixtures
+# ---------------------------------------------------------------------------
+
+from pages.practice_profile_page import PracticeProfilePage
+
+
+@pytest.fixture()
+def practice_profile_page(admin_context: BrowserContext) -> PracticeProfilePage:
+    page = admin_context.new_page()
+    pp = PracticeProfilePage(page)
+    pp.navigate_to_practice_profile()
+    pp.open_edit_form()
+    yield pp
+    try:
+        if not page.is_closed():
+            pp.cancel()
+    except Exception:
+        pass
+    if not page.is_closed():
+        page.close()
+
+
+@pytest.fixture(scope="module")
+def practice_profile_form_open(admin_context: BrowserContext) -> PracticeProfilePage:
+    page = admin_context.new_page()
+    pp = PracticeProfilePage(page)
+    pp.navigate_to_practice_profile()
+    pp.open_edit_form()
+    yield pp
+    try:
+        if not page.is_closed():
+            pp.cancel()
+    except Exception:
+        pass
+    if not page.is_closed():
+        page.close()
+
+
+# ---------------------------------------------------------------------------
+# Scheduling Rules fixtures
+# ---------------------------------------------------------------------------
+
+from pages.scheduling_rules_page import SchedulingRulesPage
+
+
+@pytest.fixture()
+def scheduling_rules_page(admin_context: BrowserContext) -> SchedulingRulesPage:
+    page = admin_context.new_page()
+    sr = SchedulingRulesPage(page)
+    sr.navigate_to_scheduling_rules()
+    yield sr
+    try:
+        if not page.is_closed():
+            sr.cancel()
+    except Exception:
+        pass
+    if not page.is_closed():
+        page.close()
+
+
+# ---------------------------------------------------------------------------
+# Patient Outreach fixtures
+# ---------------------------------------------------------------------------
+
+from pages.patient_outreach_page import PatientOutreachPage
+
+
+@pytest.fixture()
+def patient_outreach_page(admin_context: BrowserContext) -> PatientOutreachPage:
+    page = admin_context.new_page()
+    po = PatientOutreachPage(page)
+    po.navigate_to_patient_outreach()
+    yield po
+    try:
+        if not page.is_closed():
+            po.cancel()
+    except Exception:
+        pass
+    if not page.is_closed():
+        page.close()
+
+
+# ---------------------------------------------------------------------------
+# DentiVoice fixtures
+# ---------------------------------------------------------------------------
+
+from pages.dentivoice_page import DentiVoicePage
+
+
+@pytest.fixture()
+def dentivoice_page(admin_context: BrowserContext) -> DentiVoicePage:
+    page = admin_context.new_page()
+    dv = DentiVoicePage(page)
+    dv.navigate_to_dentivoice()
+    yield dv
+    try:
+        if not page.is_closed():
+            dv.cancel()
+    except Exception:
+        pass
+    if not page.is_closed():
+        page.close()
