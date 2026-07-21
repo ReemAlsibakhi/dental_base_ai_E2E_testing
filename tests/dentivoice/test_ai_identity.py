@@ -153,3 +153,23 @@ def test_ai_name_31_chars_rejected(dentivoice_page):
     dentivoice_page.click_save()
     expect(dentivoice_page.error).to_contain_text(DV_ERR["name_max"])
     dentivoice_page.cancel()
+
+
+# ===========================================================================
+# Smoke
+# ===========================================================================
+
+@pytest.mark.smoke
+@pytest.mark.functional
+def test_dentivoice_tab_loads(dentivoice_page):
+    """TC-SM-DV-01: DentiVoice tab loads with Edit buttons visible."""
+    assert dentivoice_page.page.get_by_role("button", name="Edit").count() >= 4
+
+
+@pytest.mark.smoke
+@pytest.mark.functional
+def test_ai_identity_edit_opens(dentivoice_page):
+    """TC-SM-DV-02: AI Identity panel opens with Assistant Name input."""
+    dentivoice_page.open_edit(DentiVoicePage.CARD["ai_identity"])
+    expect(dentivoice_page.ai_name_input).to_be_visible()
+    dentivoice_page.cancel()

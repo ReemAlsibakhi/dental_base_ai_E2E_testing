@@ -118,3 +118,13 @@ def test_quick_setup_template_applies(dentivoice_page):
         dentivoice_page.save_and_assert_success()
     else:
         pytest.skip("Quick Setup Template button not found in Terminology panel")
+
+
+@pytest.mark.smoke
+@pytest.mark.functional
+def test_terminology_edit_opens(dentivoice_page):
+    """TC-SM-DV-03: Terminology panel opens with Additional Instructions."""
+    _open(dentivoice_page)
+    modal = _get_modal(dentivoice_page)
+    expect(modal.locator('textarea[name="additionalInstructions"]')).to_be_visible()
+    dentivoice_page.cancel()

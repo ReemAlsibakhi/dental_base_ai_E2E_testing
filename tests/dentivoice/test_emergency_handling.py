@@ -231,3 +231,12 @@ def test_oncall_invalid_phone_shows_error(dentivoice_page):
         errors = dentivoice_page.page.locator("p.text-red-500").count()
     assert errors > 0 or is_disabled, "Invalid phone should show error"
     dentivoice_page.cancel()
+
+
+@pytest.mark.smoke
+@pytest.mark.functional
+def test_emergency_configure_opens(dentivoice_page):
+    """TC-SM-DV-04: Emergency Handling panel opens."""
+    _open(dentivoice_page)
+    expect(dentivoice_page.cancel_button).to_be_visible()
+    dentivoice_page.cancel()
