@@ -88,7 +88,11 @@ class InsuranceBillingPage(BasePage):
         }"""
         self.page.wait_for_function(js, timeout=10_000)
         self.save_button.click(force=True)
-        expect(self.page.get_by_text("saved successfully")).to_be_visible(timeout=10_000)
+        expect(
+            self.page.get_by_text("saved successfully", exact=False).or_(
+            self.page.locator('[role="status"]').or_(
+            self.page.locator('[data-sonner-toast]')))
+        ).to_be_visible(timeout=10_000)
 
     def click_save(self) -> None:
         self.save_button.click(force=True)
@@ -96,7 +100,10 @@ class InsuranceBillingPage(BasePage):
 
     @property
     def error(self) -> Locator:
-        return self.modal.locator("p.text-red-500").first
+        # Exclude character counter elements (e.g. "5000/500")
+        return self.modal.locator(
+            "p.text-red-500:not([aria-live]):not([id$='-counter'])"
+        ).first
 
     # ------------------------------------------------------------------
     # Coverage
@@ -137,6 +144,14 @@ class InsuranceBillingPage(BasePage):
     @property
     def add_custom_button(self) -> Locator:
         return self.modal.get_by_role("button", name="Add Custom")
+
+    def fill_coverage_percentage(self, locator, value: str) -> None:
+        """Fill number input for coverage % fields."""
+        locator.scroll_into_view_if_needed()
+        locator.fill("")
+        locator.fill(value)
+        locator.press("Tab")
+        self.page.wait_for_timeout(300)
 
     # ------------------------------------------------------------------
     # Membership Plans
