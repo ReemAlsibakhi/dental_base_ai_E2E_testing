@@ -41,22 +41,15 @@ class InsuranceBillingPage(BasePage):
         self.page.wait_for_load_state("networkidle")
 
     def open_edit(self, card_name: str) -> None:
-        """Open Edit panel by card heading text."""
-        # Find Edit button near the card heading
-        heading = self.page.get_by_text(card_name, exact=False).first
-        heading.scroll_into_view_if_needed()
-        # Click the Edit button in the same section
+        """Open Edit panel by card heading h3 text — uses XPath sibling search."""
+        # Each card row has h3 + Edit button as siblings in a flex container
+        # XPath: find h3 with text → go up to row div → find Edit button inside
         edit_btn = self.page.locator(
-            f'[class*="section"],[class*="card"],[class*="Card"],[class*="panel"]'
-        ).filter(has_text=card_name).get_by_role("button", name="Edit").first
-        if not edit_btn.is_visible():
-            # Fallback: click Edit button closest to heading
-            edit_btn = heading.locator("xpath=ancestor::div[contains(@class,'flex') or contains(@class,'grid')][1]//button[normalize-space()='Edit']").first
-        if not edit_btn.is_visible():
-            # Last resort: use page-level with text filter
-            edit_btn = self.page.get_by_role("button", name="Edit").filter(
-                has=self.page.locator(f'text="{card_name}"')
-            ).first
+            f"//h3[contains(text(),'{card_name}')]"
+            "/ancestor::div[contains(@class,'flex')][2]"
+            "//button[normalize-space()='Edit']"
+        ).first
+        edit_btn.scroll_into_view_if_needed()
         edit_btn.click()
         self.page.wait_for_timeout(500)
 
