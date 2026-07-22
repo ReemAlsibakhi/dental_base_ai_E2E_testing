@@ -464,3 +464,25 @@ def dentivoice_page(admin_context: BrowserContext) -> DentiVoicePage:
         pass
     if not page.is_closed():
         page.close()
+
+
+# ---------------------------------------------------------------------------
+# Insurance & Billing fixtures
+# ---------------------------------------------------------------------------
+
+from pages.insurance_billing_page import InsuranceBillingPage
+
+
+@pytest.fixture()
+def insurance_billing_page(admin_context: BrowserContext) -> InsuranceBillingPage:
+    page = admin_context.new_page()
+    ib = InsuranceBillingPage(page)
+    ib.navigate()
+    yield ib
+    try:
+        if not page.is_closed():
+            ib.cancel()
+    except Exception:
+        pass
+    if not page.is_closed():
+        page.close()
