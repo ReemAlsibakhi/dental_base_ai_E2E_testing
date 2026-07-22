@@ -21,12 +21,12 @@ class InsuranceBillingPage(BasePage):
     URL = "/settings?settingTab=Insurance+%26+Billing"
 
     CARD = {
-        "coverage":         18,
-        "membership_plans": 19,
-        "finance":          20,
-        "service_pricing":  21,
-        "active_offers":    22,
-        "pricing_policy":   23,
+        "coverage":         "Coverage",
+        "membership_plans": "Membership Plans",
+        "finance":          "Finance",
+        "service_pricing":  "Service Pricing",
+        "active_offers":    "Active Offers",
+        "pricing_policy":   "Pricing Policy",
     }
 
     def __init__(self, page: Page) -> None:
@@ -40,8 +40,24 @@ class InsuranceBillingPage(BasePage):
         self.page.goto(self.URL)
         self.page.wait_for_load_state("networkidle")
 
-    def open_edit(self, card_index: int) -> None:
-        self.page.get_by_role("button", name="Edit").nth(card_index).click()
+    def open_edit(self, card_name: str) -> None:
+        """Open Edit panel by card heading text."""
+        # Find Edit button near the card heading
+        heading = self.page.get_by_text(card_name, exact=False).first
+        heading.scroll_into_view_if_needed()
+        # Click the Edit button in the same section
+        edit_btn = self.page.locator(
+            f'[class*="section"],[class*="card"],[class*="Card"],[class*="panel"]'
+        ).filter(has_text=card_name).get_by_role("button", name="Edit").first
+        if not edit_btn.is_visible():
+            # Fallback: click Edit button closest to heading
+            edit_btn = heading.locator("xpath=ancestor::div[contains(@class,'flex') or contains(@class,'grid')][1]//button[normalize-space()='Edit']").first
+        if not edit_btn.is_visible():
+            # Last resort: use page-level with text filter
+            edit_btn = self.page.get_by_role("button", name="Edit").filter(
+                has=self.page.locator(f'text="{card_name}"')
+            ).first
+        edit_btn.click()
         self.page.wait_for_timeout(500)
 
     # ------------------------------------------------------------------
