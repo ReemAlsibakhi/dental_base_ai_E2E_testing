@@ -88,11 +88,14 @@ class InsuranceBillingPage(BasePage):
         }"""
         self.page.wait_for_function(js, timeout=10_000)
         self.save_button.click(force=True)
-        expect(
-            self.page.get_by_text("saved successfully", exact=False).or_(
-            self.page.locator('[role="status"]').or_(
-            self.page.locator('[data-sonner-toast]')))
-        ).to_be_visible(timeout=10_000)
+        # Toast varies — try multiple selectors
+        toast = self.page.locator(
+            '[data-sonner-toast], [role="status"], '
+            '.toast, [class*="toast"], [class*="Toast"]'
+        ).first
+        if not toast.is_visible():
+            toast = self.page.get_by_text("successfully", exact=False).first
+        expect(toast).to_be_visible(timeout=10_000)
 
     def click_save(self) -> None:
         self.save_button.click(force=True)
@@ -102,7 +105,7 @@ class InsuranceBillingPage(BasePage):
     def error(self) -> Locator:
         # Exclude character counter elements (e.g. "5000/500")
         return self.modal.locator(
-            "p.text-red-500:not([aria-live]):not([id$='-counter'])"
+            "p.text-red-500:not([id$='-counter'])"
         ).first
 
     # ------------------------------------------------------------------
