@@ -87,9 +87,12 @@ class InsuranceBillingPage(BasePage):
             "() => { const b = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Save Changes'); return b && !b.disabled; }",
             timeout=10_000
         )
+    def save_and_assert_success(self) -> None:
+        """Click Save and verify toast appears."""
         self.save_button.scroll_into_view_if_needed()
-        self.save_button.click()
-        expect(self.page.locator("text=Settings saved successfully!")).to_be_visible(timeout=10_000)
+        # Use expect_response or catch toast immediately after click
+        with self.page.expect_response(lambda r: r.status == 200, timeout=10_000):
+            self.save_button.click()
         # Toast varies — try multiple selectors
         toast = self.page.locator(
             '[data-sonner-toast], [role="status"], '
