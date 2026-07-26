@@ -89,7 +89,7 @@ class InsuranceBillingPage(BasePage):
         )
         self.save_button.scroll_into_view_if_needed()
         self.save_button.click()
-        expect(self.page.get_by_text("Settings saved successfully!")).to_be_visible(timeout=10_000)
+        expect(self.page.locator("text=Settings saved successfully!")).to_be_visible(timeout=10_000)
         # Toast varies — try multiple selectors
         toast = self.page.locator(
             '[data-sonner-toast], [role="status"], '
