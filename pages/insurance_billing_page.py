@@ -88,10 +88,17 @@ class InsuranceBillingPage(BasePage):
             timeout=10_000
         )
     def save_and_assert_success(self) -> None:
-        """Click Save and verify toast appears."""
+        """
+        Click Save and verify success via API response.
+        Insurance & Billing saves via PATCH/PUT — we intercept the network
+        response instead of relying on the toast (which disappears too fast).
+        """
         self.save_button.scroll_into_view_if_needed()
-        # Use expect_response or catch toast immediately after click
-        with self.page.expect_response(lambda r: r.status == 200, timeout=10_000):
+        with self.page.expect_response(
+            lambda r: r.request.method in ("POST", "PUT", "PATCH")
+                      and r.status in (200, 201, 204),
+            timeout=10_000
+        ):
             self.save_button.click()
         # Toast varies — try multiple selectors
         toast = self.page.locator(
