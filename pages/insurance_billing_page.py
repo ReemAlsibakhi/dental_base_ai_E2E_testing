@@ -81,13 +81,10 @@ class InsuranceBillingPage(BasePage):
             pass
 
     def save_and_assert_success(self) -> None:
-        js = """() => {
-            const b = [...document.querySelectorAll('button')]
-                .find(b => b.textContent.trim() === 'Save Changes');
-            return b && !b.disabled;
-        }"""
-        self.page.wait_for_function(js, timeout=10_000)
+        """Click Save and verify 'Settings saved successfully!' toast."""
+        self.save_button.scroll_into_view_if_needed()
         self.save_button.click(force=True)
+        expect(self.page.get_by_text("Settings saved successfully!")).to_be_visible(timeout=10_000)
         # Toast varies — try multiple selectors
         toast = self.page.locator(
             '[data-sonner-toast], [role="status"], '
