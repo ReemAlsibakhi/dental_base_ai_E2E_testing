@@ -103,10 +103,8 @@ class InsuranceBillingPage(BasePage):
 
     @property
     def error(self) -> Locator:
-        # Exclude character counter elements (e.g. "5000/500")
-        return self.modal.locator(
-            "p.text-red-500:not([id$='-counter'])"
-        ).first
+        """Error elements have id ending in -error (confirmed from live DOM)."""
+        return self.modal.locator("p[id$='-error']").first
 
     # ------------------------------------------------------------------
     # Coverage
