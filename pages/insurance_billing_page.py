@@ -100,14 +100,11 @@ class InsuranceBillingPage(BasePage):
         return self.modal.get_by_role("button", name="Save Plan")
 
     def save_plan(self) -> None:
-        """Click Save Plan then Save Changes."""
+        """Click Save Plan — saves plan to local state, no API call."""
         self.save_plan_button.scroll_into_view_if_needed()
-        with self.page.expect_response(
-            lambda r: r.request.method in ("POST", "PUT", "PATCH")
-                      and r.status in (200, 201, 204),
-            timeout=10_000
-        ):
-            self.save_plan_button.click()
+        self.save_plan_button.click()
+        # Wait for the New Plan form to close
+        self.page.wait_for_timeout(500)
 
 
         self.save_button.click(force=True)
