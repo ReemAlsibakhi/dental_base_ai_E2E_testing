@@ -101,6 +101,7 @@ def test_insurance_name_1_char_shows_error(insurance_billing_page):
     insurance_billing_page.add_custom_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
     insurance_billing_page.smart_fill(insurance_billing_page.insurance_name_input, "D")
+    insurance_billing_page.insurance_name_input.press("Tab")
     insurance_billing_page.page.wait_for_timeout(500)
     expect(insurance_billing_page.error).to_contain_text("at least 2 characters")
     insurance_billing_page.cancel()
