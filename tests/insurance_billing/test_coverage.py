@@ -89,7 +89,7 @@ def test_insurance_name_empty_shows_error(insurance_billing_page):
     insurance_billing_page.insurance_name_input.press("Tab")
     insurance_billing_page.page.wait_for_timeout(500)
     is_disabled = insurance_billing_page.save_button.is_disabled()
-    errors = insurance_billing_page.page.locator("p.text-red-500").count()
+    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
     assert is_disabled or errors > 0, "Empty name should be rejected"
     insurance_billing_page.cancel()
 
@@ -114,8 +114,9 @@ def test_insurance_name_2_chars_accepted(insurance_billing_page):
     insurance_billing_page.add_custom_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
     insurance_billing_page.smart_fill(insurance_billing_page.insurance_name_input, "AB")
+    insurance_billing_page.insurance_name_input.press("Tab")
     insurance_billing_page.page.wait_for_timeout(500)
-    errors = insurance_billing_page.page.locator("p.text-red-500").count()
+    errors = insurance_billing_page.page.locator("p[id$='-error']").count()
     assert errors == 0, "2-char name should be accepted"
     insurance_billing_page.cancel()
 
@@ -130,7 +131,7 @@ def test_insurance_name_xss_rejected(insurance_billing_page):
         insurance_billing_page.insurance_name_input, "<script>alert(1)</script>"
     )
     insurance_billing_page.page.wait_for_timeout(500)
-    errors = insurance_billing_page.page.locator("p.text-red-500").count()
+    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
     is_disabled = insurance_billing_page.save_button.is_disabled()
     assert is_disabled or errors > 0, "XSS payload should be rejected"
     insurance_billing_page.cancel()
@@ -183,7 +184,7 @@ def test_coverage_percentage_over_100_shows_error(insurance_billing_page):
     insurance_billing_page.fill_coverage_percentage(
         insurance_billing_page.preventive_input, "101"
     )
-    errors = insurance_billing_page.page.locator("p.text-red-500").count()
+    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
     is_disabled = insurance_billing_page.save_button.is_disabled()
     assert is_disabled or errors > 0, "Coverage % > 100 should be rejected"
     insurance_billing_page.cancel()
@@ -198,7 +199,7 @@ def test_coverage_percentage_negative_shows_error(insurance_billing_page):
     insurance_billing_page.fill_coverage_percentage(
         insurance_billing_page.preventive_input, "-1"
     )
-    errors = insurance_billing_page.page.locator("p.text-red-500").count()
+    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
     is_disabled = insurance_billing_page.save_button.is_disabled()
     assert is_disabled or errors > 0
     insurance_billing_page.cancel()
@@ -213,7 +214,7 @@ def test_coverage_percentage_0_accepted(insurance_billing_page):
     insurance_billing_page.fill_coverage_percentage(
         insurance_billing_page.preventive_input, "0"
     )
-    errors = insurance_billing_page.page.locator("p.text-red-500").count()
+    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
     assert errors == 0
     insurance_billing_page.cancel()
 
@@ -227,7 +228,7 @@ def test_coverage_percentage_100_accepted(insurance_billing_page):
     insurance_billing_page.fill_coverage_percentage(
         insurance_billing_page.preventive_input, "100"
     )
-    errors = insurance_billing_page.page.locator("p.text-red-500").count()
+    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
     assert errors == 0
     insurance_billing_page.cancel()
 
@@ -274,7 +275,7 @@ def test_additional_notes_over_500_blocked(insurance_billing_page):
     )
     insurance_billing_page.page.wait_for_timeout(500)
     value = insurance_billing_page.additional_notes.input_value()
-    errors = insurance_billing_page.page.locator("p.text-red-500").count()
+    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
     assert errors > 0 or len(value) <= 500, "501-char notes should be rejected"
     insurance_billing_page.cancel()
 
@@ -288,7 +289,7 @@ def test_additional_notes_500_chars_accepted(insurance_billing_page):
         insurance_billing_page.additional_notes, "A" * 500
     )
     insurance_billing_page.page.wait_for_timeout(500)
-    errors = insurance_billing_page.page.locator("p.text-red-500").count()
+    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
     assert errors == 0
     insurance_billing_page.cancel()
 
