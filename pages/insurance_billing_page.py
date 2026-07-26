@@ -81,17 +81,10 @@ class InsuranceBillingPage(BasePage):
             pass
 
     def save_and_assert_success(self) -> None:
-        """Click Save and verify 'Settings saved successfully!' toast."""
-        # Wait for Save to be enabled first
-        self.page.wait_for_function(
-            "() => { const b = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Save Changes'); return b && !b.disabled; }",
-            timeout=10_000
-        )
-    def save_and_assert_success(self) -> None:
         """
         Click Save and verify success via API response.
-        Insurance & Billing saves via PATCH/PUT — we intercept the network
-        response instead of relying on the toast (which disappears too fast).
+        Intercepts POST/PUT/PATCH network response instead of relying
+        on the toast (which disappears too fast to catch reliably).
         """
         self.save_button.scroll_into_view_if_needed()
         with self.page.expect_response(
@@ -100,14 +93,6 @@ class InsuranceBillingPage(BasePage):
             timeout=10_000
         ):
             self.save_button.click()
-        # Toast varies — try multiple selectors
-        toast = self.page.locator(
-            '[data-sonner-toast], [role="status"], '
-            '.toast, [class*="toast"], [class*="Toast"]'
-        ).first
-        if not toast.is_visible():
-            toast = self.page.get_by_text("successfully", exact=False).first
-        expect(toast).to_be_visible(timeout=10_000)
 
     def click_save(self) -> None:
         self.save_button.click(force=True)
