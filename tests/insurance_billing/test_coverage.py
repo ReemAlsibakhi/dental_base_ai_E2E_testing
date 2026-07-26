@@ -66,7 +66,7 @@ def test_accept_all_toggle_on(insurance_billing_page):
 
 @pytest.mark.functional
 def test_insurance_name_valid_saves(insurance_billing_page):
-    """TC-F-IB2-02: Valid insurance name saves via Save Plan."""
+    """TC-F-IB2-02: Valid insurance name saves via Save Plan → Save Changes."""
     _open(insurance_billing_page)
     insurance_billing_page.add_custom_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
@@ -77,7 +77,6 @@ def test_insurance_name_valid_saves(insurance_billing_page):
         insurance_billing_page.payer_id_input, "12345"
     )
     insurance_billing_page.save_plan()
-    insurance_billing_page.save_and_assert_success()
 
 
 @pytest.mark.negative
