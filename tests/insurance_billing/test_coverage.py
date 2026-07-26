@@ -55,7 +55,7 @@ def test_accept_all_toggle_on(insurance_billing_page):
     toggle = insurance_billing_page.accept_all_toggle
     # Read initial state and click once to guarantee dirty state
     initial = toggle.get_attribute("aria-checked")
-    toggle.click(force=True)
+    toggle.click()
     insurance_billing_page.page.wait_for_timeout(800)
     assert toggle.get_attribute("aria-checked") != initial, "Toggle should change state"
     # Verify Save button is enabled before clicking
