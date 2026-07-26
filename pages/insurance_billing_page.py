@@ -94,7 +94,22 @@ class InsuranceBillingPage(BasePage):
         ):
             self.save_button.click()
 
-    def click_save(self) -> None:
+    @property
+    def save_plan_button(self) -> Locator:
+        """Save Plan button — inside Add Custom form."""
+        return self.modal.get_by_role("button", name="Save Plan")
+
+    def save_plan(self) -> None:
+        """Click Save Plan then Save Changes."""
+        self.save_plan_button.scroll_into_view_if_needed()
+        with self.page.expect_response(
+            lambda r: r.request.method in ("POST", "PUT", "PATCH")
+                      and r.status in (200, 201, 204),
+            timeout=10_000
+        ):
+            self.save_plan_button.click()
+
+
         self.save_button.click(force=True)
         self.page.wait_for_timeout(500)
 
