@@ -50,13 +50,19 @@ def test_add_custom_plan_form_opens(insurance_billing_page):
 
 @pytest.mark.functional
 def test_accept_all_toggle_on(insurance_billing_page):
-    """TC-F-IB2-03: Accept All Insurance toggle ON → saves."""
+    """TC-F-IB2-03: Accept All Insurance toggle — change state → saves."""
     _open(insurance_billing_page)
     toggle = insurance_billing_page.accept_all_toggle
+    # Read initial state and click once to guarantee dirty state
     initial = toggle.get_attribute("aria-checked")
     toggle.click(force=True)
-    insurance_billing_page.page.wait_for_timeout(500)
-    assert toggle.get_attribute("aria-checked") != initial
+    insurance_billing_page.page.wait_for_timeout(800)
+    assert toggle.get_attribute("aria-checked") != initial, "Toggle should change state"
+    # Verify Save button is enabled before clicking
+    insurance_billing_page.page.wait_for_function(
+        "() => { const b = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Save Changes'); return b && !b.disabled; }",
+        timeout=5_000
+    )
     insurance_billing_page.save_and_assert_success()
 
 

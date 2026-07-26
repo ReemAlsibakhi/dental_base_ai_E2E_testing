@@ -82,6 +82,11 @@ class InsuranceBillingPage(BasePage):
 
     def save_and_assert_success(self) -> None:
         """Click Save and verify 'Settings saved successfully!' toast."""
+        # Wait for Save to be enabled first
+        self.page.wait_for_function(
+            "() => { const b = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Save Changes'); return b && !b.disabled; }",
+            timeout=10_000
+        )
         self.save_button.scroll_into_view_if_needed()
         self.save_button.click(force=True)
         expect(self.page.get_by_text("Settings saved successfully!")).to_be_visible(timeout=10_000)
