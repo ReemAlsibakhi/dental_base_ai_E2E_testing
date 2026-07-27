@@ -64,10 +64,11 @@ export abstract class BasePage {
     await locator.evaluate((el, v) => {
       const input = el as HTMLInputElement | HTMLTextAreaElement;
       input.focus();
-      input.setSelectionRange?.(0, input.value.length);
-      document.execCommand('selectAll', false);
-      document.execCommand('delete', false);
-      if (v) document.execCommand('insertText', false, v);
+      // Select all existing text then replace with insertText in one operation
+      // Avoids deprecated execCommand('selectAll') and execCommand('delete')
+      const len = input.value.length;
+      input.setSelectionRange(0, len);
+      document.execCommand('insertText', false, v);
     }, value);
   }
 
