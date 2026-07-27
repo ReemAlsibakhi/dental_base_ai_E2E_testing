@@ -8,11 +8,11 @@
     "test:headed": "npx playwright test --headed",
     "test:ui": "npx playwright test --ui",
     "test:report": "npx playwright show-report",
-    "auth": "npx playwright test tests/auth.setup.ts"
+    "auth": "npx playwright test tests/auth.setup.ts --project=setup"
   },
   "devDependencies": {
-    "@playwright/test": "^1.48.0",
-    "@types/node": "^22.0.0",
+    "@playwright/test": "latest",
+    "@types/node": "latest",
     "dotenv": "^16.0.0",
     "typescript": "^5.5.0"
   }
