@@ -29,16 +29,6 @@ export abstract class BasePage {
 
   // -----------------------------------------------------------------------
   // React-aware fill
-  //
-  // Problem: React ignores DOM mutations — it only responds to its own
-  // synthetic events. Playwright's fill() doesn't trigger React's onChange
-  // in complex controlled inputs.
-  //
-  // Solution: execCommand('insertText') dispatches a real InputEvent that
-  // React intercepts. Confirmed working in Chromium for this app.
-  //
-  // Dirty state guarantee: if current === target, React sees no change.
-  // We set a temp value first to force a state transition.
   // -----------------------------------------------------------------------
 
   async smartFill(locator: Locator, value: string, debounceMs = 500): Promise<void> {
@@ -46,7 +36,10 @@ export abstract class BasePage {
     await locator.focus();
     await this.page.waitForTimeout(BasePage.FOCUS_DELAY_MS);
 
-    const current = await locator.inputValue().catch(() => '');
+    const current = await locator.inputValue().catch(() => {
+      // inputValue() fails on non-input elements (e.g. contenteditable)
+      return '';
+    });
 
     // Dirty state guarantee: temp → target forces React to see two changes
     if (current === value) {
@@ -59,15 +52,14 @@ export abstract class BasePage {
     await this.page.waitForTimeout(debounceMs);
   }
 
-  /** Internal: clear and insert value via execCommand */
+  /** Internal: select all + insertText via execCommand (only non-deprecated way to trigger React onChange) */
   private async _execFill(locator: Locator, value: string): Promise<void> {
     await locator.evaluate((el, v) => {
       const input = el as HTMLInputElement | HTMLTextAreaElement;
       input.focus();
-      // Select all existing text then replace with insertText in one operation
-      // Avoids deprecated execCommand('selectAll') and execCommand('delete')
-      const len = input.value.length;
-      input.setSelectionRange(0, len);
+      // setSelectionRange replaces deprecated execCommand('selectAll') + execCommand('delete')
+      input.setSelectionRange(0, input.value.length);
+      // insertText with selected text replaces it — only method that triggers React's synthetic onChange
       document.execCommand('insertText', false, v);
     }, value);
   }
@@ -75,11 +67,15 @@ export abstract class BasePage {
   /**
    * Fill input[type=email] or input[type=tel].
    * These don't support setSelectionRange — use Playwright's fill() instead.
-   * Includes dirty state guarantee via clear → fill pattern.
+   * Includes dirty state guarantee.
    */
   async fillInput(locator: Locator, value: string): Promise<void> {
     await locator.scrollIntoViewIfNeeded();
-    await locator.clear();
+    const current = await locator.inputValue().catch(() => '');
+    // Dirty state guarantee — same value means no React change without this
+    if (current === value) {
+      await locator.fill('__tmp__');
+    }
     await locator.fill(value);
     await locator.press('Tab');
     await this.page.waitForTimeout(BasePage.TEMP_DELAY_MS);
@@ -90,13 +86,24 @@ export abstract class BasePage {
   //
   // Toasts disappear in ~1s — too fast for Playwright to catch reliably.
   // Network responses are slower and guaranteed to exist on success.
+  // Optional urlPattern to avoid catching unrelated background requests.
   // -----------------------------------------------------------------------
 
-  async waitForApiSuccess(timeout = 15_000): Promise<void> {
+  async waitForApiSuccess(
+    urlPattern?: string | RegExp,
+    timeout = 15_000
+  ): Promise<void> {
     await this.page.waitForResponse(
-      (response) =>
-        ['POST', 'PUT', 'PATCH'].includes(response.request().method()) &&
-        [200, 201, 204].includes(response.status()),
+      (response) => {
+        const urlMatch = urlPattern
+          ? response.url().match(urlPattern) !== null
+          : true;
+        return (
+          urlMatch &&
+          ['POST', 'PUT', 'PATCH'].includes(response.request().method()) &&
+          [200, 201, 204].includes(response.status())
+        );
+      },
       { timeout }
     );
   }
@@ -107,10 +114,10 @@ export abstract class BasePage {
 
   /**
    * Generate a unique string per test run.
-   * Prevents conflicts when tests create persistent data (plans, providers).
-   * Example: BasePage.unique('Plan') → 'Plan_3a7f2c'
+   * Combines timestamp + random to make collisions practically impossible.
+   * Example: BasePage.unique('Plan') → 'Plan_lf3k2_4x7'
    */
   static unique(prefix = 'Test'): string {
-    return `${prefix}_${Math.random().toString(36).slice(2, 8)}`;
+    return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 5)}`;
   }
 }
