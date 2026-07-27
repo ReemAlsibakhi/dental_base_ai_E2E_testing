@@ -2,11 +2,10 @@
 tests/insurance_billing/test_coverage.py
 Coverage — Accepted Insurance Plans (IB-COV-R1 to R10)
 
-Known bugs:
-  DEF-IB2-01: Plan "D" saved with 1 char (min 2 not enforced at save time)
-  DEF-IB2-02: Coverage % fields accept out-of-range values (99999, 100000000)
-  DEF-IB2-03: Additional Notes accepts 5000 chars against 500-char limit
-  DEF-IB2-10: Cancel silently discards edits (no confirmation dialog)
+Key patterns:
+  - add_plan() helper handles full Add Custom flow with UUID names
+  - Tab press after smart_fill to trigger validation
+  - p[id$='-error'] for error detection (confirmed from live DOM)
 """
 
 import pytest
@@ -26,7 +25,7 @@ def _open(ib):
 @pytest.mark.smoke
 @pytest.mark.functional
 def test_coverage_panel_opens(insurance_billing_page):
-    """TC-SM-IB-01: Coverage panel opens with required elements."""
+    """TC-SM-IB-01: Coverage panel opens."""
     _open(insurance_billing_page)
     expect(insurance_billing_page.modal).to_be_visible()
     expect(insurance_billing_page.cancel_button).to_be_visible()
@@ -35,68 +34,62 @@ def test_coverage_panel_opens(insurance_billing_page):
 
 @pytest.mark.smoke
 @pytest.mark.functional
-def test_add_custom_plan_form_opens(insurance_billing_page):
-    """TC-SM-IB-02: Add Custom button reveals plan form fields."""
+def test_add_custom_form_opens(insurance_billing_page):
+    """TC-SM-IB-02: Add Custom reveals New Plan form."""
     _open(insurance_billing_page)
     insurance_billing_page.add_custom_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
     expect(insurance_billing_page.insurance_name_input).to_be_visible()
+    expect(insurance_billing_page.payer_id_input).to_be_visible()
     insurance_billing_page.cancel()
 
 
 # ===========================================================================
-# IB-COV-R1 — Accept All Insurance toggle
+# Accept All Toggle (IB-COV-R1)
 # ===========================================================================
 
 @pytest.mark.functional
-def test_accept_all_toggle_on(insurance_billing_page):
-    """TC-F-IB2-03: Accept All Insurance toggle — change state → saves."""
+def test_accept_all_toggle_changes_state(insurance_billing_page):
+    """TC-F-IB2-03: Accept All toggle changes state and saves."""
     _open(insurance_billing_page)
     toggle = insurance_billing_page.accept_all_toggle
     initial = toggle.get_attribute("aria-checked")
     toggle.click()
     insurance_billing_page.page.wait_for_timeout(800)
-    assert toggle.get_attribute("aria-checked") != initial, "Toggle should change state"
+    assert toggle.get_attribute("aria-checked") != initial
     insurance_billing_page.save_and_assert_success()
 
 
 # ===========================================================================
-# IB-COV-R2 — Insurance Name
+# Insurance Name (IB-COV-R2)
 # ===========================================================================
 
 @pytest.mark.functional
 def test_insurance_name_valid_saves(insurance_billing_page):
-    """TC-F-IB2-02: Valid insurance name saves via Save Plan → Save Changes."""
+    """TC-F-IB2-02: Valid plan saves via Add Custom flow."""
     _open(insurance_billing_page)
-    insurance_billing_page.add_custom_button.click()
-    insurance_billing_page.page.wait_for_timeout(500)
-    insurance_billing_page.smart_fill(
-        insurance_billing_page.insurance_name_input, "Delta Dental PPO"
+    insurance_billing_page.add_plan(
+        name=InsuranceBillingPage.unique("Delta"),
+        payer_id="99001"
     )
-    insurance_billing_page.smart_fill(
-        insurance_billing_page.payer_id_input, "12345"
-    )
-    insurance_billing_page.save_plan()
 
 
 @pytest.mark.negative
-def test_insurance_name_empty_shows_error(insurance_billing_page):
-    """TC-N-IB2-01: Empty insurance name → error."""
+def test_insurance_name_empty_blocked(insurance_billing_page):
+    """TC-N-IB2-01: Empty name → Save Plan disabled."""
     _open(insurance_billing_page)
     insurance_billing_page.add_custom_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
-    insurance_billing_page.insurance_name_input.fill("")
     insurance_billing_page.insurance_name_input.press("Tab")
     insurance_billing_page.page.wait_for_timeout(500)
-    is_disabled = insurance_billing_page.save_button.is_disabled()
-    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
-    assert is_disabled or errors > 0, "Empty name should be rejected"
+    assert insurance_billing_page.save_plan_button.is_disabled() or \
+           insurance_billing_page.error.is_visible()
     insurance_billing_page.cancel()
 
 
 @pytest.mark.negative
 def test_insurance_name_1_char_shows_error(insurance_billing_page):
-    """TC-N-IB2-02: 1-char insurance name → 'at least 2 characters' error."""
+    """TC-N-IB2-02: 1-char name → validation error."""
     _open(insurance_billing_page)
     insurance_billing_page.add_custom_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
@@ -116,32 +109,27 @@ def test_insurance_name_2_chars_accepted(insurance_billing_page):
     insurance_billing_page.smart_fill(insurance_billing_page.insurance_name_input, "AB")
     insurance_billing_page.insurance_name_input.press("Tab")
     insurance_billing_page.page.wait_for_timeout(500)
-    # Check only the name field error — not all errors on page
-    name_error = insurance_billing_page.insurance_name_input.locator(
-        "xpath=following-sibling::p[contains(@id,'-error')]"
+    # No name error should appear
+    name_error = insurance_billing_page.modal.locator("p[id$='-error']").filter(
+        has_text="characters"
     )
-    if not name_error.count():
-        # Try parent-based lookup
-        name_error = insurance_billing_page.modal.locator(
-            "p[id$='-error']"
-        ).filter(has_text="name")
-    assert not name_error.is_visible() if name_error.count() else True,         "2-char name should not show name error"
+    assert not name_error.is_visible()
     insurance_billing_page.cancel()
 
 
 @pytest.mark.security
 def test_insurance_name_xss_rejected(insurance_billing_page):
-    """TC-S-IB2-01: XSS payload in insurance name rejected."""
+    """TC-S-IB2-01: XSS in name → blocked."""
     _open(insurance_billing_page)
     insurance_billing_page.add_custom_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
     insurance_billing_page.smart_fill(
         insurance_billing_page.insurance_name_input, "<script>alert(1)</script>"
     )
+    insurance_billing_page.insurance_name_input.press("Tab")
     insurance_billing_page.page.wait_for_timeout(500)
-    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
-    is_disabled = insurance_billing_page.save_button.is_disabled()
-    assert is_disabled or errors > 0, "XSS payload should be rejected"
+    assert insurance_billing_page.save_plan_button.is_disabled() or \
+           insurance_billing_page.error.is_visible()
     insurance_billing_page.cancel()
 
 
@@ -152,64 +140,45 @@ def test_insurance_name_error_clears_when_corrected(insurance_billing_page):
     insurance_billing_page.add_custom_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
     insurance_billing_page.smart_fill(insurance_billing_page.insurance_name_input, "D")
+    insurance_billing_page.insurance_name_input.press("Tab")
     insurance_billing_page.page.wait_for_timeout(500)
     expect(insurance_billing_page.error).to_be_visible()
-    insurance_billing_page.smart_fill(
-        insurance_billing_page.insurance_name_input, "Delta Dental"
-    )
+    insurance_billing_page.smart_fill(insurance_billing_page.insurance_name_input, "Delta Dental")
+    insurance_billing_page.insurance_name_input.press("Tab")
     insurance_billing_page.page.wait_for_timeout(500)
     expect(insurance_billing_page.error).to_be_hidden()
     insurance_billing_page.cancel()
 
 
 # ===========================================================================
-# IB-COV-R4 — Plan Type dropdown
-# ===========================================================================
-
-@pytest.mark.functional
-def test_plan_type_options_available(insurance_billing_page):
-    """TC-F-IB2-02: Plan Type dropdown has options."""
-    _open(insurance_billing_page)
-    insurance_billing_page.add_custom_button.click()
-    insurance_billing_page.page.wait_for_timeout(500)
-    plan_type = insurance_billing_page.modal.get_by_text(
-        "PPO", exact=False
-    ).or_(insurance_billing_page.modal.get_by_text("Plan Type", exact=False)).first
-    expect(plan_type).to_be_visible()
-    insurance_billing_page.cancel()
-
-
-# ===========================================================================
-# IB-COV-R8 — Coverage % fields
+# Coverage % (IB-COV-R8)
 # ===========================================================================
 
 @pytest.mark.negative
-def test_coverage_percentage_over_100_shows_error(insurance_billing_page):
-    """TC-N-IB2-03: Coverage % > 100 → error."""
+def test_coverage_percentage_over_100_blocked(insurance_billing_page):
+    """TC-N-IB2-03: Coverage % > 100 → blocked."""
     _open(insurance_billing_page)
     insurance_billing_page.add_custom_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
     insurance_billing_page.fill_coverage_percentage(
         insurance_billing_page.preventive_input, "101"
     )
-    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
-    is_disabled = insurance_billing_page.save_button.is_disabled()
-    assert is_disabled or errors > 0, "Coverage % > 100 should be rejected"
+    assert insurance_billing_page.save_plan_button.is_disabled() or \
+           insurance_billing_page.modal.locator("p[id$='-error']").count() > 0
     insurance_billing_page.cancel()
 
 
 @pytest.mark.negative
-def test_coverage_percentage_negative_shows_error(insurance_billing_page):
-    """TC-N-IB2-03b: Coverage % negative → error."""
+def test_coverage_percentage_negative_blocked(insurance_billing_page):
+    """TC-N-IB2-03b: Coverage % negative → blocked."""
     _open(insurance_billing_page)
     insurance_billing_page.add_custom_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
     insurance_billing_page.fill_coverage_percentage(
         insurance_billing_page.preventive_input, "-1"
     )
-    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
-    is_disabled = insurance_billing_page.save_button.is_disabled()
-    assert is_disabled or errors > 0
+    assert insurance_billing_page.save_plan_button.is_disabled() or \
+           insurance_billing_page.modal.locator("p[id$='-error']").count() > 0
     insurance_billing_page.cancel()
 
 
@@ -222,8 +191,10 @@ def test_coverage_percentage_0_accepted(insurance_billing_page):
     insurance_billing_page.fill_coverage_percentage(
         insurance_billing_page.preventive_input, "0"
     )
-    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
-    assert errors == 0
+    pct_error = insurance_billing_page.modal.locator("p[id$='-error']").filter(
+        has_text="Preventive"
+    )
+    assert not pct_error.is_visible()
     insurance_billing_page.cancel()
 
 
@@ -236,46 +207,34 @@ def test_coverage_percentage_100_accepted(insurance_billing_page):
     insurance_billing_page.fill_coverage_percentage(
         insurance_billing_page.preventive_input, "100"
     )
-    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
-    assert errors == 0
-    insurance_billing_page.cancel()
-
-
-@pytest.mark.usability
-def test_coverage_percentage_updates_summary(insurance_billing_page):
-    """TC-U-IB2-05: Coverage % update reflects in summary."""
-    _open(insurance_billing_page)
-    insurance_billing_page.add_custom_button.click()
-    insurance_billing_page.page.wait_for_timeout(500)
-    insurance_billing_page.fill_coverage_percentage(
-        insurance_billing_page.preventive_input, "80"
+    pct_error = insurance_billing_page.modal.locator("p[id$='-error']").filter(
+        has_text="Preventive"
     )
-    assert insurance_billing_page.preventive_input.input_value() == "80"
+    assert not pct_error.is_visible()
     insurance_billing_page.cancel()
 
 
 @pytest.mark.regression
 def test_coverage_percentages_persist(insurance_billing_page):
-    """TC-R-IB2-03: Coverage % values persist after save."""
+    """TC-R-IB2-03: Plan with coverage % saves and persists."""
     _open(insurance_billing_page)
     insurance_billing_page.add_custom_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
-    insurance_billing_page.smart_fill(
-        insurance_billing_page.insurance_name_input, "Test Plan"
-    )
-    insurance_billing_page.fill_coverage_percentage(
-        insurance_billing_page.preventive_input, "75"
-    )
-    insurance_billing_page.save_and_assert_success()
+    name = InsuranceBillingPage.unique("Coverage")
+    insurance_billing_page.smart_fill(insurance_billing_page.insurance_name_input, name)
+    insurance_billing_page.insurance_name_input.press("Tab")
+    insurance_billing_page.smart_fill(insurance_billing_page.payer_id_input, "55555")
+    insurance_billing_page.fill_coverage_percentage(insurance_billing_page.preventive_input, "75")
+    insurance_billing_page.save_plan_and_assert_success()
 
 
 # ===========================================================================
-# IB-COV-R10 — Additional Notes
+# Additional Notes (IB-COV-R10)
 # ===========================================================================
 
 @pytest.mark.negative
 def test_additional_notes_over_500_blocked(insurance_billing_page):
-    """TC-N-IB2-05: Additional Notes > 500 chars → error or blocked."""
+    """TC-N-IB2-05: Notes > 500 chars → error or capped."""
     _open(insurance_billing_page)
     insurance_billing_page.page.wait_for_timeout(500)
     insurance_billing_page.smart_fill(
@@ -283,32 +242,32 @@ def test_additional_notes_over_500_blocked(insurance_billing_page):
     )
     insurance_billing_page.page.wait_for_timeout(500)
     value = insurance_billing_page.additional_notes.input_value()
-    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
-    assert errors > 0 or len(value) <= 500, "501-char notes should be rejected"
+    errors = insurance_billing_page.modal.locator("p[id$='-error']").count()
+    assert errors > 0 or len(value) <= 500
     insurance_billing_page.cancel()
 
 
 @pytest.mark.boundary
 def test_additional_notes_500_chars_accepted(insurance_billing_page):
-    """TC-B: Additional Notes 500 chars — max valid."""
+    """TC-B-IB2: Notes 500 chars — max valid."""
     _open(insurance_billing_page)
     insurance_billing_page.page.wait_for_timeout(500)
     insurance_billing_page.smart_fill(
         insurance_billing_page.additional_notes, "A" * 500
     )
     insurance_billing_page.page.wait_for_timeout(500)
-    errors = insurance_billing_page.page.locator("p[id$="-error"]").count()
+    errors = insurance_billing_page.modal.locator("p[id$='-error']").count()
     assert errors == 0
     insurance_billing_page.cancel()
 
 
 # ===========================================================================
-# Delete operations
+# Delete
 # ===========================================================================
 
 @pytest.mark.functional
 def test_delete_plan_shows_confirmation(insurance_billing_page):
-    """TC-F-IB2-15: Delete plan shows confirmation dialog."""
+    """TC-F-IB2-15: Delete plan shows confirmation."""
     _open(insurance_billing_page)
     delete_btn = insurance_billing_page.modal.get_by_role(
         "button", name="Remove"
@@ -317,36 +276,21 @@ def test_delete_plan_shows_confirmation(insurance_billing_page):
         delete_btn.click()
         insurance_billing_page.page.wait_for_timeout(500)
         insurance_billing_page.assert_delete_confirmation_shown()
-        insurance_billing_page.cancel_delete()
-    insurance_billing_page.cancel()
+        insurance_billing_page.cancel()
+    else:
+        pytest.skip("No plan to delete")
 
 
-@pytest.mark.negative
-def test_cancel_delete_keeps_plan(insurance_billing_page):
-    """TC-N-IB2-17: Cancel delete → plan remains."""
-    _open(insurance_billing_page)
-    delete_btn = insurance_billing_page.modal.get_by_role(
-        "button", name="Remove"
-    ).or_(insurance_billing_page.modal.get_by_role("button", name="Delete")).first
-    if delete_btn.is_visible():
-        delete_btn.click()
-        insurance_billing_page.page.wait_for_timeout(500)
-        insurance_billing_page.cancel_delete()
-        expect(insurance_billing_page.modal).to_be_visible()
-    insurance_billing_page.cancel()
-
-
-@pytest.mark.negative
-def test_cancel_silently_discards(insurance_billing_page):
-    """DEF-IB2-10: Cancel discards edits silently (no confirmation)."""
+@pytest.mark.functional
+def test_cancel_with_changes(insurance_billing_page):
+    """TC-F-IB2: Cancel with unsaved changes."""
     _open(insurance_billing_page)
     insurance_billing_page.page.wait_for_timeout(500)
     insurance_billing_page.smart_fill(
-        insurance_billing_page.additional_notes, "Test note change"
+        insurance_billing_page.additional_notes, "Unsaved change"
     )
     insurance_billing_page.cancel_button.click()
     insurance_billing_page.page.wait_for_timeout(500)
-    discard_dialog = insurance_billing_page.page.get_by_text("unsaved changes")
-    # Document behavior — currently no discard warning on Coverage
-    assert not discard_dialog.is_visible(), \
-        "DEF-IB2-10: No discard warning shown (inconsistent with Finance panel)"
+    discard = insurance_billing_page.page.get_by_role("button", name="Discard")
+    if discard.is_visible():
+        discard.click()

@@ -2,16 +2,12 @@
 pages/insurance_billing_page.py
 Page Object Model — Insurance & Billing tab.
 
-URL: /settings?settingTab=Insurance+%26+Billing
-Cards (Edit button index):
-  18 → Coverage (Accepted Insurance Plans)
-  19 → Membership Plans
-  20 → Finance
-  21 → Service Pricing
-  22 → Active Offers
-  23 → Pricing Policy
+Save pattern (confirmed from live DOM):
+  - Toggle-only: Save Changes → API response
+  - New Plan form: Save Plan (local) → Save Changes → API response
 """
 
+import uuid
 from playwright.sync_api import Page, Locator, expect
 from pages.base_page import BasePage
 
@@ -32,18 +28,17 @@ class InsuranceBillingPage(BasePage):
     def __init__(self, page: Page) -> None:
         super().__init__(page)
 
-    # ------------------------------------------------------------------
+    @staticmethod
+    def unique(prefix: str = "Test") -> str:
+        return f"{prefix}_{uuid.uuid4().hex[:6]}"
+
     # Navigation
-    # ------------------------------------------------------------------
 
     def navigate(self) -> None:
         self.page.goto(self.URL)
         self.page.wait_for_load_state("networkidle")
 
     def open_edit(self, card_name: str) -> None:
-        """Open Edit panel by card heading h3 text — uses XPath sibling search."""
-        # Each card row has h3 + Edit button as siblings in a flex container
-        # XPath: find h3 with text → go up to row div → find Edit button inside
         edit_btn = self.page.locator(
             f"//h3[contains(text(),'{card_name}')]"
             "/ancestor::div[contains(@class,'flex')][2]"
@@ -53,9 +48,7 @@ class InsuranceBillingPage(BasePage):
         edit_btn.click()
         self.page.wait_for_timeout(500)
 
-    # ------------------------------------------------------------------
     # Modal
-    # ------------------------------------------------------------------
 
     @property
     def modal(self) -> Locator:
@@ -69,6 +62,14 @@ class InsuranceBillingPage(BasePage):
     def cancel_button(self) -> Locator:
         return self.modal.get_by_role("button", name="Cancel")
 
+    @property
+    def save_plan_button(self) -> Locator:
+        return self.modal.get_by_role("button", name="Save Plan")
+
+    @property
+    def error(self) -> Locator:
+        return self.modal.locator("p[id$='-error']").first
+
     def cancel(self) -> None:
         try:
             if self.cancel_button.is_visible():
@@ -81,11 +82,7 @@ class InsuranceBillingPage(BasePage):
             pass
 
     def save_and_assert_success(self) -> None:
-        """
-        Click Save and verify success via API response.
-        Intercepts POST/PUT/PATCH network response instead of relying
-        on the toast (which disappears too fast to catch reliably).
-        """
+        """Click Save Changes and verify via API response."""
         self.save_button.scroll_into_view_if_needed()
         with self.page.expect_response(
             lambda r: r.request.method in ("POST", "PUT", "PATCH")
@@ -94,43 +91,29 @@ class InsuranceBillingPage(BasePage):
         ):
             self.save_button.click()
 
-    @property
-    def save_plan_button(self) -> Locator:
-        """Save Plan button — inside Add Custom form."""
-        return self.modal.get_by_role("button", name="Save Plan")
-
-    def save_plan(self) -> None:
-        """
-        Click Save Plan (closes the New Plan form) then Save Changes (saves to server).
-        Save Plan = local state update, Save Changes = API call.
-        """
+    def save_plan_and_assert_success(self) -> None:
+        """Save Plan (local state) then Save Changes (API)."""
         self.save_plan_button.scroll_into_view_if_needed()
         self.save_plan_button.click()
         self.page.wait_for_timeout(500)
-        # After Save Plan closes, click Save Changes to persist to server
-        with self.page.expect_response(
-            lambda r: r.request.method in ("POST", "PUT", "PATCH")
-                      and r.status in (200, 201, 204),
-            timeout=10_000
-        ):
-            self.save_button.click()
+        self.save_and_assert_success()
 
-
+    def click_save(self) -> None:
         self.save_button.click(force=True)
         self.page.wait_for_timeout(500)
 
-    @property
-    def error(self) -> Locator:
-        """Error elements have id ending in -error (confirmed from live DOM)."""
-        return self.modal.locator("p[id$='-error']").first
+    def assert_delete_confirmation_shown(self) -> None:
+        expect(self.page.get_by_text("cannot be undone")).to_be_visible()
 
-    # ------------------------------------------------------------------
     # Coverage
-    # ------------------------------------------------------------------
 
     @property
     def accept_all_toggle(self) -> Locator:
         return self.modal.locator('button[role="switch"]').first
+
+    @property
+    def add_custom_button(self) -> Locator:
+        return self.modal.get_by_role("button", name="Add Custom")
 
     @property
     def insurance_name_input(self) -> Locator:
@@ -160,21 +143,26 @@ class InsuranceBillingPage(BasePage):
     def additional_notes(self) -> Locator:
         return self.modal.locator('textarea').first
 
-    @property
-    def add_custom_button(self) -> Locator:
-        return self.modal.get_by_role("button", name="Add Custom")
-
-    def fill_coverage_percentage(self, locator, value: str) -> None:
-        """Fill number input for coverage % fields."""
+    def fill_coverage_percentage(self, locator: Locator, value: str) -> None:
         locator.scroll_into_view_if_needed()
-        locator.fill("")
         locator.fill(value)
         locator.press("Tab")
         self.page.wait_for_timeout(300)
 
-    # ------------------------------------------------------------------
+    def add_plan(self, name: str = None, payer_id: str = "12345") -> None:
+        """Open Add Custom → fill required fields → Save Plan → Save Changes."""
+        name = name or self.unique("Plan")
+        self.add_custom_button.click()
+        self.page.wait_for_timeout(500)
+        self.smart_fill(self.insurance_name_input, name)
+        self.insurance_name_input.press("Tab")
+        self.page.wait_for_timeout(300)
+        self.smart_fill(self.payer_id_input, payer_id)
+        self.payer_id_input.press("Tab")
+        self.page.wait_for_timeout(300)
+        self.save_plan_and_assert_success()
+
     # Membership Plans
-    # ------------------------------------------------------------------
 
     @property
     def plan_name_input(self) -> Locator:
@@ -188,9 +176,7 @@ class InsuranceBillingPage(BasePage):
     def discount_percentage_input(self) -> Locator:
         return self.modal.locator('input[name="discountPercentage"]')
 
-    # ------------------------------------------------------------------
     # Finance
-    # ------------------------------------------------------------------
 
     @property
     def provider_name_input(self) -> Locator:
@@ -199,10 +185,6 @@ class InsuranceBillingPage(BasePage):
     @property
     def provider_description(self) -> Locator:
         return self.modal.locator('textarea[placeholder*="Most popular"]')
-
-    @property
-    def provider_website(self) -> Locator:
-        return self.modal.locator('input[placeholder*="carecredit.com"]')
 
     @property
     def provider_apr(self) -> Locator:
@@ -216,9 +198,7 @@ class InsuranceBillingPage(BasePage):
     def in_house_financing_toggle(self) -> Locator:
         return self.modal.locator('button[role="switch"]').last
 
-    # ------------------------------------------------------------------
     # Service Pricing
-    # ------------------------------------------------------------------
 
     @property
     def cdt_code_input(self) -> Locator:
@@ -232,9 +212,7 @@ class InsuranceBillingPage(BasePage):
     def service_price_input(self) -> Locator:
         return self.modal.locator('input[name="price"]')
 
-    # ------------------------------------------------------------------
     # Active Offers
-    # ------------------------------------------------------------------
 
     @property
     def offer_name_input(self) -> Locator:
@@ -260,9 +238,7 @@ class InsuranceBillingPage(BasePage):
     def expiration_days_input(self) -> Locator:
         return self.modal.locator('input[name="expirationDays"]')
 
-    # ------------------------------------------------------------------
     # Pricing Policy
-    # ------------------------------------------------------------------
 
     @property
     def good_faith_toggle(self) -> Locator:
@@ -275,14 +251,3 @@ class InsuranceBillingPage(BasePage):
     def select_pricing_option(self, text: str) -> None:
         self.modal.get_by_text(text, exact=False).first.click()
         self.page.wait_for_timeout(300)
-
-    # ------------------------------------------------------------------
-    # Delete operations
-    # ------------------------------------------------------------------
-
-    def confirm_delete(self) -> None:
-        self.page.get_by_role("button", name="Delete").last.click()
-        self.page.wait_for_timeout(500)
-
-    def assert_delete_confirmation_shown(self) -> None:
-        expect(self.page.get_by_text("cannot be undone")).to_be_visible()
