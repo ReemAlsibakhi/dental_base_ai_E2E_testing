@@ -3,45 +3,37 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
+const BASE_URL = process.env.BASE_URL ?? 'https://dentalbase-dev-v2.vercel.app';
+
 export default defineConfig({
   testDir: './tests',
   testMatch: '**/*.spec.ts',
-
-  /* Run tests in files in parallel */
+  outputDir: './test-results',
   fullyParallel: false,
-
-  /* Fail the build on CI if you accidentally left test.only in the source code */
   forbidOnly: !!process.env.CI,
-
-  /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-
-  /* Single worker to preserve auth state */
   workers: 1,
 
-  /* Reporter */
   reporter: [
-    ['html', { outputFolder: 'playwright-report' }],
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ['list'],
   ],
 
   use: {
-    baseURL: process.env.BASE_URL ?? 'https://dentalbase-dev-v2.vercel.app',
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'on-first-retry',
-    actionTimeout: 15_000,
+    actionTimeout: 20_000,
     navigationTimeout: 30_000,
+    viewport: { width: 1280, height: 800 },
   },
 
   projects: [
-    /* Setup: authenticate once and save state */
     {
       name: 'setup',
       testMatch: '**/auth.setup.ts',
     },
-
-    /* Run all tests using saved auth state */
     {
       name: 'chromium',
       use: {

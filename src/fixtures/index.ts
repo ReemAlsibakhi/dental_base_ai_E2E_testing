@@ -1,14 +1,11 @@
-import { test as base } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 import { InsuranceBillingPage } from '../pages/InsuranceBillingPage';
 
-/**
- * Extended test fixtures — typed, reusable across all spec files.
- */
-type Fixtures = {
+type AppFixtures = {
   insuranceBilling: InsuranceBillingPage;
 };
 
-export const test = base.extend<Fixtures>({
+export const test = base.extend<AppFixtures>({
   insuranceBilling: async ({ page }, use) => {
     const ib = new InsuranceBillingPage(page);
     await ib.navigate();
@@ -16,4 +13,4 @@ export const test = base.extend<Fixtures>({
   },
 });
 
-export { expect } from '@playwright/test';
+export { expect };

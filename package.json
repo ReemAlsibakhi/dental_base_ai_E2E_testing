@@ -1,0 +1,19 @@
+{
+  "name": "dentalbase-e2e",
+  "version": "2.0.0",
+  "description": "DentalBase E2E test suite — TypeScript + Playwright",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:coverage": "npx playwright test tests/insurance-billing/coverage.spec.ts",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "test:report": "npx playwright show-report",
+    "auth": "npx playwright test tests/auth.setup.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.0.0",
+    "dotenv": "^16.0.0",
+    "typescript": "^5.5.0"
+  }
+}
