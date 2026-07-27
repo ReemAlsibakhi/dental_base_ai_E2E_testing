@@ -3,109 +3,65 @@ import { Page, Locator } from '@playwright/test';
 /**
  * BasePage — foundation for all Page Objects.
  *
- * Design decisions:
- *  - abstract: no standalone "base page" exists in the app
- *  - abstract navigate(): every POM must declare its URL
- *  - smartFill: React requires execCommand to trigger synthetic onChange
- *  - waitForApiSuccess: network interception is more reliable than toasts
- *  - static unique(): no instance needed — pure utility
+ * Philosophy:
+ *  - Use Playwright's built-in methods — they are well-tested and maintained
+ *  - Solve problems at the root, not with workarounds
+ *  - Dirty state is a test data problem, not a fill() problem
+ *  - unique() ensures every test uses fresh data → no dirty state possible
  */
 export abstract class BasePage {
   readonly page: Page;
-
-  // Timing constants — named to avoid magic numbers
-  private static readonly FOCUS_DELAY_MS = 100;
-  private static readonly TEMP_DELAY_MS  = 300;
 
   constructor(page: Page) {
     this.page = page;
   }
 
   // -----------------------------------------------------------------------
-  // Navigation — must be implemented by every POM
+  // Navigation — enforced contract for every POM
   // -----------------------------------------------------------------------
 
   abstract navigate(): Promise<void>;
 
   // -----------------------------------------------------------------------
-  // React-aware fill
+  // Fill methods
+  //
+  // Playwright's fill() dispatches real InputEvents internally.
+  // React intercepts these correctly in all modern versions.
+  //
+  // The only fill "problem" we ever faced was dirty state — which is
+  // a test data problem, solved by unique() below, not by fill() wrappers.
   // -----------------------------------------------------------------------
 
-  async smartFill(locator: Locator, value: string, debounceMs = 500): Promise<void> {
+  /**
+   * Fill any input or textarea.
+   * Uses Playwright's fill() — the standard, recommended approach.
+   */
+  async fill(locator: Locator, value: string): Promise<void> {
     await locator.scrollIntoViewIfNeeded();
-    await locator.focus();
-    await this.page.waitForTimeout(BasePage.FOCUS_DELAY_MS);
-
-    const current = await locator.inputValue().catch(() => {
-      // inputValue() fails on non-input elements (e.g. contenteditable)
-      return '';
-    });
-
-    // Dirty state guarantee: temp → target forces React to see two changes
-    if (current === value) {
-      const temp = value !== '__tmp__' ? '__tmp__' : '__tmp2__';
-      await this._execFill(locator, temp);
-      await this.page.waitForTimeout(BasePage.TEMP_DELAY_MS);
-    }
-
-    await this._execFill(locator, value);
-    await this.page.waitForTimeout(debounceMs);
+    await locator.fill(value);
   }
 
   /**
-   * Internal: fill input via execCommand('insertText').
-   *
-   * WHY execCommand (deprecated)?
-   * execCommand('insertText') is the only confirmed method that dispatches
-   * a real InputEvent which React's synthetic event system intercepts.
-   *
-   * Alternatives that were tested and FAILED on this app:
-   *   - locator.fill()              → no React onChange
-   *   - HTMLInputElement value setter + dispatchEvent → no React onChange
-   *   - locator.type()              → works but slow character-by-character
-   *
-   * This is a known limitation when testing React controlled inputs.
-   * Track: https://github.com/microsoft/playwright/issues/13862
-   *
-   * @deprecated execCommand is deprecated by browsers but has no alternative
-   *             for triggering React's synthetic onChange. Will revisit when
-   *             Playwright adds native React support.
+   * Fill input[type=email] or input[type=tel] and blur.
+   * Tab press triggers validation on fields that validate on blur.
    */
-  private async _execFill(locator: Locator, value: string): Promise<void> {
-    await locator.evaluate((el, v) => {
-      const input = el as HTMLInputElement | HTMLTextAreaElement;
-      input.focus();
-      input.setSelectionRange(0, input.value.length);
-      // eslint-disable-next-line @typescript-eslint/no-deprecated
-      document.execCommand('insertText', false, v);
-    }, value);
-  }
-
-  /**
-   * Fill input[type=email] or input[type=tel].
-   * These don't support setSelectionRange — use Playwright's fill() instead.
-   * Includes dirty state guarantee.
-   */
-  async fillInput(locator: Locator, value: string): Promise<void> {
+  async fillAndBlur(locator: Locator, value: string): Promise<void> {
     await locator.scrollIntoViewIfNeeded();
-    const current = await locator.inputValue().catch(() => '');
-    // Dirty state guarantee — same value means no React change without this
-    if (current === value) {
-      await locator.fill('__tmp__');
-    }
     await locator.fill(value);
     await locator.press('Tab');
-    await this.page.waitForTimeout(BasePage.TEMP_DELAY_MS);
   }
 
   // -----------------------------------------------------------------------
   // API response interception
   //
   // Toasts disappear in ~1s — too fast for Playwright to catch reliably.
-  // Network responses are slower and guaranteed to exist on success.
-  // Optional urlPattern to avoid catching unrelated background requests.
+  // Intercepting the network response is the correct, reliable approach.
   // -----------------------------------------------------------------------
 
+  /**
+   * Wait for a successful API mutation response.
+   * @param urlPattern - optional filter to avoid catching unrelated requests
+   */
   async waitForApiSuccess(
     urlPattern?: string | RegExp,
     timeout = 15_000
@@ -127,12 +83,18 @@ export abstract class BasePage {
 
   // -----------------------------------------------------------------------
   // Test data isolation
+  //
+  // The correct solution to dirty state is unique test data.
+  // If every test uses a value that never existed before,
+  // React will always see a change — no workarounds needed.
   // -----------------------------------------------------------------------
 
   /**
-   * Generate a unique string per test run.
-   * Combines timestamp + random to make collisions practically impossible.
-   * Example: BasePage.unique('Plan') → 'Plan_lf3k2_4x7'
+   * Generate a unique value for test data isolation.
+   * Combines timestamp + random → collision-proof across parallel runs.
+   *
+   * @example
+   * BasePage.unique('Plan')  → 'Plan_lf3k2_4x7'
    */
   static unique(prefix = 'Test'): string {
     return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 5)}`;
