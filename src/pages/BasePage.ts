@@ -3,21 +3,26 @@ import { Page, Locator } from '@playwright/test';
 /**
  * BasePage — foundation for all Page Objects.
  *
- * Provides:
- *  - smartFill: React-aware fill that guarantees dirty state
- *  - fillInput: for email/tel inputs (no execCommand support)
- *  - waitForApiSuccess: intercepts POST/PUT/PATCH 2xx responses
- *  - unique: short random string for test data isolation
+ * Design decisions:
+ *  - abstract: no standalone "base page" exists in the app
+ *  - abstract navigate(): every POM must declare its URL
+ *  - smartFill: React requires execCommand to trigger synthetic onChange
+ *  - waitForApiSuccess: network interception is more reliable than toasts
+ *  - static unique(): no instance needed — pure utility
  */
 export abstract class BasePage {
   readonly page: Page;
+
+  // Timing constants — named to avoid magic numbers
+  private static readonly FOCUS_DELAY_MS = 100;
+  private static readonly TEMP_DELAY_MS  = 300;
 
   constructor(page: Page) {
     this.page = page;
   }
 
   // -----------------------------------------------------------------------
-  // Navigation
+  // Navigation — must be implemented by every POM
   // -----------------------------------------------------------------------
 
   abstract navigate(): Promise<void>;
@@ -25,65 +30,67 @@ export abstract class BasePage {
   // -----------------------------------------------------------------------
   // React-aware fill
   //
-  // execCommand('insertText') is the only method confirmed to trigger
-  // React's synthetic onChange event in this app.
+  // Problem: React ignores DOM mutations — it only responds to its own
+  // synthetic events. Playwright's fill() doesn't trigger React's onChange
+  // in complex controlled inputs.
   //
-  // NOTE: evaluate() callbacks run in browser context — no TypeScript types.
+  // Solution: execCommand('insertText') dispatches a real InputEvent that
+  // React intercepts. Confirmed working in Chromium for this app.
+  //
+  // Dirty state guarantee: if current === target, React sees no change.
+  // We set a temp value first to force a state transition.
   // -----------------------------------------------------------------------
 
   async smartFill(locator: Locator, value: string, debounceMs = 500): Promise<void> {
     await locator.scrollIntoViewIfNeeded();
-    await locator.click();
-    await this.page.waitForTimeout(100);
+    await locator.focus();
+    await this.page.waitForTimeout(BasePage.FOCUS_DELAY_MS);
 
     const current = await locator.inputValue().catch(() => '');
 
-    // If same value → set temp first to guarantee React sees a change
+    // Dirty state guarantee: temp → target forces React to see two changes
     if (current === value) {
       const temp = value !== '__tmp__' ? '__tmp__' : '__tmp2__';
-      await locator.evaluate((el, t) => {
-        const input = el as HTMLInputElement | HTMLTextAreaElement;
-        input.focus();
-        input.setSelectionRange?.(0, input.value.length);
-        document.execCommand('selectAll', false, undefined);
-        document.execCommand('delete', false, undefined);
-        document.execCommand('insertText', false, t);
-      }, temp);
-      await this.page.waitForTimeout(300);
+      await this._execFill(locator, temp);
+      await this.page.waitForTimeout(BasePage.TEMP_DELAY_MS);
     }
 
-    // Set target value
+    await this._execFill(locator, value);
+    await this.page.waitForTimeout(debounceMs);
+  }
+
+  /** Internal: clear and insert value via execCommand */
+  private async _execFill(locator: Locator, value: string): Promise<void> {
     await locator.evaluate((el, v) => {
       const input = el as HTMLInputElement | HTMLTextAreaElement;
       input.focus();
       input.setSelectionRange?.(0, input.value.length);
-      document.execCommand('selectAll', false, undefined);
-      document.execCommand('delete', false, undefined);
+      document.execCommand('selectAll', false);
+      document.execCommand('delete', false);
       if (v) document.execCommand('insertText', false, v);
     }, value);
-
-    await this.page.waitForTimeout(debounceMs);
   }
 
   /**
-   * Fill input[type=email] or input[type=tel] — these don't support execCommand.
-   * Uses Playwright's fill() which triggers React onChange directly.
+   * Fill input[type=email] or input[type=tel].
+   * These don't support setSelectionRange — use Playwright's fill() instead.
+   * Includes dirty state guarantee via clear → fill pattern.
    */
   async fillInput(locator: Locator, value: string): Promise<void> {
     await locator.scrollIntoViewIfNeeded();
+    await locator.clear();
     await locator.fill(value);
     await locator.press('Tab');
-    await this.page.waitForTimeout(300);
+    await this.page.waitForTimeout(BasePage.TEMP_DELAY_MS);
   }
 
   // -----------------------------------------------------------------------
   // API response interception
+  //
+  // Toasts disappear in ~1s — too fast for Playwright to catch reliably.
+  // Network responses are slower and guaranteed to exist on success.
   // -----------------------------------------------------------------------
 
-  /**
-   * Wait for a successful API mutation (POST/PUT/PATCH → 200/201/204).
-   * More reliable than waiting for UI elements (toasts disappear too fast).
-   */
   async waitForApiSuccess(timeout = 15_000): Promise<void> {
     await this.page.waitForResponse(
       (response) =>
@@ -97,7 +104,11 @@ export abstract class BasePage {
   // Test data isolation
   // -----------------------------------------------------------------------
 
-  /** Generate a short unique string — prevents test data conflicts across runs. */
+  /**
+   * Generate a unique string per test run.
+   * Prevents conflicts when tests create persistent data (plans, providers).
+   * Example: BasePage.unique('Plan') → 'Plan_3a7f2c'
+   */
   static unique(prefix = 'Test'): string {
     return `${prefix}_${Math.random().toString(36).slice(2, 8)}`;
   }
