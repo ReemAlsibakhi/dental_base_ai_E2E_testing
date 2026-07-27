@@ -2,43 +2,58 @@ import { test as setup } from '@playwright/test';
 import * as path from 'path';
 import * as fs from 'fs';
 
+/**
+ * Auth Setup — reuses Python save_session.py state if available,
+ * otherwise performs fresh Keycloak login.
+ */
+
 const AUTH_FILE = path.join(__dirname, '../.auth/admin.json');
 
-setup('authenticate as admin', async ({ page }) => {
-  const email = process.env.ADMIN_EMAIL ?? 'reem_user';
-  const password = process.env.ADMIN_PASSWORD ?? 'FaRe12345!!';
-  const baseURL = process.env.BASE_URL ?? 'https://dentalbase-dev-v2.vercel.app';
+// Python Playwright saves auth here
+const PYTHON_AUTH_FILE = path.join(__dirname, '../.playwright_auth/admin.json');
 
-  // Reuse existing auth if valid
-  if (fs.existsSync(AUTH_FILE)) {
-    const state = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf-8'));
+setup('authenticate as admin', async ({ page }) => {
+  // Option 1: Reuse Python auth state (from save_session.py)
+  if (fs.existsSync(PYTHON_AUTH_FILE)) {
+    const state = JSON.parse(fs.readFileSync(PYTHON_AUTH_FILE, 'utf-8'));
     if (state?.cookies?.length > 0) {
+      fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
+      fs.copyFileSync(PYTHON_AUTH_FILE, AUTH_FILE);
+
+      // Verify session is still valid
       await page.context().addCookies(state.cookies);
-      await page.goto(`${baseURL}/settings`, { waitUntil: 'networkidle', timeout: 30_000 });
+      await page.goto('/settings', { waitUntil: 'commit', timeout: 30_000 });
+      await page.waitForTimeout(3000);
+
       if (page.url().includes('/settings')) {
-        console.log('Reusing existing auth state');
+        console.log('✅ Reusing Python auth state');
         return;
       }
+      console.log('⚠️  Python auth expired, doing fresh login...');
     }
   }
 
-  // Navigate to app — will redirect to Keycloak
-  await page.goto(`${baseURL}/settings`, { waitUntil: 'commit', timeout: 30_000 });
+  // Option 2: Fresh Keycloak login
+  const email    = process.env.ADMIN_EMAIL    ?? 'reem_user';
+  const password = process.env.ADMIN_PASSWORD ?? 'FaRe12345!!';
 
-  // Wait for Keycloak login page to load
-  await page.waitForURL(/keycloak|auth|login/, { timeout: 30_000 });
-  await page.waitForLoadState('domcontentloaded', { timeout: 30_000 });
+  await page.goto('/settings', { waitUntil: 'commit', timeout: 30_000 });
 
-  // Keycloak login form
-  await page.fill('#username, input[name="username"]', email);
-  await page.fill('#password, input[name="password"]', password);
-  await page.click('#kc-login, button[type="submit"]');
+  // Wait for app to load and redirect to Keycloak
+  await page.waitForTimeout(3000);
+  await page.waitForURL(/keycloak|auth|login|accounts/, { timeout: 30_000 });
+  await page.waitForLoadState('domcontentloaded');
 
-  // Wait for redirect back to app
-  await page.waitForURL(`${baseURL}/**`, { timeout: 30_000 });
+  // Fill Keycloak form
+  await page.locator('#username').or(page.locator('input[name="username"]')).fill(email);
+  await page.locator('#password').or(page.locator('input[name="password"]')).fill(password);
+  await page.locator('#kc-login').or(page.locator('button[type="submit"]')).click();
 
-  // Save auth state
+  // Wait for app
+  await page.waitForURL('**/settings**', { timeout: 30_000 });
+
+  // Save state
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
   await page.context().storageState({ path: AUTH_FILE });
-  console.log('Auth state saved to', AUTH_FILE);
+  console.log('✅ Auth state saved');
 });
