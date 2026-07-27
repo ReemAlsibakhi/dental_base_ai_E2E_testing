@@ -52,14 +52,31 @@ export abstract class BasePage {
     await this.page.waitForTimeout(debounceMs);
   }
 
-  /** Internal: select all + insertText via execCommand (only non-deprecated way to trigger React onChange) */
+  /**
+   * Internal: fill input via execCommand('insertText').
+   *
+   * WHY execCommand (deprecated)?
+   * execCommand('insertText') is the only confirmed method that dispatches
+   * a real InputEvent which React's synthetic event system intercepts.
+   *
+   * Alternatives that were tested and FAILED on this app:
+   *   - locator.fill()              → no React onChange
+   *   - HTMLInputElement value setter + dispatchEvent → no React onChange
+   *   - locator.type()              → works but slow character-by-character
+   *
+   * This is a known limitation when testing React controlled inputs.
+   * Track: https://github.com/microsoft/playwright/issues/13862
+   *
+   * @deprecated execCommand is deprecated by browsers but has no alternative
+   *             for triggering React's synthetic onChange. Will revisit when
+   *             Playwright adds native React support.
+   */
   private async _execFill(locator: Locator, value: string): Promise<void> {
     await locator.evaluate((el, v) => {
       const input = el as HTMLInputElement | HTMLTextAreaElement;
       input.focus();
-      // setSelectionRange replaces deprecated execCommand('selectAll') + execCommand('delete')
       input.setSelectionRange(0, input.value.length);
-      // insertText with selected text replaces it — only method that triggers React's synthetic onChange
+      // eslint-disable-next-line @typescript-eslint/no-deprecated
       document.execCommand('insertText', false, v);
     }, value);
   }
