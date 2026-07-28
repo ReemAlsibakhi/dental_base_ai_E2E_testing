@@ -27,10 +27,20 @@ async function login(page: Page): Promise<void> {
   const email    = process.env.ADMIN_EMAIL    ?? 'reem_user';
   const password = process.env.ADMIN_PASSWORD ?? 'FaRe12345!!';
 
-  // App redirects to Keycloak SSO on unauthenticated access
   await page.goto('/settings', { waitUntil: 'commit', timeout: 30_000 });
-  await page.waitForURL(/keycloak|auth|login/, { timeout: 30_000 });
-  await page.waitForLoadState('domcontentloaded');
+
+  // App may show landing page with "Get started" or redirect to Keycloak directly
+  await page.waitForTimeout(2000);
+
+  // Click "Get started" if on landing page
+  const getStarted = page.getByRole('button', { name: 'Get started' })
+    .or(page.getByRole('link', { name: 'Get started' }));
+  if (await getStarted.isVisible()) {
+    await getStarted.click();
+  }
+
+  // Wait for Keycloak login form
+  await page.waitForSelector('#username', { timeout: 30_000 });
 
   // Fill Keycloak form
   await page.locator('#username').fill(email);
@@ -38,7 +48,7 @@ async function login(page: Page): Promise<void> {
   await page.locator('#kc-login').click();
 
   // Wait for redirect back to app
-  await page.waitForURL(`${BASE_URL}/settings**`, { timeout: 30_000 });
+  await page.waitForURL('**/settings**', { timeout: 30_000 });
 
   // Save session
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
