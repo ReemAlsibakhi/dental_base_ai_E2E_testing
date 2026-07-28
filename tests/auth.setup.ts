@@ -3,14 +3,14 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 /**
- * Auth Setup — runs once before all tests.
+ * Auth Setup — performs login and saves complete browser state.
  *
- * Performs fresh login and saves the complete browser state
- * (cookies + localStorage) to .auth/admin.json.
- *
- * Playwright injects this state into every test automatically
- * via storageState in playwright.config.ts — no manual session
- * management needed in tests.
+ * App flow:
+ *   / → landing page ("Welcome back" + "Get started")
+ *     → click "Get started"
+ *     → /login (username + password form)
+ *     → fill credentials → submit
+ *     → authenticated app
  */
 
 const AUTH_FILE = path.join(__dirname, '../.auth/admin.json');
@@ -19,31 +19,31 @@ setup('authenticate as admin', async ({ page }) => {
   const email    = process.env.ADMIN_EMAIL    ?? 'reem_user';
   const password = process.env.ADMIN_PASSWORD ?? 'FaRe12345!!';
 
-  // Navigate to app — redirects to /login automatically
+  // Step 1: Navigate to app
   await page.goto('/', { waitUntil: 'commit', timeout: 30_000 });
 
-  // Wait for login form to render
+  // Step 2: Click "Get started" on landing page
+  const getStarted = page.getByRole('button', { name: 'Get started' });
+  await getStarted.waitFor({ state: 'visible', timeout: 30_000 });
+  await getStarted.click();
+
+  // Step 3: Wait for login form
   await page.waitForSelector('input[type="password"]', { timeout: 30_000 });
 
-  // Fill credentials
-  const emailInput    = page.locator('input[name="username"], input[type="email"], #username').first();
-  const passwordInput = page.locator('input[type="password"]').first();
-  const submitButton  = page.locator('button[type="submit"]').first();
+  // Step 4: Fill credentials
+  await page.locator('input[name="username"], input[type="email"], #username').first().fill(email);
+  await page.locator('input[type="password"]').first().fill(password);
+  await page.locator('button[type="submit"]').first().click();
 
-  await emailInput.fill(email);
-  await passwordInput.fill(password);
-  await submitButton.click();
-
-  // Wait for redirect to authenticated area
+  // Step 5: Wait for authenticated redirect
   await page.waitForURL(
     (url) => !url.pathname.includes('/login'),
     { timeout: 30_000 }
   );
 
-  // Verify we are in the app
-  await expect(page.locator('nav, main, [class*="sidebar"]').first()).toBeVisible();
+  await expect(page.locator('nav, main').first()).toBeVisible();
 
-  // Save complete browser state — cookies + localStorage
+  // Step 6: Save complete state
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
   await page.context().storageState({ path: AUTH_FILE });
   console.log('✅ Auth state saved');
