@@ -197,18 +197,21 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   // -------------------------------------------------------------------------
 
   test('delete plan shows confirmation', async ({ insuranceBilling }) => {
+    // Create a plan first so we have something to delete
+    await insuranceBilling.addPlan({
+      name: BasePage.unique('DeleteMe'),
+      payerId: '99999',
+    });
+
+    // Find and click the delete button
     const deleteBtn = insuranceBilling.modal
       .getByRole('button', { name: 'Remove' })
       .or(insuranceBilling.modal.getByRole('button', { name: 'Delete' }))
       .first();
 
-    if (await deleteBtn.isVisible()) {
-      await deleteBtn.click();
-      await insuranceBilling.page.waitForTimeout(500);
-      await insuranceBilling.assertDeleteConfirmationShown();
-      await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).last().click();
-    } else {
-      test.skip(true, 'No plan to delete');
-    }
+    await expect(deleteBtn).toBeVisible();
+    await deleteBtn.click();
+    await insuranceBilling.assertDeleteConfirmationShown();
+    await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).last().click();
   });
 });
