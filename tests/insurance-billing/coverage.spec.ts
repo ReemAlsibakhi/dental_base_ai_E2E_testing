@@ -81,7 +81,7 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   test('2-char name — minimum valid', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomButton.click();
     await insuranceBilling.page.waitForTimeout(500);
-    await insuranceBilling.smartFill(insuranceBilling.insuranceNameInput, 'AB');
+    await insuranceBilling.fill(insuranceBilling.insuranceNameInput, 'AB');
     await insuranceBilling.insuranceNameInput.press('Tab');
     await insuranceBilling.page.waitForTimeout(500);
     const nameError = insuranceBilling.modal
@@ -93,7 +93,7 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   test('XSS in name → blocked', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomButton.click();
     await insuranceBilling.page.waitForTimeout(500);
-    await insuranceBilling.smartFill(
+    await insuranceBilling.fill(
       insuranceBilling.insuranceNameInput,
       '<script>alert(1)</script>'
     );
@@ -107,12 +107,12 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   test('error clears when name corrected', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomButton.click();
     await insuranceBilling.page.waitForTimeout(500);
-    await insuranceBilling.smartFill(insuranceBilling.insuranceNameInput, 'D');
+    await insuranceBilling.fill(insuranceBilling.insuranceNameInput, 'D');
     await insuranceBilling.insuranceNameInput.press('Tab');
     await insuranceBilling.page.waitForTimeout(500);
     await expect(insuranceBilling.error).toBeVisible();
 
-    await insuranceBilling.smartFill(insuranceBilling.insuranceNameInput, 'Delta Dental');
+    await insuranceBilling.fill(insuranceBilling.insuranceNameInput, 'Delta Dental');
     await insuranceBilling.insuranceNameInput.press('Tab');
     await insuranceBilling.page.waitForTimeout(500);
     await expect(insuranceBilling.error).not.toBeVisible();
@@ -125,7 +125,7 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   test('coverage % > 100 → blocked', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomButton.click();
     await insuranceBilling.page.waitForTimeout(500);
-    await insuranceBilling.fillCoveragePercentage(insuranceBilling.preventiveInput, '101');
+    await insuranceBilling.fill(insuranceBilling.preventiveInput, '101');
     const isDisabled = await insuranceBilling.savePlanButton.isDisabled();
     const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
     expect(isDisabled || errors > 0).toBeTruthy();
@@ -134,7 +134,7 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   test('coverage % = 0 → minimum valid', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomButton.click();
     await insuranceBilling.page.waitForTimeout(500);
-    await insuranceBilling.fillCoveragePercentage(insuranceBilling.preventiveInput, '0');
+    await insuranceBilling.fill(insuranceBilling.preventiveInput, '0');
     const pctError = insuranceBilling.modal
       .locator("p[id$='-error']")
       .filter({ hasText: 'Preventive' });
@@ -144,7 +144,7 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   test('coverage % = 100 → maximum valid', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomButton.click();
     await insuranceBilling.page.waitForTimeout(500);
-    await insuranceBilling.fillCoveragePercentage(insuranceBilling.preventiveInput, '100');
+    await insuranceBilling.fill(insuranceBilling.preventiveInput, '100');
     const pctError = insuranceBilling.modal
       .locator("p[id$='-error']")
       .filter({ hasText: 'Preventive' });
@@ -165,14 +165,14 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   // -------------------------------------------------------------------------
 
   test('additional notes 500 chars accepted', async ({ insuranceBilling }) => {
-    await insuranceBilling.smartFill(insuranceBilling.additionalNotes, 'A'.repeat(500));
+    await insuranceBilling.fill(insuranceBilling.additionalNotes, 'A'.repeat(500));
     await insuranceBilling.page.waitForTimeout(500);
     const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
     expect(errors).toBe(0);
   });
 
   test('additional notes > 500 chars blocked', async ({ insuranceBilling }) => {
-    await insuranceBilling.smartFill(insuranceBilling.additionalNotes, 'A'.repeat(501));
+    await insuranceBilling.fill(insuranceBilling.additionalNotes, 'A'.repeat(501));
     await insuranceBilling.page.waitForTimeout(500);
     const value = await insuranceBilling.additionalNotes.inputValue();
     const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
