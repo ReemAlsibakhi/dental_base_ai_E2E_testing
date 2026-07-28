@@ -1,74 +1,50 @@
-import { test as setup, expect, Page } from '@playwright/test';
+import { test as setup, expect } from '@playwright/test';
 import * as path from 'path';
 import * as fs from 'fs';
 
 /**
- * Auth Setup — authenticates once and saves session for all tests.
+ * Auth Setup — runs once before all tests.
  *
- * Flow:
- *   1. Check if saved session is still valid → reuse (fast path)
- *   2. If not → login via /login page → save session
+ * Performs fresh login and saves the complete browser state
+ * (cookies + localStorage) to .auth/admin.json.
+ *
+ * Playwright injects this state into every test automatically
+ * via storageState in playwright.config.ts — no manual session
+ * management needed in tests.
  */
 
 const AUTH_FILE = path.join(__dirname, '../.auth/admin.json');
-
-async function isSessionValid(page: Page): Promise<boolean> {
-  if (!fs.existsSync(AUTH_FILE)) return false;
-  try {
-    const state = JSON.parse(fs.readFileSync(AUTH_FILE, 'utf-8'));
-    if (!state?.cookies?.length) return false;
-    await page.context().addCookies(state.cookies);
-    await page.goto('/settings', { waitUntil: 'commit', timeout: 15_000 });
-    if (page.url().includes('/settings')) {
-      // Refresh saved state with latest cookies
-      await page.context().storageState({ path: AUTH_FILE });
-      return true;
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-async function saveSession(page: Page): Promise<void> {
-  fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
-  await page.context().storageState({ path: AUTH_FILE });
-}
 
 setup('authenticate as admin', async ({ page }) => {
   const email    = process.env.ADMIN_EMAIL    ?? 'reem_user';
   const password = process.env.ADMIN_PASSWORD ?? 'FaRe12345!!';
 
-  // Fast path: reuse existing valid session
-  if (await isSessionValid(page)) {
-    console.log('✅ Reusing existing session');
-    return;
-  }
-
   // Navigate to app — redirects to /login automatically
   await page.goto('/', { waitUntil: 'commit', timeout: 30_000 });
 
   // Wait for login form to render
-  const emailInput   = page.getByLabel(/email|username/i).or(page.locator('input[type="email"], input[name="username"]')).first();
-  const passwordInput = page.getByLabel(/password/i).or(page.locator('input[type="password"]')).first();
-  const submitButton  = page.locator('button[type="submit"]');
+  await page.waitForSelector('input[type="password"]', { timeout: 30_000 });
 
-  await emailInput.waitFor({ state: 'visible', timeout: 30_000 });
+  // Fill credentials
+  const emailInput    = page.locator('input[name="username"], input[type="email"], #username').first();
+  const passwordInput = page.locator('input[type="password"]').first();
+  const submitButton  = page.locator('button[type="submit"]').first();
 
-  // Fill and submit
   await emailInput.fill(email);
   await passwordInput.fill(password);
   await submitButton.click();
 
-  // Verify login succeeded — must redirect away from /login
+  // Wait for redirect to authenticated area
   await page.waitForURL(
     (url) => !url.pathname.includes('/login'),
     { timeout: 30_000 }
   );
 
-  // Confirm we're in the authenticated app
-  await expect(page.locator('nav, main')).toBeVisible();
+  // Verify we are in the app
+  await expect(page.locator('nav, main, [class*="sidebar"]').first()).toBeVisible();
 
-  await saveSession(page);
-  console.log('✅ Login successful — session saved');
+  // Save complete browser state — cookies + localStorage
+  fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
+  await page.context().storageState({ path: AUTH_FILE });
+  console.log('✅ Auth state saved');
 });
