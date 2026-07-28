@@ -6,12 +6,17 @@ import { BasePage } from './BasePage';
  *
  * URL: /settings?settingTab=Insurance+%26+Billing
  *
- * Save patterns (confirmed from live DOM):
- *   Toggle-only:  Save Changes → API response (200/204)
- *   New Plan:     fill fields → Save Plan (local) → Save Changes → API response
+ * Inherits from BasePage:
+ *   openEdit(), modal, saveButton, cancelButton, error,
+ *   cancel(), saveAndAssertSuccess(), fill(), fillAndBlur(),
+ *   waitForApiSuccess(), unique()
  *
- * NOTE: Many cards share input[name="name"] and input[name="price"].
- * All locators are scoped to this.modal to prevent cross-card conflicts.
+ * Save patterns (confirmed from live DOM):
+ *   Toggle-only:  saveAndAssertSuccess()
+ *   New Plan:     addPlan() → Save Plan (local) → saveAndAssertSuccess()
+ *
+ * NOTE: input[name="name"] and input[name="price"] are shared across cards.
+ * All locators scoped to this.modal — safe because modals never overlap.
  */
 export class InsuranceBillingPage extends BasePage {
   static readonly URL = '/settings?settingTab=Insurance+%26+Billing';
@@ -29,77 +34,22 @@ export class InsuranceBillingPage extends BasePage {
     super(page);
   }
 
-  // -------------------------------------------------------------------------
-  // Navigation
-  // -------------------------------------------------------------------------
-
   override async navigate(): Promise<void> {
     await this.page.goto(InsuranceBillingPage.URL);
-    // domcontentloaded — networkidle times out on DentalBase (background requests)
     await this.page.waitForLoadState('domcontentloaded');
   }
 
-  async openEdit(cardName: string): Promise<void> {
-    // Locate Edit button by finding it next to the card heading
-    const editBtn = this.page
-      .locator('h3')
-      .filter({ hasText: cardName })
-      .locator('..')
-      .locator('..')
-      .getByRole('button', { name: 'Edit' })
-      .first();
-    await editBtn.scrollIntoViewIfNeeded();
-    await editBtn.click();
-    await expect(this.modal).toBeVisible();
-  }
-
   // -------------------------------------------------------------------------
-  // Modal — shared helpers
+  // Coverage — Save Plan button (unique to this card's Add Custom flow)
   // -------------------------------------------------------------------------
-
-  get modal(): Locator {
-    return this.page.locator('[role="dialog"]');
-  }
-
-  get saveButton(): Locator {
-    return this.modal.getByRole('button', { name: 'Save Changes' });
-  }
-
-  get cancelButton(): Locator {
-    return this.modal.getByRole('button', { name: 'Cancel' });
-  }
 
   get savePlanButton(): Locator {
     return this.modal.getByRole('button', { name: 'Save Plan' });
   }
 
-  get error(): Locator {
-    return this.modal.locator("p[id$='-error']").first();
-  }
-
-  async cancel(): Promise<void> {
-    try {
-      if (await this.cancelButton.isVisible()) {
-        await this.cancelButton.click();
-        const discard = this.page.getByRole('button', { name: 'Discard' });
-        if (await discard.isVisible()) await discard.click();
-      }
-    } catch { /* panel may already be closed */ }
-  }
-
-  async saveAndAssertSuccess(): Promise<void> {
-    await this.saveButton.scrollIntoViewIfNeeded();
-    // Start listening before click — avoids race condition
-    await Promise.all([
-      this.waitForApiSuccess(),
-      this.saveButton.click(),
-    ]);
-  }
-
   async savePlanAndAssertSuccess(): Promise<void> {
     await this.savePlanButton.scrollIntoViewIfNeeded();
     await this.savePlanButton.click();
-    // Save Plan closes the inline form — wait for it to disappear
     await expect(this.savePlanButton).not.toBeVisible();
     await this.saveAndAssertSuccess();
   }
@@ -148,10 +98,6 @@ export class InsuranceBillingPage extends BasePage {
     return this.modal.locator('textarea').first();
   }
 
-  async fillCoveragePercentage(locator: Locator, value: string): Promise<void> {
-    await this.fillAndBlur(locator, value);
-  }
-
   async addPlan(options: {
     name?: string;
     payerId?: string;
@@ -169,10 +115,10 @@ export class InsuranceBillingPage extends BasePage {
     await this.fillAndBlur(this.coverageNameInput, name);
     await this.fillAndBlur(this.payerIdInput, payerId);
 
-    if (options.preventive) await this.fillCoveragePercentage(this.preventiveInput,  options.preventive);
-    if (options.basic)      await this.fillCoveragePercentage(this.basicInput,       options.basic);
-    if (options.major)      await this.fillCoveragePercentage(this.majorInput,       options.major);
-    if (options.orthodontic) await this.fillCoveragePercentage(this.orthodonticInput, options.orthodontic);
+    if (options.preventive)  await this.fillAndBlur(this.preventiveInput,  options.preventive);
+    if (options.basic)       await this.fillAndBlur(this.basicInput,       options.basic);
+    if (options.major)       await this.fillAndBlur(this.majorInput,       options.major);
+    if (options.orthodontic) await this.fillAndBlur(this.orthodonticInput, options.orthodontic);
 
     await this.savePlanAndAssertSuccess();
     return { name, payerId };
@@ -236,7 +182,6 @@ export class InsuranceBillingPage extends BasePage {
 
   // -------------------------------------------------------------------------
   // Active Offers
-  // NOTE: input[name="price"] same as servicePriceInput — safe (no modal overlap)
   // -------------------------------------------------------------------------
 
   get offerNameInput(): Locator {

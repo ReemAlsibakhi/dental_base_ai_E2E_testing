@@ -1,13 +1,13 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 
 /**
  * BasePage — foundation for all Page Objects.
  *
- * Philosophy:
- *  - Use Playwright's built-in methods — they are well-tested and maintained
- *  - Solve problems at the root, not with workarounds
- *  - Dirty state is a test data problem, not a fill() problem
- *  - unique() ensures every test uses fresh data → no dirty state possible
+ * Contains shared functionality used across ALL modules:
+ *  - Navigation helpers
+ *  - Modal interactions (save, cancel, error)
+ *  - API response interception
+ *  - Test data isolation
  */
 export abstract class BasePage {
   readonly page: Page;
@@ -17,34 +17,80 @@ export abstract class BasePage {
   }
 
   // -----------------------------------------------------------------------
-  // Navigation — enforced contract for every POM
+  // Navigation — must be implemented by every POM
   // -----------------------------------------------------------------------
 
   abstract navigate(): Promise<void>;
+
+  /**
+   * Open Edit panel by card heading text.
+   * Works for all settings modules — finds Edit button next to h3 heading.
+   */
+  async openEdit(cardName: string): Promise<void> {
+    const editBtn = this.page
+      .locator('h3')
+      .filter({ hasText: cardName })
+      .locator('..')
+      .locator('..')
+      .getByRole('button', { name: 'Edit' })
+      .first();
+    await editBtn.scrollIntoViewIfNeeded();
+    await editBtn.click();
+    await expect(this.modal).toBeVisible();
+  }
+
+  // -----------------------------------------------------------------------
+  // Modal — shared across all modules
+  // -----------------------------------------------------------------------
+
+  get modal(): Locator {
+    return this.page.locator('[role="dialog"]');
+  }
+
+  get saveButton(): Locator {
+    return this.modal.getByRole('button', { name: 'Save Changes' });
+  }
+
+  get cancelButton(): Locator {
+    return this.modal.getByRole('button', { name: 'Cancel' });
+  }
+
+  get error(): Locator {
+    return this.modal.locator("p[id$='-error']").first();
+  }
+
+  async cancel(): Promise<void> {
+    try {
+      if (await this.cancelButton.isVisible()) {
+        await this.cancelButton.click();
+        const discard = this.page.getByRole('button', { name: 'Discard' });
+        if (await discard.isVisible()) await discard.click();
+      }
+    } catch { /* panel may already be closed */ }
+  }
+
+  async saveAndAssertSuccess(): Promise<void> {
+    await this.saveButton.scrollIntoViewIfNeeded();
+    // Start listening before click — avoids race condition with fast responses
+    await Promise.all([
+      this.waitForApiSuccess(),
+      this.saveButton.click(),
+    ]);
+  }
 
   // -----------------------------------------------------------------------
   // Fill methods
   //
   // Playwright's fill() dispatches real InputEvents internally.
   // React intercepts these correctly in all modern versions.
-  //
-  // The only fill "problem" we ever faced was dirty state — which is
-  // a test data problem, solved by unique() below, not by fill() wrappers.
+  // Dirty state is solved by unique() test data — not fill() workarounds.
   // -----------------------------------------------------------------------
 
-  /**
-   * Fill any input or textarea.
-   * Uses Playwright's fill() — the standard, recommended approach.
-   */
   async fill(locator: Locator, value: string): Promise<void> {
     await locator.scrollIntoViewIfNeeded();
     await locator.fill(value);
   }
 
-  /**
-   * Fill input[type=email] or input[type=tel] and blur.
-   * Tab press triggers validation on fields that validate on blur.
-   */
   async fillAndBlur(locator: Locator, value: string): Promise<void> {
     await locator.scrollIntoViewIfNeeded();
     await locator.fill(value);
@@ -55,13 +101,9 @@ export abstract class BasePage {
   // API response interception
   //
   // Toasts disappear in ~1s — too fast for Playwright to catch reliably.
-  // Intercepting the network response is the correct, reliable approach.
+  // Network response interception is the correct, reliable approach.
   // -----------------------------------------------------------------------
 
-  /**
-   * Wait for a successful API mutation response.
-   * @param urlPattern - optional filter to avoid catching unrelated requests
-   */
   async waitForApiSuccess(
     urlPattern?: string | RegExp,
     timeout = 15_000
@@ -84,18 +126,9 @@ export abstract class BasePage {
   // -----------------------------------------------------------------------
   // Test data isolation
   //
-  // The correct solution to dirty state is unique test data.
-  // If every test uses a value that never existed before,
-  // React will always see a change — no workarounds needed.
+  // Unique values prevent dirty state — no fill() workarounds needed.
   // -----------------------------------------------------------------------
 
-  /**
-   * Generate a unique value for test data isolation.
-   * Combines timestamp + random → collision-proof across parallel runs.
-   *
-   * @example
-   * BasePage.unique('Plan')  → 'Plan_lf3k2_4x7'
-   */
   static unique(prefix = 'Test'): string {
     return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 5)}`;
   }
