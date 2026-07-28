@@ -36,9 +36,9 @@ setup('authenticate as admin', async ({ page }) => {
   await page.locator('input[type="password"]').first().fill(password);
   await page.locator('button[type="submit"]').first().click();
 
-  // Wait for authenticated redirect
-  await page.waitForURL(
-    (url) => !url.pathname.includes('/login'),
+  // Wait for authenticated redirect — URL changes from /login to app page
+  await page.waitForFunction(
+    () => !window.location.pathname.startsWith('/login'),
     { timeout: 30_000 }
   );
 
