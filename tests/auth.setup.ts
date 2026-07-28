@@ -5,11 +5,8 @@ import * as fs from 'fs';
 /**
  * Auth Setup — performs login once and saves session for all tests.
  *
- * App flow:
- *   / → React SPA loads → landing page → "Get started" → /login → app
- *
- * Key insight: never use networkidle on SPAs with polling.
- * Instead, wait for specific elements to appear.
+ * App is hosted on Vercel — cold starts can take 30-60 seconds.
+ * We wait for specific DOM elements instead of network state.
  */
 
 const AUTH_FILE = path.join(__dirname, '../.auth/admin.json');
@@ -18,16 +15,18 @@ setup('authenticate as admin', async ({ page }) => {
   const email    = process.env.ADMIN_EMAIL    ?? 'reem_user';
   const password = process.env.ADMIN_PASSWORD ?? 'FaRe12345!!';
 
-  // Navigate — commit fires when server responds, before React renders
-  await page.goto('/', { waitUntil: 'commit', timeout: 30_000 });
+  await page.goto('/', { waitUntil: 'commit', timeout: 60_000 });
 
-  // Wait for React to render — watch for landing page button or login form
-  await page.waitForSelector('button, input[type="password"]', { timeout: 30_000 });
+  // Wait for app to finish loading — Vercel cold start can be slow
+  await page.waitForSelector('button, input[type="password"]', {
+    state: 'visible',
+    timeout: 60_000,
+  });
 
   // If on landing page → click "Get started"
-  if (await page.locator('button').filter({ hasText: 'Get started' }).isVisible()) {
-    await page.locator('button').filter({ hasText: 'Get started' }).click();
-    // Wait for login form to appear
+  const getStarted = page.locator('button').filter({ hasText: 'Get started' });
+  if (await getStarted.isVisible()) {
+    await getStarted.click();
     await page.waitForSelector('input[type="password"]', { timeout: 30_000 });
   }
 
@@ -42,10 +41,8 @@ setup('authenticate as admin', async ({ page }) => {
     { timeout: 30_000 }
   );
 
-  // Verify we are authenticated
   await expect(page.locator('nav, main').first()).toBeVisible({ timeout: 15_000 });
 
-  // Save complete browser state (cookies + localStorage)
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
   await page.context().storageState({ path: AUTH_FILE });
   console.log('✅ Auth state saved');
