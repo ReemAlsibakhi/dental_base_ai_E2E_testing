@@ -72,7 +72,7 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   test('1-char name → at least 2 characters error', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomButton.click();
     await insuranceBilling.page.waitForTimeout(500);
-    await insuranceBilling.smartFill(insuranceBilling.insuranceNameInput, 'D');
+    await insuranceBilling.fill(insuranceBilling.insuranceNameInput, 'D');
     await insuranceBilling.insuranceNameInput.press('Tab');
     await insuranceBilling.page.waitForTimeout(500);
     await expect(insuranceBilling.error).toContainText('at least 2 characters');
