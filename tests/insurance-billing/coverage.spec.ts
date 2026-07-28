@@ -106,16 +106,20 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
 
   test('error clears when name corrected', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomButton.click();
-    await insuranceBilling.page.waitForTimeout(500);
-    await insuranceBilling.fill(insuranceBilling.insuranceNameInput, 'D');
-    await insuranceBilling.insuranceNameInput.press('Tab');
-    await insuranceBilling.page.waitForTimeout(500);
-    await expect(insuranceBilling.error).toBeVisible();
+    await expect(insuranceBilling.coverageNameInput).toBeVisible();
 
-    await insuranceBilling.fill(insuranceBilling.insuranceNameInput, 'Delta Dental');
-    await insuranceBilling.insuranceNameInput.press('Tab');
-    await insuranceBilling.page.waitForTimeout(500);
-    await expect(insuranceBilling.error).not.toBeVisible();
+    // Error locator scoped to name field only — not modal-wide
+    const nameError = insuranceBilling.coverageNameInput.locator(
+      'xpath=following-sibling::p[contains(@id, "-error")]'
+    );
+
+    // Invalid name → name error appears
+    await insuranceBilling.fillAndBlur(insuranceBilling.coverageNameInput, 'D');
+    await expect(nameError).toBeVisible();
+
+    // Correct name → name error disappears
+    await insuranceBilling.fillAndBlur(insuranceBilling.coverageNameInput, 'Delta Dental');
+    await expect(nameError).not.toBeVisible();
   });
 
   // -------------------------------------------------------------------------
