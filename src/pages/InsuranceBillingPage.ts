@@ -10,9 +10,8 @@ import { BasePage } from './BasePage';
  *   Toggle-only:  Save Changes → API response (200/204)
  *   New Plan:     fill fields → Save Plan (local) → Save Changes → API response
  *
- * IMPORTANT: Many cards share input[name="name"] and input[name="price"].
- * All locators are scoped to this.modal to avoid cross-card conflicts.
- * Use card-specific methods (addPlan, addMembershipPlan, etc.) when possible.
+ * NOTE: Many cards share input[name="name"] and input[name="price"].
+ * All locators are scoped to this.modal to prevent cross-card conflicts.
  */
 export class InsuranceBillingPage extends BasePage {
   static readonly URL = '/settings?settingTab=Insurance+%26+Billing';
@@ -36,18 +35,22 @@ export class InsuranceBillingPage extends BasePage {
 
   override async navigate(): Promise<void> {
     await this.page.goto(InsuranceBillingPage.URL);
-    await this.page.waitForLoadState('networkidle');
+    // domcontentloaded — networkidle times out on DentalBase (background requests)
+    await this.page.waitForLoadState('domcontentloaded');
   }
 
   async openEdit(cardName: string): Promise<void> {
-    const editBtn = this.page.locator(
-      `//h3[contains(text(),'${cardName}')]` +
-      `/ancestor::div[contains(@class,'flex')][2]` +
-      `//button[normalize-space()='Edit']`
-    ).first();
+    // Locate Edit button by finding it next to the card heading
+    const editBtn = this.page
+      .locator('h3')
+      .filter({ hasText: cardName })
+      .locator('..')
+      .locator('..')
+      .getByRole('button', { name: 'Edit' })
+      .first();
     await editBtn.scrollIntoViewIfNeeded();
     await editBtn.click();
-    await this.page.waitForTimeout(500);
+    await expect(this.modal).toBeVisible();
   }
 
   // -------------------------------------------------------------------------
@@ -78,7 +81,6 @@ export class InsuranceBillingPage extends BasePage {
     try {
       if (await this.cancelButton.isVisible()) {
         await this.cancelButton.click();
-        await this.page.waitForTimeout(300);
         const discard = this.page.getByRole('button', { name: 'Discard' });
         if (await discard.isVisible()) await discard.click();
       }
@@ -87,6 +89,7 @@ export class InsuranceBillingPage extends BasePage {
 
   async saveAndAssertSuccess(): Promise<void> {
     await this.saveButton.scrollIntoViewIfNeeded();
+    // Start listening before click — avoids race condition
     await Promise.all([
       this.waitForApiSuccess(),
       this.saveButton.click(),
@@ -96,7 +99,8 @@ export class InsuranceBillingPage extends BasePage {
   async savePlanAndAssertSuccess(): Promise<void> {
     await this.savePlanButton.scrollIntoViewIfNeeded();
     await this.savePlanButton.click();
-    await this.page.waitForTimeout(500);
+    // Save Plan closes the inline form — wait for it to disappear
+    await expect(this.savePlanButton).not.toBeVisible();
     await this.saveAndAssertSuccess();
   }
 
@@ -106,7 +110,6 @@ export class InsuranceBillingPage extends BasePage {
 
   // -------------------------------------------------------------------------
   // Coverage — Accepted Insurance Plans
-  // NOTE: 'input[name="name"]' is shared across cards — always scope to modal
   // -------------------------------------------------------------------------
 
   get acceptAllToggle(): Locator {
@@ -117,7 +120,6 @@ export class InsuranceBillingPage extends BasePage {
     return this.modal.getByRole('button', { name: 'Add Custom' });
   }
 
-  // New Plan form fields
   get coverageNameInput(): Locator {
     return this.modal.locator('input[name="name"]');
   }
@@ -147,10 +149,7 @@ export class InsuranceBillingPage extends BasePage {
   }
 
   async fillCoveragePercentage(locator: Locator, value: string): Promise<void> {
-    await locator.scrollIntoViewIfNeeded();
-    await locator.fill(value);
-    await locator.press('Tab');
-    await this.page.waitForTimeout(300);
+    await this.fillAndBlur(locator, value);
   }
 
   async addPlan(options: {
@@ -165,19 +164,14 @@ export class InsuranceBillingPage extends BasePage {
     const payerId = options.payerId ?? '12345';
 
     await this.addCustomButton.click();
-    await this.page.waitForTimeout(500);
+    await expect(this.coverageNameInput).toBeVisible();
 
-    await this.smartFill(this.coverageNameInput, name);
-    await this.coverageNameInput.press('Tab');
-    await this.page.waitForTimeout(300);
+    await this.fillAndBlur(this.coverageNameInput, name);
+    await this.fillAndBlur(this.payerIdInput, payerId);
 
-    await this.smartFill(this.payerIdInput, payerId);
-    await this.payerIdInput.press('Tab');
-    await this.page.waitForTimeout(300);
-
-    if (options.preventive) await this.fillCoveragePercentage(this.preventiveInput, options.preventive);
-    if (options.basic)      await this.fillCoveragePercentage(this.basicInput,      options.basic);
-    if (options.major)      await this.fillCoveragePercentage(this.majorInput,      options.major);
+    if (options.preventive) await this.fillCoveragePercentage(this.preventiveInput,  options.preventive);
+    if (options.basic)      await this.fillCoveragePercentage(this.basicInput,       options.basic);
+    if (options.major)      await this.fillCoveragePercentage(this.majorInput,       options.major);
     if (options.orthodontic) await this.fillCoveragePercentage(this.orthodonticInput, options.orthodontic);
 
     await this.savePlanAndAssertSuccess();
@@ -242,8 +236,7 @@ export class InsuranceBillingPage extends BasePage {
 
   // -------------------------------------------------------------------------
   // Active Offers
-  // NOTE: input[name="price"] is shared with servicePriceInput
-  //       Safe here because modals don't overlap
+  // NOTE: input[name="price"] same as servicePriceInput — safe (no modal overlap)
   // -------------------------------------------------------------------------
 
   get offerNameInput(): Locator {
@@ -284,6 +277,5 @@ export class InsuranceBillingPage extends BasePage {
 
   async selectPricingOption(text: string): Promise<void> {
     await this.modal.getByText(text, { exact: false }).first().click();
-    await this.page.waitForTimeout(300);
   }
 }
