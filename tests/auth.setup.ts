@@ -5,14 +5,14 @@ import * as fs from 'fs';
 /**
  * Auth Setup — runs once before all tests.
  *
- * Follows Playwright's official authentication pattern:
+ * Follows Playwright official auth pattern:
  * https://playwright.dev/docs/auth
  *
- * - If .auth/admin.json exists → skip (Playwright injects it via storageState)
- * - If not → login → save storageState
- * - If session expires → delete .auth/admin.json and re-run
- *
- * Credentials must be set in .env — never hardcoded.
+ * Key decisions:
+ *  - waitUntil: 'load' — waits for JS to load before React renders
+ *  - Web First Assertions (expect) — auto-retry, no manual waitForSelector
+ *  - Skip if .auth/admin.json exists — Playwright injects via storageState
+ *  - No hardcoded credentials — throws if .env missing
  */
 
 const AUTH_FILE = path.join(__dirname, '../.auth/admin.json');
@@ -25,32 +25,24 @@ setup('authenticate as admin', async ({ page }) => {
   }
 
   if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
-    throw new Error(
-      'Missing ADMIN_EMAIL or ADMIN_PASSWORD in .env'
-    );
+    throw new Error('Missing ADMIN_EMAIL or ADMIN_PASSWORD in .env');
   }
 
   const email    = process.env.ADMIN_EMAIL;
   const password = process.env.ADMIN_PASSWORD;
 
-  // Navigate — React SPA, commit fires before render
-  await page.goto('/', { waitUntil: 'commit', timeout: 30_000 });
+  // 'load' waits for JS bundle — React needs this before rendering
+  await page.goto('/', { waitUntil: 'load', timeout: 60_000 });
 
-  // Wait for React to render any interactive element
-  await page.waitForSelector('button, input[type="password"]', {
-    state: 'visible',
-    timeout: 60_000,
-  });
-
-  // Handle landing page "Get started"
+  // Handle landing page using Web First Assertion (auto-retry built-in)
   const getStarted = page.getByRole('button', { name: /get started/i });
   if (await getStarted.isVisible()) {
     await getStarted.click();
-    await page.waitForSelector('input[type="password"]', {
-      state: 'visible',
-      timeout: 30_000,
-    });
   }
+
+  // Wait for login form using Web First Assertions
+  await expect(page.getByLabel(/username|email/i)).toBeVisible();
+  await expect(page.getByLabel(/password/i)).toBeVisible();
 
   // Fill login form
   await page.getByLabel(/username|email/i).fill(email);
@@ -61,7 +53,7 @@ setup('authenticate as admin', async ({ page }) => {
     .click();
 
   // Verify successful authentication
-  await expect(page).not.toHaveURL(/.*login/, { timeout: 30_000 });
+  await expect(page).not.toHaveURL(/.*login/);
   await expect(page.locator('nav, main').first()).toBeVisible();
 
   // Save complete browser state
