@@ -70,7 +70,7 @@ export class InsuranceBillingPage extends BasePage {
     return this.modal.getByRole('button', { name: 'Add Custom' });
   }
 
-  get coverageNameInput(): Locator {
+  get insuranceNameInput(): Locator {
     return this.modal.locator('input[name="name"]');
   }
 
@@ -110,9 +110,9 @@ export class InsuranceBillingPage extends BasePage {
     const payerId = options.payerId ?? '12345';
 
     await this.addCustomButton.click();
-    await expect(this.coverageNameInput).toBeVisible();
+    await expect(this.insuranceNameInput).toBeVisible();
 
-    await this.fillAndBlur(this.coverageNameInput, name);
+    await this.fillAndBlur(this.insuranceNameInput, name);
     await this.fillAndBlur(this.payerIdInput, payerId);
 
     if (options.preventive)  await this.fillAndBlur(this.preventiveInput,  options.preventive);
