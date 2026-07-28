@@ -36,8 +36,11 @@ setup('authenticate as admin', async ({ page }) => {
   const email    = process.env.ADMIN_EMAIL    ?? 'reem_user';
   const password = process.env.ADMIN_PASSWORD ?? 'FaRe12345!!';
 
-  await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30_000 });
-  await page.waitForTimeout(2000);
+  await page.goto('/', { waitUntil: 'commit', timeout: 30_000 });
+
+  // Wait for React app to fully render
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(5000);  // React needs time to render after domcontentloaded
 
   const url = page.url();
 

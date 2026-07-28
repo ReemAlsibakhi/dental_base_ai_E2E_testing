@@ -9,7 +9,7 @@ export default defineConfig({
   testDir: './tests',
   testMatch: '**/*.spec.ts',
   outputDir: './test-results',
-  fullyParallel: false,
+  timeout: 60_000,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
