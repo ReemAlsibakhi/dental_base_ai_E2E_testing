@@ -129,21 +129,30 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   test('coverage % > 100 → blocked', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomButton.click();
     await insuranceBilling.page.waitForTimeout(500);
-    await insuranceBilling.fill(insuranceBilling.preventiveInput, '101');
+    await insuranceBilling.fillAndBlur(insuranceBilling.preventiveInput, '101');
     const isDisabled = await insuranceBilling.savePlanButton.isDisabled();
     const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
     expect(isDisabled || errors > 0).toBeTruthy();
   });
 
-  test('coverage % = 0 → minimum valid', async ({ insuranceBilling }) => {
+  test('coverage % = 1 → minimum valid', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomButton.click();
     await insuranceBilling.page.waitForTimeout(500);
-    await insuranceBilling.fill(insuranceBilling.preventiveInput, '0');
+    await insuranceBilling.fillAndBlur(insuranceBilling.preventiveInput, '1');
     const pctError = insuranceBilling.modal
       .locator("p[id$='-error']")
       .filter({ hasText: 'Preventive' });
     await expect(pctError).not.toBeVisible();
   });
+
+  test('coverage % = 0 → blocked', async ({ insuranceBilling }) => {
+    await insuranceBilling.addCustomButton.click();
+    await insuranceBilling.page.waitForTimeout(500);
+    await insuranceBilling.fillAndBlur(insuranceBilling.preventiveInput, '0');
+    const isDisabled = await insuranceBilling.savePlanButton.isDisabled();
+    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    expect(isDisabled || errors > 0).toBeTruthy();
+  });  
 
   test('coverage % = 100 → maximum valid', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomButton.click();
@@ -169,7 +178,7 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   // -------------------------------------------------------------------------
 
   test('additional notes 500 chars accepted', async ({ insuranceBilling }) => {
-    await insuranceBilling.fill(insuranceBilling.coverageNotes, 'A'.repeat(500));
+    await insuranceBilling.fillAndBlur(insuranceBilling.coverageNotes, 'A'.repeat(500));
     await insuranceBilling.page.waitForTimeout(500);
     const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
     expect(errors).toBe(0);
