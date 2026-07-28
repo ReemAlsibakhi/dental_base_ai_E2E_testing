@@ -51,6 +51,9 @@ setup('authenticate as admin', async ({ page }) => {
 
   // DentalBase /login page or Keycloak
   if (url.includes('/login') || await page.locator('#username, input[type="email"]').first().isVisible()) {
+    // Wait for React to render the login form
+    const usernameField = page.locator('#username, input[name="username"], input[type="email"]').first();
+    await usernameField.waitFor({ state: 'visible', timeout: 30_000 });
     await fillAndSubmit(page, email, password);
     await saveState(page);
     return;
