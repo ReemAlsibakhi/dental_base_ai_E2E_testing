@@ -23,7 +23,7 @@ setup('authenticate as admin', async ({ page }) => {
   await page.goto('/', { waitUntil: 'commit', timeout: 30_000 });
 
   // Step 2: Click "Get started" on landing page
-  const getStarted = page.getByRole('button', { name: 'Get started' });
+  const getStarted = page.getByText('Get started');
   await getStarted.waitFor({ state: 'visible', timeout: 30_000 });
   await getStarted.click();
 
