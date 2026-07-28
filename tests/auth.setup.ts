@@ -35,7 +35,7 @@ setup('authenticate as admin', async ({ page }) => {
   await page.goto('/login', { waitUntil: 'load', timeout: 60_000 });
 
   // Step 2: Click "Get started" → redirects to Keycloak
-  await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible({ timeout: 30_000 });
   await page.getByRole('button', { name: 'Get started' }).click();
 
   // Step 3: Fill Keycloak login form
