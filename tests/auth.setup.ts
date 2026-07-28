@@ -31,8 +31,11 @@ setup('authenticate as admin', async ({ page }) => {
     return;
   }
 
-  // Step 1: Navigate to login page — waitUntil:'load' ensures JS bundle is ready
+  // Step 1: Navigate to login page
   await page.goto('/login', { waitUntil: 'load', timeout: 60_000 });
+
+  // Wait for loading screen to disappear — DentalBase shows spinner on init
+  await page.locator('text=DentalBase').waitFor({ state: 'hidden', timeout: 30_000 });
 
   // Step 2: Click "Get started" → redirects to Keycloak
   await expect(page.getByRole('button', { name: 'Get started' })).toBeVisible();
