@@ -19,7 +19,12 @@ async function isSessionValid(page: Page): Promise<boolean> {
     if (!state?.cookies?.length) return false;
     await page.context().addCookies(state.cookies);
     await page.goto('/settings', { waitUntil: 'commit', timeout: 15_000 });
-    return page.url().includes('/settings');
+    if (page.url().includes('/settings')) {
+      // Refresh saved state with latest cookies
+      await page.context().storageState({ path: AUTH_FILE });
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
