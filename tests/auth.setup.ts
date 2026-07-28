@@ -29,28 +29,34 @@ async function login(page: Page): Promise<void> {
 
   await page.goto('/settings', { waitUntil: 'commit', timeout: 30_000 });
 
-  // App may show landing page with "Get started" or redirect to Keycloak directly
-  await page.waitForTimeout(2000);
+  // Wait for page to settle
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(3000);
+
+  // If already on settings — session is valid, just save it
+  if (page.url().includes('/settings')) {
+    fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
+    await page.context().storageState({ path: AUTH_FILE });
+    console.log('✅ Already authenticated — auth state saved');
+    return;
+  }
 
   // Click "Get started" if on landing page
-  const getStarted = page.getByRole('button', { name: 'Get started' })
-    .or(page.getByRole('link', { name: 'Get started' }));
+  const getStarted = page.getByText('Get started');
   if (await getStarted.isVisible()) {
     await getStarted.click();
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(2000);
   }
 
   // Wait for Keycloak login form
   await page.waitForSelector('#username', { timeout: 30_000 });
-
-  // Fill Keycloak form
   await page.locator('#username').fill(email);
   await page.locator('#password').fill(password);
   await page.locator('#kc-login').click();
 
-  // Wait for redirect back to app
   await page.waitForURL('**/settings**', { timeout: 30_000 });
 
-  // Save session
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
   await page.context().storageState({ path: AUTH_FILE });
   console.log('✅ Auth state saved');
