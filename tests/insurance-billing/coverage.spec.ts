@@ -165,16 +165,16 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   // -------------------------------------------------------------------------
 
   test('additional notes 500 chars accepted', async ({ insuranceBilling }) => {
-    await insuranceBilling.fill(insuranceBilling.additionalNotes, 'A'.repeat(500));
+    await insuranceBilling.fill(insuranceBilling.coverageNotes, 'A'.repeat(500));
     await insuranceBilling.page.waitForTimeout(500);
     const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
     expect(errors).toBe(0);
   });
 
   test('additional notes > 500 chars blocked', async ({ insuranceBilling }) => {
-    await insuranceBilling.fill(insuranceBilling.additionalNotes, 'A'.repeat(501));
+    await insuranceBilling.fill(insuranceBilling.coverageNotes, 'A'.repeat(501));
     await insuranceBilling.page.waitForTimeout(500);
-    const value = await insuranceBilling.additionalNotes.inputValue();
+    const value = await insuranceBilling.coverageNotes.inputValue();
     const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
     expect(errors > 0 || value.length <= 500).toBeTruthy();
   });
