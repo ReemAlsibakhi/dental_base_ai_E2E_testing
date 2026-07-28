@@ -10,6 +10,7 @@ export default defineConfig({
   testMatch: '**/*.spec.ts',
   outputDir: './test-results',
   timeout: 120_000,
+  expect: { timeout: 30_000 },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
