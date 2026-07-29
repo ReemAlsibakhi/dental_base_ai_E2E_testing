@@ -129,15 +129,31 @@ export class InsuranceBillingPage extends BasePage {
   // -------------------------------------------------------------------------
 
   get membershipNameInput(): Locator {
-    return this.modal.locator('input[name="name"]');
+    return this.modal.getByRole('textbox', { name: 'Plan Name' });
   }
 
   get annualFeeInput(): Locator {
-    return this.modal.locator('input[name="annualFee"]');
+    return this.modal.getByRole('spinbutton', { name: 'Annual Fee' });
   }
 
   get discountPercentageInput(): Locator {
-    return this.modal.locator('input[name="discountPercentage"]');
+    return this.modal.getByRole('spinbutton', { name: 'Discount (%)' });
+  }
+
+  get updatePlanButton(): Locator {
+    return this.modal.getByRole('button', { name: 'Update Plan' });
+  }
+
+  /** Open the edit form for the first plan in the list */
+  async openFirstPlanEdit(): Promise<void> {
+    // The edit icon is an empty-text button — nth(5) targets first plan's edit
+    await this.modal.getByRole('button').filter({ hasText: /^$/ }).nth(5).click();
+    await expect(this.updatePlanButton).toBeVisible();
+  }
+
+  async updatePlanAndAssertSuccess(): Promise<void> {
+    await this.updatePlanButton.click();
+    await this.saveAndAssertSuccess();
   }
 
   // -------------------------------------------------------------------------
