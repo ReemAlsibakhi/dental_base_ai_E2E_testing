@@ -21,9 +21,14 @@ test.describe('Membership Plans', () => {
   });
 
   // -------------------------------------------------------------------------
+
+  test('panel opens with required elements', async ({ insuranceBilling }) => {
+    await expect(insuranceBilling.modal).toBeVisible();
+    await expect(insuranceBilling.cancelButton).toBeVisible();
+    await expect(insuranceBilling.saveButton).toBeVisible();
+  });
   // IB-MEM-R1 — Plan Name
   // -------------------------------------------------------------------------
-
   test('valid plan name saves', async ({ insuranceBilling }) => {
     const name = BasePage.unique('Plan');
     await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, name);
