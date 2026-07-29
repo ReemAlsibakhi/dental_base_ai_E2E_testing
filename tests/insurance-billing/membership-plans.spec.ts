@@ -30,8 +30,10 @@ test.describe('Membership Plans', () => {
   // IB-MEM-R1 — Plan Name
   // -------------------------------------------------------------------------
   test('valid plan name saves', async ({ insuranceBilling }) => {
-    const name = BasePage.unique('Plan');
-    await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, name);
+    // Edit existing plan — read current value and change it
+    const current = await insuranceBilling.membershipNameInput.inputValue();
+    const newName = current !== 'Premium Plan' ? 'Premium Plan' : 'Basic Plan';
+    await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, newName);
     await insuranceBilling.saveAndAssertSuccess();
   });
 
