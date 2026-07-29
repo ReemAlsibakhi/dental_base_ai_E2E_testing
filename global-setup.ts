@@ -27,9 +27,8 @@ async function globalSetup(config: FullConfig) {
   const baseURL = process.env.BASE_URL ?? 'https://dentalbase-dev-v2.vercel.app';
 
   try {
-    await page.goto(`${baseURL}/settings`, { waitUntil: 'load', timeout: 30_000 });
-    // Wait for React to process auth and potentially redirect
-    await page.waitForTimeout(5_000);
+    await page.goto(`${baseURL}/settings`, { waitUntil: 'commit', timeout: 15_000 });
+    await page.waitForTimeout(3_000);
     const isValid = page.url().includes('/settings');
 
     if (isValid) {
