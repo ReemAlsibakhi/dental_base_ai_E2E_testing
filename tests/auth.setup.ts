@@ -5,30 +5,53 @@ import * as fs from 'fs';
 const AUTH_FILE = path.join(__dirname, '../.auth/admin.json');
 
 setup('authenticate as admin', async ({ page }) => {
-  if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
-    throw new Error('Missing ADMIN_EMAIL or ADMIN_PASSWORD in .env');
-  }
-
+  // 1. التخطي إذا كانت الجلسة محفوظة مسبقاً
   if (fs.existsSync(AUTH_FILE)) {
     console.log('✅ Auth file exists — skipping login');
     return;
   }
 
-  await page.goto('/login');
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
 
-  // Wait indefinitely for "Get started" — no fixed timeout
-  // DentalBase load time varies, this is the correct approach for SPAs
-  const getStarted = page.getByRole('button', { name: 'Get started' });
-  await getStarted.waitFor({ state: 'visible' });
-  await getStarted.click();
+  if (!email || !password) {
+    throw new Error('❌ Missing ADMIN_EMAIL or ADMIN_PASSWORD in .env file!');
+  }
 
-  await page.getByRole('textbox', { name: 'Email or Username' }).fill(process.env.ADMIN_EMAIL);
-  await page.getByRole('textbox', { name: 'Password' }).fill(process.env.ADMIN_PASSWORD);
+  console.log('🚀 Navigating to login page...');
+  await page.goto('/login', { waitUntil: 'commit', timeout: 30_000 });
+
+  // 2. الضغط الصريح على زر Get started (الذي يفتح الفورم)
+  const getStartedBtn = page.getByRole('button', { name: 'Get started' });
+  console.log('🔹 Waiting for "Get started" button...');
+  
+  // ننتظر ظهور الزر حتى 20 ثانية لتجاوز بطء تحميل الـ SPA
+  await expect(getStartedBtn).toBeVisible({ timeout: 20_000 });
+  await getStartedBtn.click();
+  console.log('✅ Clicked "Get started"');
+
+  // 3. تحديد الحقول حسب الـ Codegen الصريح
+  const usernameInput = page.getByRole('textbox', { name: 'Email or Username' });
+  const passwordInput = page.locator('input[type="password"]');
+
+  // 4. تعبئة البيانات بعد ضمان فتح الـ Form
+  console.log('🔹 Filling login credentials...');
+  await expect(usernameInput).toBeVisible({ timeout: 15_000 });
+  await usernameInput.fill(email);
+
+  await expect(passwordInput).toBeVisible({ timeout: 10_000 });
+  await passwordInput.fill(password);
+
+  // 5. ضغط زر تسجيل الدخول Log In
+  console.log('🔹 Submitting form...');
   await page.getByRole('button', { name: 'Log In' }).click();
 
-  await expect(page).not.toHaveURL(/login/);
+  // 6. التحقق وحفظ الجلسة
+  console.log('🔹 Verifying authentication...');
+  await expect(page).not.toHaveURL(/.*login/i, { timeout: 30_000 });
 
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
   await page.context().storageState({ path: AUTH_FILE });
-  console.log('✅ Auth state saved');
+
+  console.log('✅ Auth state saved successfully!');
 });
