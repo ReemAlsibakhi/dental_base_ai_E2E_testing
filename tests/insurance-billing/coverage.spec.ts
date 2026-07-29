@@ -192,31 +192,30 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
     expect(errors > 0 || value.length <= 500).toBeTruthy();
   });
 
-  // -------------------------------------------------------------------------
-  // Delete
-  // -------------------------------------------------------------------------
-
-//   test('delete plan shows confirmation', async ({ insuranceBilling }) => {
-//     const deleteBtn = insuranceBilling.modal
-//       .getByRole('button', { name: 'Remove' })
-//       .or(insuranceBilling.modal.getByRole('button', { name: 'Delete' }))
-//       .first();
-
-//     if (await deleteBtn.isVisible()) {
-//       await deleteBtn.click();
-//       await insuranceBilling.page.waitForTimeout(500);
-//       await insuranceBilling.assertDeleteConfirmationShown();
-//       await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).last().click();
-//     } else {
-//       test.skip(true, 'No plan to delete');
-//     }
-//   });
-
   test('disable plan via toggle', async ({ insuranceBilling }) => {
     const firstPlan = insuranceBilling.modal.locator('[role="switch"]').first();
     const initial = await firstPlan.getAttribute('aria-checked');
     await firstPlan.click();
     await expect(firstPlan).not.toHaveAttribute('aria-checked', initial!);
   });
+
+  //   test('delete plan shows confirmation', async ({ insuranceBilling }) => {
+  //   // Create a plan first so we have something to delete
+  //   await insuranceBilling.addPlan({
+  //     name: BasePage.unique('DeleteMe'),
+  //     payerId: '99999',
+  //   });
+
+  //   // Find and click the delete button
+  //   const deleteBtn = insuranceBilling.modal
+  //     .getByRole('button', { name: 'Remove' })
+  //     .or(insuranceBilling.modal.getByRole('button', { name: 'Delete' }))
+  //     .first();
+
+  //   await expect(deleteBtn).toBeVisible();
+  //   await deleteBtn.click();
+  //   await insuranceBilling.assertDeleteConfirmationShown();
+  //   await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).last().click();
+  // });
 
 });  
