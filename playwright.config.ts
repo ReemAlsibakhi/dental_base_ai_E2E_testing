@@ -6,6 +6,7 @@ dotenv.config();
 const BASE_URL = process.env.BASE_URL ?? 'https://dentalbase-dev-v2.vercel.app';
 
 export default defineConfig({
+  globalSetup: require.resolve('./global-setup'),
   testDir: './tests',
   testMatch: '**/*.spec.ts',
   outputDir: './test-results',
