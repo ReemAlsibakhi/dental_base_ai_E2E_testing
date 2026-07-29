@@ -196,19 +196,27 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
   // Delete
   // -------------------------------------------------------------------------
 
-  test('delete plan shows confirmation', async ({ insuranceBilling }) => {
-    const deleteBtn = insuranceBilling.modal
-      .getByRole('button', { name: 'Remove' })
-      .or(insuranceBilling.modal.getByRole('button', { name: 'Delete' }))
-      .first();
+//   test('delete plan shows confirmation', async ({ insuranceBilling }) => {
+//     const deleteBtn = insuranceBilling.modal
+//       .getByRole('button', { name: 'Remove' })
+//       .or(insuranceBilling.modal.getByRole('button', { name: 'Delete' }))
+//       .first();
 
-    if (await deleteBtn.isVisible()) {
-      await deleteBtn.click();
-      await insuranceBilling.page.waitForTimeout(500);
-      await insuranceBilling.assertDeleteConfirmationShown();
-      await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).last().click();
-    } else {
-      test.skip(true, 'No plan to delete');
-    }
+//     if (await deleteBtn.isVisible()) {
+//       await deleteBtn.click();
+//       await insuranceBilling.page.waitForTimeout(500);
+//       await insuranceBilling.assertDeleteConfirmationShown();
+//       await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).last().click();
+//     } else {
+//       test.skip(true, 'No plan to delete');
+//     }
+//   });
+
+  test('disable plan via toggle', async ({ insuranceBilling }) => {
+    const firstPlan = insuranceBilling.modal.locator('[role="switch"]').first();
+    const initial = await firstPlan.getAttribute('aria-checked');
+    await firstPlan.click();
+    await expect(firstPlan).not.toHaveAttribute('aria-checked', initial!);
   });
-});
+
+});  
