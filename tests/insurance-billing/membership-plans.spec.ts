@@ -135,21 +135,19 @@ test.describe('Membership Plans', () => {
     expect(Number(value)).toBeGreaterThanOrEqual(0);
   });
 
-  test('TC-B-IB2-06 annual fee = 0.01 → minimum non-zero accepted', async ({ insuranceBilling }) => {
+  test('TC-N annual fee = 0.01 → blocked (min is 1)', async ({ insuranceBilling }) => {
     await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '0.01');
-    const hasError = await insuranceBilling.error.isVisible();
-    const isDisabled = await insuranceBilling.updatePlanButton.isDisabled();
-    // Business rule unclear — document actual behavior
-    expect(typeof hasError).toBe('boolean');
-    expect(typeof isDisabled).toBe('boolean');
+    await expect(insuranceBilling.error).toContainText('must be 1 or greater');
   });
 
-  test('TC-B-IB2-07 annual fee = 0 → boundary (business rule unclear)', async ({ insuranceBilling }) => {
+  test('TC-B-IB2-07 annual fee = 0 → blocked (min is 1)', async ({ insuranceBilling }) => {
     await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '0');
-    // Business rule: $0 plan validity unconfirmed — document actual behavior
-    const hasError   = await insuranceBilling.error.isVisible();
-    const isDisabled = await insuranceBilling.updatePlanButton.isDisabled();
-    console.log(`Annual fee = 0: error=${hasError}, disabled=${isDisabled}`);
+    await expect(insuranceBilling.error).toContainText('must be 1 or greater');
+  });
+
+  test('TC-B-IB2-06 annual fee = 1 → minimum valid', async ({ insuranceBilling }) => {
+    await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '1');
+    await expect(insuranceBilling.error).not.toBeVisible();
   });
 
   // -------------------------------------------------------------------------
