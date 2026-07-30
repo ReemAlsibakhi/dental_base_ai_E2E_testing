@@ -55,7 +55,7 @@ export class InsuranceBillingPage extends BasePage {
   }
 
   assertDeleteConfirmationShown(): Promise<void> {
-    return expect(this.page.getByText('cannot be undone')).toBeVisible();
+    return expect(this.page.getByText('This action cannot be undone')).toBeVisible();
   }
 
   // -------------------------------------------------------------------------

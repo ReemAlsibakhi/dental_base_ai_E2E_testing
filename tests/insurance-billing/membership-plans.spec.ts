@@ -194,14 +194,9 @@ test.describe('Membership Plans', () => {
   // -------------------------------------------------------------------------
 
   test('TC-F-IB2-15 delete plan shows confirmation', async ({ insuranceBilling }) => {
-    const deleteBtn = insuranceBilling.page
-      .getByRole('dialog')
-      .getByRole('button', { name: 'Delete' })
-      .first();
-
-    if (await deleteBtn.isVisible()) {
-      await deleteBtn.click();
-      await expect(insuranceBilling.page.getByText('cannot be undone')).toBeVisible();
+    if (await insuranceBilling.deletePlanButton.isVisible()) {
+      await insuranceBilling.deletePlanButton.click();
+      await insuranceBilling.assertDeleteConfirmationShown();
       await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).click();
     } else {
       test.skip(true, 'No per-row delete button visible');
@@ -209,14 +204,10 @@ test.describe('Membership Plans', () => {
   });
 
   test('TC-N-IB2-17 cancel delete keeps plan', async ({ insuranceBilling }) => {
-    const planName  = await insuranceBilling.membershipNameInput.inputValue();
-    const deleteBtn = insuranceBilling.page
-      .getByRole('dialog')
-      .getByRole('button', { name: 'Delete' })
-      .first();
-
-    if (await deleteBtn.isVisible()) {
-      await deleteBtn.click();
+    const planName = await insuranceBilling.membershipNameInput.inputValue();
+    if (await insuranceBilling.deletePlanButton.isVisible()) {
+      await insuranceBilling.deletePlanButton.click();
+      await insuranceBilling.assertDeleteConfirmationShown();
       await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).click();
       await expect(insuranceBilling.page.getByText(planName)).toBeVisible();
     } else {
