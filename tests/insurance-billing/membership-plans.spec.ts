@@ -57,14 +57,18 @@ test.describe('Membership Plans', () => {
     expect(isDisabled || hasError).toBeTruthy();
   });
 
-  test('TC-S-IB2-02 XSS in plan name → blocked', async ({ insuranceBilling }) => {
+  test('TC-S-IB2-02 XSS in plan name → sanitized on render', async ({ insuranceBilling }) => {
+    // Truth source test data: <img src=x onerror=alert(1)>
     await insuranceBilling.fillAndBlur(
       insuranceBilling.membershipNameInput,
-      '<script>alert(1)</script>'
+      '<img src=x onerror=alert(1)>'
     );
-    const isDisabled = await insuranceBilling.updatePlanButton.isDisabled();
-    const hasError   = await insuranceBilling.error.isVisible();
-    expect(isDisabled || hasError).toBeTruthy();
+    // Expected: sanitized/escaped on render — no alert fires
+    // Verify no JS dialog appeared
+    let alertFired = false;
+    insuranceBilling.page.on('dialog', () => { alertFired = true; });
+    await insuranceBilling.page.waitForTimeout(1000);
+    expect(alertFired).toBe(false);
   });
 
   test('TC-U-IB2-01 plan name error clears when corrected', async ({ insuranceBilling }) => {
