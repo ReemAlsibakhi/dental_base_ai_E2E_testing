@@ -93,7 +93,35 @@ test.describe('Membership Plans', () => {
   // TC-F-IB2-04, TC-N-IB2-07, TC-B-IB2-04, TC-B-IB2-05, TC-U-IB2-05
   // -------------------------------------------------------------------------
 
-  test('TC-F-IB2-04 valid discount % accepted', async ({ insuranceBilling }) => {
+  test('TC-F-IB2-04 add new membership plan (happy path)', async ({ insuranceBilling }) => {
+    // Close current plan edit first
+    await insuranceBilling.cancel();
+
+    // Open panel and click "+ New Membership Plan"
+    await insuranceBilling.openEdit(InsuranceBillingPage.CARD.membershipPlans);
+    const newPlanBtn = insuranceBilling.modal.getByRole('button', { name: '+ New Membership Plan' })
+      .or(insuranceBilling.modal.getByText('New Membership Plan'));
+    await newPlanBtn.click();
+
+    await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, 'Ortho Care Plan');
+    await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '599');
+    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '25');
+    await insuranceBilling.updatePlanAndAssertSuccess();
+  });
+
+  test('EXPLORE negative discount % → behavior', async ({ insuranceBilling }) => {
+    // IB-MEM-R4 states range 0–100 — negative is out of range
+    // Not an explicit TC in truth source but logically invalid
+    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '-1');
+    const isDisabled = await insuranceBilling.updatePlanButton.isDisabled();
+    const hasError   = await insuranceBilling.error.isVisible();
+    const value      = await insuranceBilling.discountPercentageInput.inputValue();
+    // Document actual behavior — negative may be silently sanitized like annual fee
+    console.log(`Negative discount: value=${value}, error=${hasError}, disabled=${isDisabled}`);
+    expect(Number(value)).toBeGreaterThanOrEqual(0);
+  });
+
+  test('valid discount % accepted', async ({ insuranceBilling }) => {
     await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '20');
     await expect(insuranceBilling.error).not.toBeVisible();
   });
