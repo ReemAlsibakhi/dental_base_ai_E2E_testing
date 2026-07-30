@@ -197,7 +197,7 @@ test.describe('Membership Plans', () => {
     if (await insuranceBilling.deletePlanButton.isVisible()) {
       await insuranceBilling.deletePlanButton.click();
       await insuranceBilling.assertDeleteConfirmationShown();
-      await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).click();
+      await insuranceBilling.cancelDelete();
     } else {
       test.skip(true, 'No per-row delete button visible');
     }
@@ -208,7 +208,7 @@ test.describe('Membership Plans', () => {
     if (await insuranceBilling.deletePlanButton.isVisible()) {
       await insuranceBilling.deletePlanButton.click();
       await insuranceBilling.assertDeleteConfirmationShown();
-      await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).click();
+      await insuranceBilling.cancelDelete();
       await expect(insuranceBilling.page.getByText(planName)).toBeVisible();
     } else {
       test.skip(true, 'No per-row delete button visible');

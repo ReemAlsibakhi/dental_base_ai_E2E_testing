@@ -54,8 +54,13 @@ export class InsuranceBillingPage extends BasePage {
     await this.saveAndAssertSuccess();
   }
 
-  assertDeleteConfirmationShown(): Promise<void> {
-    return expect(this.page.getByText('This action cannot be undone')).toBeVisible();
+  async assertDeleteConfirmationShown(): Promise<void> {
+    await expect(this.page.getByText('This action cannot be undone')).toBeVisible();
+  }
+
+  async cancelDelete(): Promise<void> {
+    // Cancel button inside the Delete Plan dialog specifically
+    await this.page.getByLabel('Delete Plan').getByRole('button', { name: 'Cancel' }).click();
   }
 
   // -------------------------------------------------------------------------
