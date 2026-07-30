@@ -144,6 +144,10 @@ export class InsuranceBillingPage extends BasePage {
     return this.modal.getByRole('button', { name: 'Update Plan' });
   }
 
+  get addMembershipPlanButton(): Locator {
+    return this.modal.getByRole('button', { name: 'Add Plan' });
+  }
+
   get deletePlanButton(): Locator {
     return this.modal.getByRole('dialog').getByRole('button', { name: 'Delete' })
   }
@@ -157,6 +161,11 @@ export class InsuranceBillingPage extends BasePage {
 
   async updatePlanAndAssertSuccess(): Promise<void> {
     await this.updatePlanButton.click();
+    await this.saveAndAssertSuccess();
+  }
+
+  async addMembershipPlanAndAssertSuccess(): Promise<void> {
+    await this.addMembershipPlanButton.click();
     await this.saveAndAssertSuccess();
   }
 

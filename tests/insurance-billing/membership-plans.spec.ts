@@ -106,7 +106,7 @@ test.describe('Membership Plans', () => {
     await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, 'Ortho Care Plan');
     await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '599');
     await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '25');
-    await insuranceBilling.updatePlanAndAssertSuccess();
+    await insuranceBilling.addMembershipPlanAndAssertSuccess();
   });
 
   test('EXPLORE negative discount % → behavior', async ({ insuranceBilling }) => {
