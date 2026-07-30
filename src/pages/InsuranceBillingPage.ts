@@ -144,6 +144,10 @@ export class InsuranceBillingPage extends BasePage {
     return this.modal.getByRole('button', { name: 'Update Plan' });
   }
 
+  get deletePlanButton(): Locator {
+    return this.modal.getByRole('dialog').getByRole('button', { name: 'Delete' })
+  }
+
   /** Open the edit form for the first plan in the list */
   async openFirstPlanEdit(): Promise<void> {
     // The edit icon is an empty-text button — nth(5) targets first plan's edit
