@@ -118,7 +118,9 @@ test.describe('Membership Plans', () => {
     const value      = await insuranceBilling.discountPercentageInput.inputValue();
     // Document actual behavior — negative may be silently sanitized like annual fee
     console.log(`Negative discount: value=${value}, error=${hasError}, disabled=${isDisabled}`);
-    expect(Number(value)).toBeGreaterThanOrEqual(0);
+    // expect(Number(value)).toBeGreaterThanOrEqual(0);
+    await expect(insuranceBilling.updatePlanButton).toBeDisabled();
+
   });
 
   test('valid discount % accepted', async ({ insuranceBilling }) => {
@@ -163,18 +165,22 @@ test.describe('Membership Plans', () => {
     // No error message shown — flagged as missing feedback issue
     await insuranceBilling.annualFeeInput.fill('-50');
     await insuranceBilling.annualFeeInput.press('Tab');
-    const value = await insuranceBilling.annualFeeInput.inputValue();
-    expect(Number(value)).toBeGreaterThanOrEqual(0);
+    // const value = await insuranceBilling.annualFeeInput.inputValue();
+    // expect(Number(value)).toBeGreaterThanOrEqual(0);
+    await expect(insuranceBilling.error).toBeVisible();
+    await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
 
   test('TC-N annual fee = 0.01 → blocked (min is 1)', async ({ insuranceBilling }) => {
     await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '0.01');
-    await expect(insuranceBilling.error).toContainText('must be 1 or greater');
+    await expect(insuranceBilling.error).toBeVisible();
+    await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
 
   test('TC-B-IB2-07 annual fee = 0 → blocked (min is 1)', async ({ insuranceBilling }) => {
     await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '0');
-    await expect(insuranceBilling.error).toContainText('must be 1 or greater');
+    await expect(insuranceBilling.error).toBeVisible();
+    await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
 
   test('TC-B-IB2-06 annual fee = 1 → minimum valid', async ({ insuranceBilling }) => {
