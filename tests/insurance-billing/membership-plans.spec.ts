@@ -113,6 +113,15 @@ test.describe('Membership Plans', () => {
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
+  test('discount % decimal → blocked', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();  
+    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '10.5');
+    const isDisabled = await insuranceBilling.updatePlanButton.isDisabled();
+    const hasError   = await insuranceBilling.error.isVisible();
+    expect(isDisabled || hasError).toBeTruthy();
+  });
+  
+
   // -------------------------------------------------------------------------
   // IB-MEM-R3 — Annual Fee
   // -------------------------------------------------------------------------
@@ -149,5 +158,26 @@ test('annual fee = 0 → blocked', async ({ insuranceBilling }) => {
   const hasError   = await insuranceBilling.error.isVisible();
   expect(isDisabled || hasError).toBeTruthy();
 });
+
+
+
+test('delete plan shows confirmation', async ({ insuranceBilling }) => {
+  const deleteBtn = insuranceBilling.modal.getByRole('button').filter({ hasText: /^$/ }).nth(6);
+  await deleteBtn.click();
+  
+  console.log('test delete plan ');
+
+  await expect(insuranceBilling.deletePlanButton).toBeVisible();
+  // await insuranceBilling.cancelButton.click();
+});
+
+test('cancel delete keeps plan', async ({ insuranceBilling }) => {
+  const planName = await insuranceBilling.membershipNameInput.inputValue();
+  const deleteBtn = insuranceBilling.modal.getByRole('button').filter({ hasText: /^$/ }).nth(6);
+  await deleteBtn.click();
+  await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(insuranceBilling.page.getByText(planName)).toBeVisible();
+});
+
 
 });
