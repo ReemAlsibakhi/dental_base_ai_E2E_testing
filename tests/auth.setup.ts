@@ -5,10 +5,25 @@ import * as fs from 'fs';
 const AUTH_FILE = path.join(__dirname, '../.auth/admin.json');
 
 setup('authenticate as admin', async ({ page }) => {
-  // 1. التخطي إذا كانت الجلسة محفوظة مسبقاً
+
+  // 1. فحص مجرد وجود الملف + التحقق من صلاحيته
   if (fs.existsSync(AUTH_FILE)) {
-    console.log('✅ Auth file exists — skipping login');
-    return;
+    try {
+      // نتحقق من تاريخ تعديل الملف: إذا مر عليه أكثر من 8 ساعات مثلاً نحذفه ونجدده تلقائياً
+      const stats = fs.statSync(AUTH_FILE);
+      const hoursOld = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60);
+
+      if (hoursOld > 8) { // يمكنك تعديل عدد الساعات حسب سياسة الـ Token في موقعك
+        console.log('⚠️ Auth file is older than 8 hours — deleting to refresh session...');
+        fs.unlinkSync(AUTH_FILE);
+      } else {
+        console.log('✅ Auth file exists and is fresh — skipping login');
+        return;
+      }
+    } catch {
+      // في حال حدوث أي خطأ في قراءة الملف، نحذفه للاحتياط
+      if (fs.existsSync(AUTH_FILE)) fs.unlinkSync(AUTH_FILE);
+    }
   }
 
   const email = process.env.ADMIN_EMAIL;
@@ -18,40 +33,29 @@ setup('authenticate as admin', async ({ page }) => {
     throw new Error('❌ Missing ADMIN_EMAIL or ADMIN_PASSWORD in .env file!');
   }
 
-  console.log('🚀 Navigating to login page...');
+  console.log('🚀 Executing fresh login...');
   await page.goto('/login', { waitUntil: 'commit', timeout: 30_000 });
 
-  // 2. الضغط الصريح على زر Get started (الذي يفتح الفورم)
+  // خطوة تسجيل الدخول
   const getStartedBtn = page.getByRole('button', { name: 'Get started' });
-  console.log('🔹 Waiting for "Get started" button...');
-  
-  // ننتظر ظهور الزر حتى 20 ثانية لتجاوز بطء تحميل الـ SPA
   await expect(getStartedBtn).toBeVisible({ timeout: 20_000 });
   await getStartedBtn.click();
-  console.log('✅ Clicked "Get started"');
 
-  // 3. تحديد الحقول حسب الـ Codegen الصريح
   const usernameInput = page.getByRole('textbox', { name: 'Email or Username' });
   const passwordInput = page.locator('input[type="password"]');
 
-  // 4. تعبئة البيانات بعد ضمان فتح الـ Form
-  console.log('🔹 Filling login credentials...');
   await expect(usernameInput).toBeVisible({ timeout: 15_000 });
   await usernameInput.fill(email);
-
-  await expect(passwordInput).toBeVisible({ timeout: 10_000 });
   await passwordInput.fill(password);
 
-  // 5. ضغط زر تسجيل الدخول Log In
-  console.log('🔹 Submitting form...');
   await page.getByRole('button', { name: 'Log In' }).click();
 
-  // 6. التحقق وحفظ الجلسة
-  console.log('🔹 Verifying authentication...');
+  // التأكد الصريح من التوجيه التام بعيداً عن الـ Login
   await expect(page).not.toHaveURL(/.*login/i, { timeout: 30_000 });
 
+  // حفظ الجلسة الجديدة
   fs.mkdirSync(path.dirname(AUTH_FILE), { recursive: true });
   await page.context().storageState({ path: AUTH_FILE });
 
-  console.log('✅ Auth state saved successfully!');
+  console.log('✅ Fresh auth state saved successfully!');
 });
