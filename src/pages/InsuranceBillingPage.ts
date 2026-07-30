@@ -149,7 +149,8 @@ export class InsuranceBillingPage extends BasePage {
   }
 
   get deletePlanButton(): Locator {
-    return this.modal.getByRole('dialog').getByRole('button', { name: 'Delete' })
+    // Confirmed via Playwright codegen — trash icon is 2nd button in plan row
+    return this.modal.locator('.flex.gap-2.items-center > button:nth-child(2)').first();
   }
 
   /** Open the edit form for the first plan in the list */
