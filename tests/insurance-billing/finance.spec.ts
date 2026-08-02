@@ -1,5 +1,6 @@
 import { test, expect, Browser } from '@playwright/test';
 import { InsuranceBillingPage } from '../../src/pages/InsuranceBillingPage';
+import { FINANCE } from '../../src/test-data/insurance-billing';
 import { BasePage } from '../../src/pages/BasePage';
 
 /**
@@ -56,14 +57,14 @@ test.describe('Finance', () => {
   test('TC-F-IB2-10 add custom provider with full fields', async () => {
     await ib.addCustomProviderButton.click();
 
-    await ib.providerNameInput.fill(BasePage.unique('LocalCreditUnion'));
-    await ib.providerDescription.fill('In-house partnership financing');
-    await ib.providerWebsite.fill('https://lcu.example.com');
-    await ib.providerApr.fill('9.99');
-    await ib.providerPaymentTerms.fill('12–24 months');
-    await ib.providerLoanAmountRange.fill('$200–$5000');
-    await ib.providerCreditRequirements.fill('Soft check only');
-    await ib.providerKeyFeatures.fill('No prepayment penalty');
+    await ib.providerNameInput.fill(BasePage.unique(FINANCE.providerName));
+    await ib.providerDescription.fill(FINANCE.description);
+    await ib.providerWebsite.fill(FINANCE.website);
+    await ib.providerApr.fill(FINANCE.validApr);
+    await ib.providerPaymentTerms.fill(FINANCE.paymentTerms);
+    await ib.providerLoanAmountRange.fill(FINANCE.loanRange);
+    await ib.providerCreditRequirements.fill(FINANCE.creditReqs);
+    await ib.providerKeyFeatures.fill(FINANCE.keyFeatures);
 
     await ib.addFinanceProviderAndAssertSuccess();
   });
@@ -96,7 +97,7 @@ test.describe('Finance', () => {
 
   test('TC-N-IB2-16 APR = 150 → error (outside 0–99.99)', async () => {
     await ib.addCustomProviderButton.click();
-    await ib.providerApr.fill('150');
+    await ib.providerApr.fill(FINANCE.invalidApr);
     await ib.providerApr.press('Tab');
     await expect(ib.error).toBeVisible();
   });
@@ -107,7 +108,7 @@ test.describe('Finance', () => {
 
   test('TC-B-IB2-11 APR = 99.99 → maximum valid', async () => {
     await ib.addCustomProviderButton.click();
-    await ib.providerApr.fill('99.99');
+    await ib.providerApr.fill(FINANCE.maxApr);
     await ib.providerApr.press('Tab');
     await expect(ib.error).not.toBeVisible();
   });
@@ -118,7 +119,7 @@ test.describe('Finance', () => {
 
   test('TC-B-IB2-12 APR = 100 → one above maximum → blocked', async () => {
     await ib.addCustomProviderButton.click();
-    await ib.providerApr.fill('100');
+    await ib.providerApr.fill(FINANCE.overApr);
     await ib.providerApr.press('Tab');
     await expect(ib.error).toBeVisible();
   });
@@ -133,8 +134,8 @@ test.describe('Finance', () => {
     let alertFired = false;
     ib.page.on('dialog', () => { alertFired = true; });
 
-    await ib.providerDescription.fill("<script>alert('finance')</script>");
-    await ib.providerKeyFeatures.fill("<script>alert('finance')</script>");
+    await ib.providerDescription.fill(FINANCE.xssPayload);
+    await ib.providerKeyFeatures.fill(FINANCE.xssPayload);
 
     await ib.page.waitForTimeout(1000);
     expect(alertFired).toBe(false);

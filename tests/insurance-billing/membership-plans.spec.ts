@@ -1,4 +1,5 @@
 import { test, expect } from '../../src/fixtures';
+import { MEMBERSHIP } from '../../src/test-data/insurance-billing';
 import { InsuranceBillingPage } from '../../src/pages/InsuranceBillingPage';
 
 /**
@@ -44,7 +45,7 @@ test.describe('Membership Plans', () => {
 
   test('TC-F-IB2-04 valid plan name saves', async ({ insuranceBilling }) => {
     const current = await insuranceBilling.membershipNameInput.inputValue();
-    const newName = current !== 'Premium Plan' ? 'Premium Plan' : 'Family Plan';
+    const newName = current !== MEMBERSHIP.validName ? MEMBERSHIP.validName : MEMBERSHIP.altName;
     await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, newName);
     await insuranceBilling.updatePlanAndAssertSuccess();
   });
@@ -75,13 +76,13 @@ test.describe('Membership Plans', () => {
     await insuranceBilling.membershipNameInput.clear();
     await insuranceBilling.membershipNameInput.press('Tab');
     await expect(insuranceBilling.error).toBeVisible();
-    await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, 'Family Plan');
+    await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, MEMBERSHIP.altName);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
   test('TC-R-IB2-01 plan name persists after save', async ({ insuranceBilling }) => {
     const current = await insuranceBilling.membershipNameInput.inputValue();
-    const newName = current !== 'Premium Plan' ? 'Premium Plan' : 'Family Plan';
+    const newName = current !== MEMBERSHIP.validName ? MEMBERSHIP.validName : MEMBERSHIP.altName;
     await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, newName);
     await insuranceBilling.updatePlanAndAssertSuccess();
     await insuranceBilling.openFirstPlanEdit();
@@ -103,7 +104,7 @@ test.describe('Membership Plans', () => {
       .or(insuranceBilling.modal.getByText('New Membership Plan'));
     await newPlanBtn.click();
 
-    await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, 'Ortho Care Plan');
+    await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, MEMBERSHIP.newPlanName);
     await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '599');
     await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '25');
     await insuranceBilling.addMembershipPlanAndAssertSuccess();
@@ -112,7 +113,7 @@ test.describe('Membership Plans', () => {
   test('EXPLORE negative discount % → behavior', async ({ insuranceBilling }) => {
     // IB-MEM-R4 states range 0–100 — negative is out of range
     // Not an explicit TC in truth source but logically invalid
-    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '-1');
+    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.zeroDiscount);
     const isDisabled = await insuranceBilling.updatePlanButton.isDisabled();
     const hasError   = await insuranceBilling.error.isVisible();
     const value      = await insuranceBilling.discountPercentageInput.inputValue();
@@ -124,29 +125,29 @@ test.describe('Membership Plans', () => {
   });
 
   test('valid discount % accepted', async ({ insuranceBilling }) => {
-    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '20');
+    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.validDiscount);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
   test('TC-N-IB2-07 discount % > 100 → error + Save disabled', async ({ insuranceBilling }) => {
-    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '150');
+    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.overDiscount);
     await expect(insuranceBilling.error).toContainText('cannot exceed 100%');
     await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
 
   test('TC-B-IB2-04 discount % = 100 → maximum valid', async ({ insuranceBilling }) => {
-    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '100');
+    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.maxDiscount);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
   test('TC-B-IB2-05 discount % = 101 → one above maximum → blocked', async ({ insuranceBilling }) => {
-    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '101');
+    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.overDiscount);
     await expect(insuranceBilling.error).toBeVisible();
     await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
 
   test('TC-U-IB2-05 save disabled proactively when discount invalid', async ({ insuranceBilling }) => {
-    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, '150');
+    await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.overDiscount);
     await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
 
@@ -156,7 +157,7 @@ test.describe('Membership Plans', () => {
   // -------------------------------------------------------------------------
 
   test('TC-F-IB2-05 valid annual fee accepted', async ({ insuranceBilling }) => {
-    await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '299');
+    await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, MEMBERSHIP.validFee);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
@@ -178,13 +179,13 @@ test.describe('Membership Plans', () => {
   });
 
   test('TC-B-IB2-07 annual fee = 0 → blocked (min is 1)', async ({ insuranceBilling }) => {
-    await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '0');
+    await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, MEMBERSHIP.zeroFee);
     await expect(insuranceBilling.error).toBeVisible();
     await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
 
   test('TC-B-IB2-06 annual fee = 1 → minimum valid', async ({ insuranceBilling }) => {
-    await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '1');
+    await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, MEMBERSHIP.minFee);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
