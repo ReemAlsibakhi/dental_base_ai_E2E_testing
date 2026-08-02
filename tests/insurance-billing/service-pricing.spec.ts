@@ -1,15 +1,21 @@
 import { test, expect, Browser } from '@playwright/test';
 import { InsuranceBillingPage } from '../../src/pages/InsuranceBillingPage';
 import { BasePage } from '../../src/pages/BasePage';
+import { SERVICE_PRICING } from '../../src/test-data/insurance-billing';
 
 /**
  * Service Pricing — IB-SVC-R1 to R4
  *
- * Truth source: tab6-insurance-billing.md
- * Reference: https://playwright.dev/docs/pom
+ * Truth source: docs/requirements/tab6-insurance-billing.md
+ * Test data:    src/test-data/insurance-billing.ts
+ * Reference:    https://playwright.dev/docs/pom
  *
  * NOT automated (per decision report):
  *   - IB-SVC-R3 Category dropdown (closed list)
+ *
+ * Key behaviors confirmed from truth source:
+ *   - IB-SVC-R1: Save Fee button stays clickable; error fires on click
+ *   - IB-SVC-R4: negative price silently stripped (DEF)
  */
 
 test.describe('Service Pricing', () => {
@@ -17,7 +23,7 @@ test.describe('Service Pricing', () => {
 
   test.beforeAll(async ({ browser }: { browser: Browser }) => {
     const context = await browser.newContext({ storageState: '.auth/admin.json' });
-    const page = await context.newPage();
+    const page    = await context.newPage();
     ib = new InsuranceBillingPage(page);
     await ib.navigate();
   });
@@ -40,17 +46,16 @@ test.describe('Service Pricing', () => {
 
   test('TC-F-IB2-07 add service with all fields', async () => {
     await ib.modal.getByRole('button', { name: 'Add Service' }).click();
-
-    await ib.page.getByRole('textbox', { name: 'Service Name' }).fill('Limited oral evaluation');
-    await ib.page.getByRole('textbox', { name: 'CDT Code' }).fill('D0140');
-    await ib.page.getByRole('spinbutton', { name: 'Price' }).fill('95');
-
+    await ib.page.getByRole('textbox', { name: 'Service Name' }).fill(SERVICE_PRICING.validName);
+    await ib.page.getByRole('textbox', { name: 'CDT Code' }).fill(SERVICE_PRICING.cdtCode);
+    await ib.page.getByRole('spinbutton', { name: 'Price' }).fill(SERVICE_PRICING.validPrice);
     await ib.modal.getByRole('button', { name: 'Save Fee' }).click();
     await ib.saveAndAssertSuccess();
   });
 
   // -------------------------------------------------------------------------
   // IB-SVC-R1 — Service Name validation
+  // Note: Save Fee button stays enabled; error fires on click (not on blur)
   // -------------------------------------------------------------------------
 
   test('TC-N-IB2-09 empty service name → error on submit', async () => {
@@ -61,14 +66,14 @@ test.describe('Service Pricing', () => {
 
   test('TC-N-IB2-10 1-char service name → error on submit', async () => {
     await ib.modal.getByRole('button', { name: 'Add Service' }).click();
-    await ib.page.getByRole('textbox', { name: 'Service Name' }).fill('A');
+    await ib.page.getByRole('textbox', { name: 'Service Name' }).fill(SERVICE_PRICING.invalidName);
     await ib.modal.getByRole('button', { name: 'Save Fee' }).click();
     await expect(ib.error).toContainText('at least 2 characters');
   });
 
   test('TC-B-IB2-08 2-char service name → minimum valid', async () => {
     await ib.modal.getByRole('button', { name: 'Add Service' }).click();
-    await ib.page.getByRole('textbox', { name: 'Service Name' }).fill('AB');
+    await ib.page.getByRole('textbox', { name: 'Service Name' }).fill(SERVICE_PRICING.minName);
     await ib.modal.getByRole('button', { name: 'Save Fee' }).click();
     await expect(ib.error).not.toBeVisible();
   });
@@ -77,39 +82,39 @@ test.describe('Service Pricing', () => {
     await ib.modal.getByRole('button', { name: 'Add Service' }).click();
     let alertFired = false;
     ib.page.on('dialog', () => { alertFired = true; });
-    await ib.page.getByRole('textbox', { name: 'Service Name' }).fill('<script>alert(1)</script>');
+    await ib.page.getByRole('textbox', { name: 'Service Name' }).fill(SERVICE_PRICING.xssPayload);
     await ib.page.waitForTimeout(1000);
     expect(alertFired).toBe(false);
   });
 
   // -------------------------------------------------------------------------
-  // IB-SVC-R2 — CDT Code (optional)
+  // IB-SVC-R2 — CDT Code (optional free text)
   // -------------------------------------------------------------------------
 
-  test('TC-F-IB2-07 CDT code D0150 accepted', async () => {
+  test('TC-F CDT code accepted', async () => {
     await ib.modal.getByRole('button', { name: 'Add Service' }).click();
-    await ib.page.getByRole('textbox', { name: 'CDT Code' }).fill('D0150');
+    await ib.page.getByRole('textbox', { name: 'CDT Code' }).fill(SERVICE_PRICING.cdtCode);
     await expect(ib.error).not.toBeVisible();
   });
 
   // -------------------------------------------------------------------------
-  // IB-SVC-R4 — Price (silent sanitization)
+  // IB-SVC-R4 — Price (silent sanitization — DEF)
   // -------------------------------------------------------------------------
 
   test('TC-N-IB2-11 negative price → silently sanitized (DEF)', async () => {
     await ib.modal.getByRole('button', { name: 'Add Service' }).click();
     const priceField = ib.page.getByRole('spinbutton', { name: 'Price' });
-    await priceField.fill('-50');
+    await priceField.fill(SERVICE_PRICING.negPrice);
     await priceField.press('Tab');
     const value = await priceField.inputValue();
-    // DEF: minus sign silently stripped — field shows 50 not -50
+    // DEF: minus sign silently stripped — field shows 50 not -50, no error shown
     expect(Number(value)).toBeGreaterThanOrEqual(0);
   });
 
   test('TC-B-IB2-09 valid price accepted', async () => {
     await ib.modal.getByRole('button', { name: 'Add Service' }).click();
     const priceField = ib.page.getByRole('spinbutton', { name: 'Price' });
-    await priceField.fill('150');
+    await priceField.fill(SERVICE_PRICING.validPrice);
     await expect(ib.error).not.toBeVisible();
   });
 });
