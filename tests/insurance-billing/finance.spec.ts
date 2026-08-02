@@ -5,15 +5,12 @@ import { BasePage } from '../../src/pages/BasePage';
 /**
  * Finance — IB-FIN-R1 to R9
  *
- * Truth source: tab6-insurance-billing.md (QA Test Report 2026-07-21)
+ * Truth source: tab6-insurance-billing.md
  * Reference: https://playwright.dev/docs/pom
  *
- * Selectors confirmed via Playwright codegen on live app.
- *
  * NOT automated (per decision report):
- *   - IB-FIN-R6 Application Process dropdown (closed list)
- *   - IB-FIN-R7 Approval Time dropdown (options not fully enumerated)
- *   - DEF-IB2-09: chip removal has no confirmation — documented not fixed
+ *   - IB-FIN-R6 Application Process (closed list)
+ *   - IB-FIN-R7 Approval Time (options not fully enumerated)
  */
 
 test.describe('Finance', () => {
@@ -30,12 +27,10 @@ test.describe('Finance', () => {
   // -------------------------------------------------------------------------
 
   test('TC-F-IB2-09 add provider from Quick Add list', async ({ insuranceBilling }) => {
-    // Remove CareCredit first if already added to ensure clean state
-    const careCredit = insuranceBilling.modal.getByRole('button', { name: '✓ CareCredit' });
-    if (await careCredit.isVisible()) {
-      await careCredit.click();
+    const alreadyAdded = insuranceBilling.modal.getByRole('button', { name: '✓ CareCredit' });
+    if (await alreadyAdded.isVisible()) {
+      await alreadyAdded.click();
     }
-    // Add CareCredit from Quick Add
     await insuranceBilling.modal.getByRole('button', { name: '+ CareCredit' }).click();
     await insuranceBilling.saveAndAssertSuccess();
   });
@@ -44,21 +39,19 @@ test.describe('Finance', () => {
   // TC-F-IB2-10 — Add Custom provider with full field set
   // -------------------------------------------------------------------------
 
-  test('TC-F-IB2-10 add custom finance provider with full fields', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Custom' }).click();
+  test('TC-F-IB2-10 add custom provider with full fields', async ({ insuranceBilling }) => {
+    await insuranceBilling.addCustomProviderButton.click();
 
-    const name = BasePage.unique('LocalCreditUnion');
-    await insuranceBilling.page.getByRole('textbox', { name: 'Provider Name' }).fill(name);
-    await insuranceBilling.page.getByRole('textbox', { name: 'Description' }).fill('In-house partnership financing');
-    await insuranceBilling.page.getByRole('textbox', { name: 'Website' }).fill('https://lcu.example.com');
-    await insuranceBilling.page.getByRole('textbox', { name: 'APR / Interest Rate (%)' }).fill('9.99');
-    await insuranceBilling.page.getByRole('textbox', { name: 'Payment Terms' }).fill('12–24 months');
-    await insuranceBilling.page.getByRole('textbox', { name: 'Loan Amount Range' }).fill('$200–$5000');
-    await insuranceBilling.page.getByRole('textbox', { name: 'Credit Requirements' }).fill('Soft check only');
-    await insuranceBilling.page.getByRole('textbox', { name: 'Key Features' }).fill('No prepayment penalty');
+    await insuranceBilling.providerNameInput.fill(BasePage.unique('LocalCreditUnion'));
+    await insuranceBilling.providerDescription.fill('In-house partnership financing');
+    await insuranceBilling.providerWebsite.fill('https://lcu.example.com');
+    await insuranceBilling.providerApr.fill('9.99');
+    await insuranceBilling.providerPaymentTerms.fill('12–24 months');
+    await insuranceBilling.providerLoanAmountRange.fill('$200–$5000');
+    await insuranceBilling.providerCreditRequirements.fill('Soft check only');
+    await insuranceBilling.providerKeyFeatures.fill('No prepayment penalty');
 
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Finance Provider' }).click();
-    await insuranceBilling.saveAndAssertSuccess();
+    await insuranceBilling.addFinanceProviderAndAssertSuccess();
   });
 
   // -------------------------------------------------------------------------
@@ -66,12 +59,11 @@ test.describe('Finance', () => {
   // -------------------------------------------------------------------------
 
   test('TC-F-IB2-11 enable In-House Financing toggle', async ({ insuranceBilling }) => {
-    const toggle = insuranceBilling.modal.getByRole('switch').nth(1);
+    const toggle = insuranceBilling.inHouseFinancingToggle;
     const initial = await toggle.getAttribute('aria-checked');
     await toggle.click();
     await insuranceBilling.page.waitForTimeout(300);
-    const after = await toggle.getAttribute('aria-checked');
-    expect(after).not.toBe(initial);
+    expect(await toggle.getAttribute('aria-checked')).not.toBe(initial);
     await insuranceBilling.saveAndAssertSuccess();
   });
 
@@ -80,13 +72,10 @@ test.describe('Finance', () => {
   // -------------------------------------------------------------------------
 
   test('TC-N-IB2-15 empty provider name → blocked', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Custom' }).click();
-    // Leave Provider Name empty and try to submit
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Finance Provider' }).click();
-    const isDisabled = await insuranceBilling.modal
-      .getByRole('button', { name: 'Add Finance Provider' })
-      .isDisabled();
-    const hasError = await insuranceBilling.error.isVisible();
+    await insuranceBilling.addCustomProviderButton.click();
+    await insuranceBilling.addFinanceProviderButton.click();
+    const isDisabled = await insuranceBilling.addFinanceProviderButton.isDisabled();
+    const hasError   = await insuranceBilling.error.isVisible();
     expect(isDisabled || hasError).toBeTruthy();
   });
 
@@ -95,10 +84,9 @@ test.describe('Finance', () => {
   // -------------------------------------------------------------------------
 
   test('TC-N-IB2-16 APR = 150 → error (outside 0–99.99)', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Custom' }).click();
-    const aprField = insuranceBilling.page.getByRole('textbox', { name: 'APR / Interest Rate (%)' });
-    await aprField.fill('150');
-    await aprField.press('Tab');
+    await insuranceBilling.addCustomProviderButton.click();
+    await insuranceBilling.providerApr.fill('150');
+    await insuranceBilling.providerApr.press('Tab');
     await expect(insuranceBilling.error).toBeVisible();
   });
 
@@ -107,10 +95,9 @@ test.describe('Finance', () => {
   // -------------------------------------------------------------------------
 
   test('TC-B-IB2-11 APR = 99.99 → maximum valid', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Custom' }).click();
-    const aprField = insuranceBilling.page.getByRole('textbox', { name: 'APR / Interest Rate (%)' });
-    await aprField.fill('99.99');
-    await aprField.press('Tab');
+    await insuranceBilling.addCustomProviderButton.click();
+    await insuranceBilling.providerApr.fill('99.99');
+    await insuranceBilling.providerApr.press('Tab');
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
@@ -119,10 +106,9 @@ test.describe('Finance', () => {
   // -------------------------------------------------------------------------
 
   test('TC-B-IB2-12 APR = 100 → one above maximum → blocked', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Custom' }).click();
-    const aprField = insuranceBilling.page.getByRole('textbox', { name: 'APR / Interest Rate (%)' });
-    await aprField.fill('100');
-    await aprField.press('Tab');
+    await insuranceBilling.addCustomProviderButton.click();
+    await insuranceBilling.providerApr.fill('100');
+    await insuranceBilling.providerApr.press('Tab');
     await expect(insuranceBilling.error).toBeVisible();
   });
 
@@ -130,16 +116,14 @@ test.describe('Finance', () => {
   // TC-S-IB2-05 — XSS in Description and Key Features
   // -------------------------------------------------------------------------
 
-  test('TC-S-IB2-05 XSS in description → sanitized', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Custom' }).click();
+  test('TC-S-IB2-05 XSS in description and key features → sanitized', async ({ insuranceBilling }) => {
+    await insuranceBilling.addCustomProviderButton.click();
 
     let alertFired = false;
     insuranceBilling.page.on('dialog', () => { alertFired = true; });
 
-    await insuranceBilling.page.getByRole('textbox', { name: 'Description' })
-      .fill("<script>alert('finance')</script>");
-    await insuranceBilling.page.getByRole('textbox', { name: 'Key Features' })
-      .fill("<script>alert('finance')</script>");
+    await insuranceBilling.providerDescription.fill("<script>alert('finance')</script>");
+    await insuranceBilling.providerKeyFeatures.fill("<script>alert('finance')</script>");
 
     await insuranceBilling.page.waitForTimeout(1000);
     expect(alertFired).toBe(false);

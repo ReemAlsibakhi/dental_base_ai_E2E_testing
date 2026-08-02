@@ -179,24 +179,53 @@ export class InsuranceBillingPage extends BasePage {
   // Finance
   // -------------------------------------------------------------------------
 
+  get addCustomProviderButton(): Locator {
+    return this.modal.getByRole('button', { name: 'Add Custom' });
+  }
+
+  get addFinanceProviderButton(): Locator {
+    return this.modal.getByRole('button', { name: 'Add Finance Provider' });
+  }
+
   get providerNameInput(): Locator {
-    return this.modal.locator('input[placeholder*="CareCredit"]');
+    return this.page.getByRole('textbox', { name: 'Provider Name' });
   }
 
   get providerDescription(): Locator {
-    return this.modal.locator('textarea[placeholder*="Most popular"]');
+    return this.page.getByRole('textbox', { name: 'Description' });
+  }
+
+  get providerWebsite(): Locator {
+    return this.page.getByRole('textbox', { name: 'Website' });
   }
 
   get providerApr(): Locator {
-    return this.modal.locator('input[placeholder="26.99"]');
+    return this.page.getByRole('textbox', { name: 'APR / Interest Rate (%)' });
+  }
+
+  get providerPaymentTerms(): Locator {
+    return this.page.getByRole('textbox', { name: 'Payment Terms' });
+  }
+
+  get providerLoanAmountRange(): Locator {
+    return this.page.getByRole('textbox', { name: 'Loan Amount Range' });
+  }
+
+  get providerCreditRequirements(): Locator {
+    return this.page.getByRole('textbox', { name: 'Credit Requirements' });
   }
 
   get providerKeyFeatures(): Locator {
-    return this.modal.locator('textarea[placeholder*="No prepayment"]');
+    return this.page.getByRole('textbox', { name: 'Key Features' });
   }
 
   get inHouseFinancingToggle(): Locator {
-    return this.modal.locator('button[role="switch"]').last();
+    return this.modal.getByRole('switch').nth(1);
+  }
+
+  async addFinanceProviderAndAssertSuccess(): Promise<void> {
+    await this.addFinanceProviderButton.click();
+    await this.saveAndAssertSuccess();
   }
 
   // -------------------------------------------------------------------------
