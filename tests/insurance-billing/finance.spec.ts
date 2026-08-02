@@ -73,10 +73,8 @@ test.describe('Finance', () => {
 
   test('TC-N-IB2-15 empty provider name → blocked', async ({ insuranceBilling }) => {
     await insuranceBilling.addCustomProviderButton.click();
-    await insuranceBilling.addFinanceProviderButton.click();
-    const isDisabled = await insuranceBilling.addFinanceProviderButton.isDisabled();
-    const hasError   = await insuranceBilling.error.isVisible();
-    expect(isDisabled || hasError).toBeTruthy();
+    // Button should be disabled proactively when name is empty
+    await expect(insuranceBilling.addFinanceProviderButton).toBeDisabled();
   });
 
   // -------------------------------------------------------------------------
