@@ -285,11 +285,11 @@ export class InsuranceBillingPage extends BasePage {
   // -------------------------------------------------------------------------
 
   get goodFaithToggle(): Locator {
-    return this.modal.locator('button[role="switch"]').first();
+    return this.page.getByRole('switch', { name: 'Good Faith Estimate Compliance' });
   }
 
   get customAiScriptTextarea(): Locator {
-    return this.modal.locator('textarea').first();
+    return this.page.getByRole('textbox', { name: 'Custom AI Script (Optional)' });
   }
 
   async selectPricingOption(text: string): Promise<void> {
