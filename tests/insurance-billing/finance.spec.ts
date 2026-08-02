@@ -27,11 +27,10 @@ test.describe('Finance', () => {
   // -------------------------------------------------------------------------
 
   test('TC-F-IB2-09 add provider from Quick Add list', async ({ insuranceBilling }) => {
-    const alreadyAdded = insuranceBilling.modal.getByRole('button', { name: '✓ CareCredit' });
-    if (await alreadyAdded.isVisible()) {
-      await alreadyAdded.click();
+    if (await insuranceBilling.quickAddProviderAdded('CareCredit').isVisible()) {
+      await insuranceBilling.quickAddProviderAdded('CareCredit').click();
     }
-    await insuranceBilling.modal.getByRole('button', { name: '+ CareCredit' }).click();
+    await insuranceBilling.quickAddProvider('CareCredit').click();
     await insuranceBilling.saveAndAssertSuccess();
   });
 

@@ -187,6 +187,14 @@ export class InsuranceBillingPage extends BasePage {
     return this.modal.getByRole('button', { name: 'Add Finance Provider' });
   }
 
+  quickAddProvider(name: string): Locator {
+    return this.modal.getByRole('button', { name: `+ ${name}` });
+  }
+
+  quickAddProviderAdded(name: string): Locator {
+    return this.modal.getByRole('button', { name: `✓ ${name}` });
+  }
+
   get providerNameInput(): Locator {
     return this.page.getByRole('textbox', { name: 'Provider Name' });
   }
