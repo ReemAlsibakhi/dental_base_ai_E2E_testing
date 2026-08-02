@@ -193,27 +193,21 @@ test.describe('Membership Plans', () => {
   // TC-F-IB2-15, TC-N-IB2-17
   // -------------------------------------------------------------------------
 
-  test('TC-F-IB2-15 delete plan shows confirmation', async ({ insuranceBilling }) => {
-  // Cancel edit form to go back to plan list where delete button is visible
-  await insuranceBilling.modal.getByRole('button', { name: 'Cancel' }).click();
-  
+test('TC-F-IB2-15 delete plan shows confirmation', async ({ insuranceBilling }) => {
   await expect(insuranceBilling.deletePlanButton).toBeVisible();
   await insuranceBilling.deletePlanButton.click();
   await insuranceBilling.assertDeleteConfirmationShown();
-  await insuranceBilling.page.getByRole('button', { name: 'Cancel' }).click();
+  await insuranceBilling.cancelDelete();
 });
 
-  test('TC-N-IB2-17 cancel delete keeps plan', async ({ insuranceBilling }) => {
-    await insuranceBilling.cancel();
- 
-    const planName = await insuranceBilling.membershipNameInput.inputValue();
-    if (await insuranceBilling.deletePlanButton.isVisible()) {
-      await insuranceBilling.deletePlanButton.click();
-      await insuranceBilling.assertDeleteConfirmationShown();
-      await insuranceBilling.cancelDelete();
-      await expect(insuranceBilling.page.getByText(planName)).toBeVisible();
-    } else {
-      test.skip(true, 'No per-row delete button visible');
-    }
-  });
+test('TC-N-IB2-17 cancel delete keeps plan', async ({ insuranceBilling }) => {
+  // await insuranceBilling.modal.getByRole('button', { name: 'Cancel' }).first().click();
+  
+  await insuranceBilling.deletePlanButton.click();
+  await insuranceBilling.assertDeleteConfirmationShown();
+  await insuranceBilling.cancelDelete();
+  
+  // Verify "Family Plan" still exists in the list
+  await expect(insuranceBilling.modal.getByText('Family Plan').first()).toBeVisible();
+});
 });

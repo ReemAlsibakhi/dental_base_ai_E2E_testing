@@ -2,7 +2,7 @@
   "cookies": [
     {
       "name": "AUTH_SESSION_ID",
-      "value": "cba7a201-0f87-43be-bf59-9d8bfa10f73b",
+      "value": "7bba1836-9c6d-464a-8012-9cd13c06837b",
       "domain": "keycloak-dev.dentalbase.ai",
       "path": "/realms/dev/",
       "expires": -1,
@@ -12,7 +12,7 @@
     },
     {
       "name": "KEYCLOAK_IDENTITY",
-      "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIxMDBiYzI1OS05M2YwLTQwMGMtYWE3MS1lZjVlMmYzNzFhNzEifQ.eyJleHAiOjE3ODYwMTMxODIsImlhdCI6MTc4NTQwODM4MiwianRpIjoiYjU3MWE5NjUtMTY0MC00MjM4LWFmMzktNGRlMTJmNmZlOGZiIiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay1kZXYuZGVudGFsYmFzZS5haS9yZWFsbXMvZGV2Iiwic3ViIjoiMjg4ZjUyMGEtMGMyMS00ZjU4LWFkZTUtYzNhOWNiZjIyZjk5IiwidHlwIjoiU2VyaWFsaXplZC1JRCIsInNpZCI6ImNiYTdhMjAxLTBmODctNDNiZS1iZjU5LTlkOGJmYTEwZjczYiIsInN0YXRlX2NoZWNrZXIiOiJQSldPUl9aT3U0TXJXYXJncUwzMkJNdHNkR24zZ1pBMm8wTFpkbFhESGhRIn0.TiG2JraFqpbk6V5kD7xIpb0rC-ZEcsIxpUHTw-ymNTCTXVpZWj_QDzX4V7TIa_bBPGl-Vm4XndmTIcfRP95NiA",
+      "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIxMDBiYzI1OS05M2YwLTQwMGMtYWE3MS1lZjVlMmYzNzFhNzEifQ.eyJleHAiOjE3ODYyNjAyNjcsImlhdCI6MTc4NTY1NTQ2NywianRpIjoiNmViYjAxZjQtODEwOS00ZTliLWE1ZTEtZWE2ZDNiYjM5YzI4IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay1kZXYuZGVudGFsYmFzZS5haS9yZWFsbXMvZGV2Iiwic3ViIjoiMjg4ZjUyMGEtMGMyMS00ZjU4LWFkZTUtYzNhOWNiZjIyZjk5IiwidHlwIjoiU2VyaWFsaXplZC1JRCIsInNpZCI6IjdiYmExODM2LTljNmQtNDY0YS04MDEyLTljZDEzYzA2ODM3YiIsInN0YXRlX2NoZWNrZXIiOiJienc3dHhkOUJveksxbU9YVmVqR1U0Mm1zZWRreVNQdXhudHVRZjBleHhRIn0.BvyN0BXzVCYo834agGbG2ZU1_luFt2xZmbIgpmYk0iSAt324JeYKSbjMW8zbRdT85yPGh1Er5XmiHty_NN0vmw",
       "domain": "keycloak-dev.dentalbase.ai",
       "path": "/realms/dev/",
       "expires": -1,
@@ -22,10 +22,10 @@
     },
     {
       "name": "KEYCLOAK_SESSION",
-      "value": "\"dev/288f520a-0c21-4f58-ade5-c3a9cbf22f99/cba7a201-0f87-43be-bf59-9d8bfa10f73b\"",
+      "value": "\"dev/288f520a-0c21-4f58-ade5-c3a9cbf22f99/7bba1836-9c6d-464a-8012-9cd13c06837b\"",
       "domain": "keycloak-dev.dentalbase.ai",
       "path": "/realms/dev/",
-      "expires": 1786013182.21858,
+      "expires": 1786260267.788151,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
@@ -45,23 +45,23 @@
         },
         {
           "name": "userData",
-          "value": "{\"id\":81,\"username\":\"reem_user\",\"email\":\"rsibakhi@gmail.com\",\"first_name\":\"Lara\",\"last_name\":\"Sibakhi\",\"full_name\":\"Lara Sibakhi\",\"phone_number\":\"6035551234\",\"time_zone\":null,\"identity_provider\":\"keycloak\",\"is_verified\":true,\"is_active\":true,\"receive_emails\":false,\"primary_office_id\":9,\"date_joined\":\"2025-12-18T14:03:10.717925\",\"last_login\":\"2026-07-30T10:46:23.100884\",\"keycloak_realm\":\"dev\",\"offices\":[{\"office_id\":9,\"office_name\":\"Smile Dental\",\"external_office_id\":\"aa35c48e-2362-45ae-af39-0e342e950966\",\"office_phone\":\"4566565664\",\"pms_system\":\"eaglesoft\",\"role\":{\"id\":1,\"name\":\"Admin\"},\"outreach_settings\":{\"appointment_reminders\":true,\"missed_opportunity\":true,\"no_show\":true,\"recall\":false,\"quick_fill\":false,\"reputation_management\":false},\"voip_enabled\":true,\"ai_platforms\":[\"voice_ai\"],\"ai_phone_number\":\"+19294924108\"}]}"
+          "value": "{\"id\":81,\"username\":\"reem_user\",\"email\":\"rsibakhi@gmail.com\",\"first_name\":\"Sara\",\"last_name\":\"Ali\",\"full_name\":\"Sara Ali\",\"phone_number\":\"6035551234\",\"time_zone\":null,\"identity_provider\":\"keycloak\",\"is_verified\":true,\"is_active\":true,\"receive_emails\":false,\"primary_office_id\":9,\"date_joined\":\"2025-12-18T14:03:10.717925\",\"last_login\":\"2026-08-02T07:24:28.754634\",\"keycloak_realm\":\"dev\",\"offices\":[{\"office_id\":9,\"office_name\":\"Smile Dental\",\"external_office_id\":\"aa35c48e-2362-45ae-af39-0e342e950966\",\"office_phone\":\"4566565664\",\"pms_system\":\"eaglesoft\",\"role\":{\"id\":1,\"name\":\"Admin\"},\"outreach_settings\":{\"appointment_reminders\":true,\"missed_opportunity\":true,\"no_show\":true,\"recall\":false,\"quick_fill\":false,\"reputation_management\":false},\"voip_enabled\":true,\"ai_platforms\":[\"voice_ai\"],\"ai_phone_number\":\"+19294924108\"}]}"
         },
         {
           "name": "expires_in",
-          "value": "1800"
+          "value": "1799"
         },
         {
           "name": "refreshToken",
-          "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIxMDBiYzI1OS05M2YwLTQwMGMtYWE3MS1lZjVlMmYzNzFhNzEifQ.eyJleHAiOjE3ODYwMTMxODIsImlhdCI6MTc4NTQwODM4MiwianRpIjoiNzVmYWUwMjUtM2QwNi00YjIyLTg1YTAtMzk3MDI1NzU0NjI2IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay1kZXYuZGVudGFsYmFzZS5haS9yZWFsbXMvZGV2IiwiYXVkIjoiaHR0cHM6Ly9rZXljbG9hay1kZXYuZGVudGFsYmFzZS5haS9yZWFsbXMvZGV2Iiwic3ViIjoiMjg4ZjUyMGEtMGMyMS00ZjU4LWFkZTUtYzNhOWNiZjIyZjk5IiwidHlwIjoiUmVmcmVzaCIsImF6cCI6ImRlbnRhbC1haS1iYWNrZW5kIiwic2lkIjoiY2JhN2EyMDEtMGY4Ny00M2JlLWJmNTktOWQ4YmZhMTBmNzNiIiwic2NvcGUiOiJvcGVuaWQgd2ViLW9yaWdpbnMgcHJvZmlsZSBiYXNpYyByb2xlcyBhY3IgZW1haWwifQ.XSp172YKtEN92D8X59iHqvnaEUiZ0UZkSalhgVsFGecLcjZ59CU7GCYesicasCtn8DHcYN1CFzlS5NSF_t3xcg"
+          "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIxMDBiYzI1OS05M2YwLTQwMGMtYWE3MS1lZjVlMmYzNzFhNzEifQ.eyJleHAiOjE3ODYyNjAyNjcsImlhdCI6MTc4NTY1NTQ2OCwianRpIjoiMDMxY2Q1YTgtZTViZC00YmYxLWI4MzAtNmI4NmZkZDgwNDQ4IiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay1kZXYuZGVudGFsYmFzZS5haS9yZWFsbXMvZGV2IiwiYXVkIjoiaHR0cHM6Ly9rZXljbG9hay1kZXYuZGVudGFsYmFzZS5haS9yZWFsbXMvZGV2Iiwic3ViIjoiMjg4ZjUyMGEtMGMyMS00ZjU4LWFkZTUtYzNhOWNiZjIyZjk5IiwidHlwIjoiUmVmcmVzaCIsImF6cCI6ImRlbnRhbC1haS1iYWNrZW5kIiwic2lkIjoiN2JiYTE4MzYtOWM2ZC00NjRhLTgwMTItOWNkMTNjMDY4MzdiIiwic2NvcGUiOiJvcGVuaWQgd2ViLW9yaWdpbnMgcHJvZmlsZSBiYXNpYyByb2xlcyBhY3IgZW1haWwifQ.NjeeJkq2icRjC22ewFfDYmSQm-Dj8lDTeZnFW5s1LeWWEnszGY4IpeiAxoYXnh_sI1JbOHPx8H2CVJR_sBjuHQ"
         },
         {
           "name": "tokenExpiry",
-          "value": "1785410184781"
+          "value": "1785657268971"
         },
         {
           "name": "authToken",
-          "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI0R3FEZVdFXzBqQlJnRG5INFdrWXhLR3o1WnE0UmJMMWdQWHB0MHRfLXgwIn0.eyJleHAiOjE3ODU0MTAxODIsImlhdCI6MTc4NTQwODM4MiwiYXV0aF90aW1lIjoxNzg1NDA4MzgyLCJqdGkiOiI2M2Q3MjgwMS1kZDFlLTQ3YWUtYmY1OS04YWU2YmM4OGVjMTYiLCJpc3MiOiJodHRwczovL2tleWNsb2FrLWRldi5kZW50YWxiYXNlLmFpL3JlYWxtcy9kZXYiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiMjg4ZjUyMGEtMGMyMS00ZjU4LWFkZTUtYzNhOWNiZjIyZjk5IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiZGVudGFsLWFpLWJhY2tlbmQiLCJzaWQiOiJjYmE3YTIwMS0wZjg3LTQzYmUtYmY1OS05ZDhiZmExMGY3M2IiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHBzOi8vZGVudGFsYmFzZS1kZXYtdjIudmVyY2VsLmFwcCIsImh0dHBzOi8vZGV2LmRlbnRhbGJhc2UuYWkiLCJodHRwczovL2Rldi1yZWFsdGltZS5kZW50YWxiYXNlLmFpIiwiaHR0cHM6Ly9mb3Jtcy1kZXYuZGVudGFsYmFzZS5haSIsImh0dHA6Ly9sb2NhbGhvc3Q6ODAwMC8qIiwiaHR0cHM6Ly9kZW50YWxiYXNlLWRldi12MS52ZXJjZWwuYXBwLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbImRlZmF1bHQtcm9sZXMtZGV2Iiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiIsIkFkbWluIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl0sIm5hbWUiOiJMYXJhIFNpYmFraGkiLCJncm91cHMiOlsiL29mZmljZS05L2FkbWluIl0sInByZWZlcnJlZF91c2VybmFtZSI6InJlZW1fdXNlciIsImdpdmVuX25hbWUiOiJMYXJhIiwiZmFtaWx5X25hbWUiOiJTaWJha2hpIiwiZW1haWwiOiJyc2liYWtoaUBnbWFpbC5jb20ifQ.tVu2qPpgUfj10O1v9zhOf72Irxa_26Hx6LoTW3frAkwuMt9NBjDJSqzzAhR3z4KRd0NHm3aIGftNcTd8b5LpXc1sHGKu-Ulq9BrxjvFBKyaj1phY6ih5uz-IWWoOcSvsfXKwdcwzlGIU_n2UXq-DbGcOcXxYdZaoa3WlUMko-luz0D_IPsW7usc0pB30rrBSbane_BwO1vjnBJzqkKGTT38aTbSKW-Tp31LM-W9QxLIs4vhq6kA0jz1oslBWPpJyOMiaJkib5x4cd9PdQOl08tNaGiIbplN02hm953th0Cfrx7qq249euBJldxD_-ebv5Ey462sHZwpZLAbkQNe_bg"
+          "value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI0R3FEZVdFXzBqQlJnRG5INFdrWXhLR3o1WnE0UmJMMWdQWHB0MHRfLXgwIn0.eyJleHAiOjE3ODU2NTcyNjcsImlhdCI6MTc4NTY1NTQ2NywiYXV0aF90aW1lIjoxNzg1NjU1NDY3LCJqdGkiOiI0MTIwMjZkNC1mNjI1LTQ3ZDgtOWFiMy0wOGY1NmYwZTNkYWMiLCJpc3MiOiJodHRwczovL2tleWNsb2FrLWRldi5kZW50YWxiYXNlLmFpL3JlYWxtcy9kZXYiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiMjg4ZjUyMGEtMGMyMS00ZjU4LWFkZTUtYzNhOWNiZjIyZjk5IiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiZGVudGFsLWFpLWJhY2tlbmQiLCJzaWQiOiI3YmJhMTgzNi05YzZkLTQ2NGEtODAxMi05Y2QxM2MwNjgzN2IiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbImh0dHBzOi8vZGVudGFsYmFzZS1kZXYtdjIudmVyY2VsLmFwcCIsImh0dHBzOi8vZGV2LmRlbnRhbGJhc2UuYWkiLCJodHRwczovL2Rldi1yZWFsdGltZS5kZW50YWxiYXNlLmFpIiwiaHR0cHM6Ly9mb3Jtcy1kZXYuZGVudGFsYmFzZS5haSIsImh0dHA6Ly9sb2NhbGhvc3Q6ODAwMC8qIiwiaHR0cHM6Ly9kZW50YWxiYXNlLWRldi12MS52ZXJjZWwuYXBwLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbImRlZmF1bHQtcm9sZXMtZGV2Iiwib2ZmbGluZV9hY2Nlc3MiLCJ1bWFfYXV0aG9yaXphdGlvbiIsIkFkbWluIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJvcGVuaWQgcHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl0sIm5hbWUiOiJTYXJhIEFsaSIsImdyb3VwcyI6WyIvb2ZmaWNlLTkvYWRtaW4iXSwicHJlZmVycmVkX3VzZXJuYW1lIjoicmVlbV91c2VyIiwiZ2l2ZW5fbmFtZSI6IlNhcmEiLCJmYW1pbHlfbmFtZSI6IkFsaSIsImVtYWlsIjoicnNpYmFraGlAZ21haWwuY29tIn0.nGU_N8XiaDsrgjRs-z1Y-v_Rk10i0g2d5OQvuEkKOExWgf9L54yYlI15aWo6kPgVB2sh0FjyvpmaYOktwqEhAPwMtQ7xtWIRgFpcNaYOdj4WpKVNJo3Mj_08YbJpDq_8bK0bLOxaRLbdE-Lqw4-YauY0FsBxXvlnDGeROfPaJquEfnJxOv2o4XJ0lAUBCfM_Y4hbbYrR191v-c3aljE-njPTKpLOhQErD2v8InTuQXA8S1xslSTLGzXlWm9Zf8MecacD1vaneTyroJmasikPr1g_EY4W_2bNoSiO_8rdvVc2Pcb-8pqBCUOs4Ho9aydclOUBYEOeJnW4nxCAROakTQ"
         },
         {
           "name": "username",
