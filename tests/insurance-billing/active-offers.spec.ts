@@ -35,6 +35,7 @@ test.describe('Active Offers', () => {
   });
 
   test('TC-N-IB2-13 empty promotion name → error inline', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
     await insuranceBilling.promotionNameInput.clear();
     await insuranceBilling.promotionNameInput.press('Tab');
     await expect(insuranceBilling.error).toContainText('at least 2 characters');
