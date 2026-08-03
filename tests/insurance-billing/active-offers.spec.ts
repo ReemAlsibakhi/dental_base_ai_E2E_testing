@@ -50,10 +50,16 @@ test.describe('Active Offers', () => {
   });
 
   test('DEF-IB2-06 promo price > original price → not enforced (bug)', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
+
+    await insuranceBilling.fill(insuranceBilling.promotionNameInput, ACTIVE_OFFERS.name);
     await insuranceBilling.fillAndBlur(insuranceBilling.promotionalPriceInput, ACTIVE_OFFERS.defPromoPrice);
     await insuranceBilling.fillAndBlur(insuranceBilling.originalPriceInput, ACTIVE_OFFERS.defOriginalPrice);
     await insuranceBilling.originalPriceInput.press('Tab');
     const hasError = await insuranceBilling.error.isVisible();
     console.log(`DEF-IB2-06 Promo > Original — error shown: ${hasError}`);
+   
+    expect(hasError).toBeTruthy();
+
   });
 });
