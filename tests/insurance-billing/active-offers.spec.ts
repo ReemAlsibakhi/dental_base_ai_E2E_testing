@@ -69,7 +69,7 @@ test.describe('Active Offers', () => {
 
   test('IB-OFF-R5 included services 500 chars → accepted', async ({ insuranceBilling }) => {
     await insuranceBilling.addOfferButton.click();
-  
+    await insuranceBilling.fill(insuranceBilling.promotionNameInput, ACTIVE_OFFERS.name);  
     await insuranceBilling.fillAndBlur(insuranceBilling.includedServicesInput, 'A'.repeat(500));
     await expect(insuranceBilling.error).not.toBeVisible();
   });
@@ -90,7 +90,7 @@ test.describe('Active Offers', () => {
 
   test('IB-OFF-R6 restrictions 500 chars → accepted', async ({ insuranceBilling }) => {
     await insuranceBilling.addOfferButton.click();
-
+    await insuranceBilling.fill(insuranceBilling.promotionNameInput, ACTIVE_OFFERS.name);  
     await insuranceBilling.fillAndBlur(insuranceBilling.restrictionsTermsInput, 'A'.repeat(500));
     await expect(insuranceBilling.error).not.toBeVisible();
   });
@@ -122,7 +122,7 @@ test.describe('Active Offers', () => {
 
   test('IB-OFF-R7 valid expiration days → accepted', async ({ insuranceBilling }) => {
     await insuranceBilling.addOfferButton.click();
-
+    await insuranceBilling.fill(insuranceBilling.promotionNameInput, ACTIVE_OFFERS.name);  
     await insuranceBilling.fillAndBlur(insuranceBilling.expirationDaysInput, ACTIVE_OFFERS.expirationDays);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
