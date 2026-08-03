@@ -49,6 +49,30 @@ test.describe('Active Offers', () => {
     expect(alertFired).toBe(false);
   });
 
+  // -------------------------------------------------------------------------
+  // IB-OFF-R4 — Price boundaries (confirmed from live DOM)
+  // -------------------------------------------------------------------------
+
+  test('IB-OFF-R4 promotional price = 0 → blocked (min is 1)', async ({ insuranceBilling }) => {
+    await insuranceBilling.fillAndBlur(insuranceBilling.promotionalPriceInput, ACTIVE_OFFERS.zeroPriceBlocked);
+    await expect(insuranceBilling.error).toContainText('must be 1 or greater');
+  });
+
+  test('IB-OFF-R4 original price = 0 → blocked (min is 1)', async ({ insuranceBilling }) => {
+    await insuranceBilling.fillAndBlur(insuranceBilling.originalPriceInput, ACTIVE_OFFERS.zeroPriceBlocked);
+    await expect(insuranceBilling.error).toContainText('must be 1 or greater');
+  });
+
+  test('IB-OFF-R4 promotional price = 1 → minimum valid', async ({ insuranceBilling }) => {
+    await insuranceBilling.fillAndBlur(insuranceBilling.promotionalPriceInput, ACTIVE_OFFERS.minPromoPrice);
+    await expect(insuranceBilling.error).not.toBeVisible();
+  });
+
+  test('IB-OFF-R4 original price = 1 → minimum valid', async ({ insuranceBilling }) => {
+    await insuranceBilling.fillAndBlur(insuranceBilling.originalPriceInput, ACTIVE_OFFERS.minOriginalPrice);
+    await expect(insuranceBilling.error).not.toBeVisible();
+  });
+
   test('DEF-IB2-06 promo price > original price → not enforced (bug)', async ({ insuranceBilling }) => {
     await insuranceBilling.addOfferButton.click();
 
