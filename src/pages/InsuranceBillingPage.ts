@@ -256,28 +256,35 @@ export class InsuranceBillingPage extends BasePage {
   // Active Offers
   // -------------------------------------------------------------------------
 
-  get offerNameInput(): Locator {
-    return this.modal.locator('input[name="name"]');
+  // Active Offers
+  // -------------------------------------------------------------------------
+
+  get addOfferButton(): Locator {
+    return this.page.getByText('New PromotionPromotion Name*');
+  }
+
+  get promotionNameInput(): Locator {
+    return this.page.getByRole('textbox', { name: 'Promotion Name' });
   }
 
   get promotionalPriceInput(): Locator {
-    return this.modal.locator('input[name="price"]');
+    return this.page.getByRole('spinbutton', { name: 'Promotional Price ($)' });
   }
 
   get originalPriceInput(): Locator {
-    return this.modal.locator('input[name="originalPrice"]');
+    return this.page.getByRole('spinbutton', { name: 'Original Price ($)' });
   }
 
-  get includedServicesTextarea(): Locator {
-    return this.modal.locator('textarea[placeholder*="services separated"]');
+  get includedServicesInput(): Locator {
+    return this.page.getByRole('textbox', { name: 'Included Services' });
   }
 
-  get restrictionsTextarea(): Locator {
-    return this.modal.locator('textarea[name="restrictions"]');
+  get restrictionsTermsInput(): Locator {
+    return this.page.getByRole('textbox', { name: 'Restrictions/Terms' });
   }
 
-  get expirationDaysInput(): Locator {
-    return this.modal.locator('input[name="expirationDays"]');
+  get addPromotionButton(): Locator {
+    return this.page.getByRole('button', { name: 'Add Promotion' });
   }
 
   // -------------------------------------------------------------------------
