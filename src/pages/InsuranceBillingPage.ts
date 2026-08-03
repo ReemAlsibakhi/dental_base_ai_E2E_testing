@@ -58,6 +58,15 @@ export class InsuranceBillingPage extends BasePage {
     await expect(this.page.getByText('This action cannot be undone')).toBeVisible();
   }
 
+  /** All validation error elements in the modal */
+  get fieldErrors(): Locator {
+    return this.modal.locator("p[id$='-error']");
+  }
+
+  async fieldErrorCount(): Promise<number> {
+    return this.modal.locator("p[id$='-error']").count();
+  }
+
   async cancelDelete(): Promise<void> {
     // Cancel button inside the Delete Plan dialog specifically
     await this.page.getByLabel('Delete Plan').getByRole('button', { name: 'Cancel' }).click();

@@ -34,7 +34,6 @@ test.describe('Pricing Policy', () => {
     const toggle  = insuranceBilling.goodFaithToggle;
     const initial = await toggle.getAttribute('aria-checked');
     await toggle.click();
-    await insuranceBilling.page.waitForTimeout(300);
     expect(await toggle.getAttribute('aria-checked')).not.toBe(initial);
     await insuranceBilling.saveAndAssertSuccess();
   });
@@ -46,9 +45,8 @@ test.describe('Pricing Policy', () => {
 
   test('IB-PP-R3 custom AI script = 2001 chars → blocked or truncated', async ({ insuranceBilling }) => {
     await insuranceBilling.customAiScriptTextarea.fill('A'.repeat(PRICING_POLICY.maxScriptLength + 1));
-    await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.customAiScriptTextarea.inputValue();
-    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    const errors = await insuranceBilling.fieldErrorCount();
     expect(errors > 0 || value.length <= PRICING_POLICY.maxScriptLength).toBeTruthy();
   });
 

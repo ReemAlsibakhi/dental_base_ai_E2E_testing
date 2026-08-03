@@ -49,7 +49,6 @@ test.describe('Finance', () => {
     const toggle = insuranceBilling.inHouseFinancingToggle;
     const initial = await toggle.getAttribute('aria-checked');
     await toggle.click();
-    await insuranceBilling.page.waitForTimeout(300);
     expect(await toggle.getAttribute('aria-checked')).not.toBe(initial);
     await insuranceBilling.saveAndAssertSuccess();
   });

@@ -44,7 +44,7 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
     const toggle = insuranceBilling.acceptAllToggle;
     const initial = await toggle.getAttribute('aria-checked');
     await toggle.click();
-    await insuranceBilling.page.waitForTimeout(800);
+    
     expect(await toggle.getAttribute('aria-checked')).not.toBe(initial);
     await insuranceBilling.saveAndAssertSuccess();
   });
@@ -115,7 +115,7 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
     await insuranceBilling.addCustomButton.click();
     await insuranceBilling.fillAndBlur(insuranceBilling.preventiveInput, COVERAGE.overPercent);
     const isDisabled = await insuranceBilling.savePlanButton.isDisabled();
-    const errors     = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    const errors     = await insuranceBilling.fieldErrorCount();
     expect(isDisabled || errors > 0).toBeTruthy();
   });
 
@@ -132,7 +132,7 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
     await insuranceBilling.addCustomButton.click();
     await insuranceBilling.fillAndBlur(insuranceBilling.preventiveInput, '0');
     const isDisabled = await insuranceBilling.savePlanButton.isDisabled();
-    const errors     = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    const errors     = await insuranceBilling.fieldErrorCount();
     expect(isDisabled || errors > 0).toBeTruthy();
   });
 
@@ -160,15 +160,14 @@ test.describe('Coverage — Accepted Insurance Plans', () => {
 
   test('additional notes 500 chars accepted', async ({ insuranceBilling }) => {
     await insuranceBilling.fillAndBlur(insuranceBilling.coverageNotes, COVERAGE.maxNotes);
-    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    const errors = await insuranceBilling.fieldErrorCount();
     expect(errors).toBe(0);
   });
 
   test('additional notes > 500 chars blocked', async ({ insuranceBilling }) => {
     await insuranceBilling.fill(insuranceBilling.coverageNotes, COVERAGE.overNotes);
-    await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.coverageNotes.inputValue();
-    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    const errors = await insuranceBilling.fieldErrorCount();
     expect(errors > 0 || value.length <= 500).toBeTruthy();
   });
 

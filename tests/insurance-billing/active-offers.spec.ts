@@ -85,9 +85,8 @@ test.describe('Active Offers', () => {
     await insuranceBilling.addOfferButton.click();
 
     await insuranceBilling.fillAndBlur(insuranceBilling.promotionalPriceInput, '-10');
-    await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.promotionalPriceInput.inputValue();
-    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    const errors = await insuranceBilling.fieldErrorCount();
     expect(errors > 0 || Number(value) >= 0).toBeTruthy();
   });
 
@@ -95,9 +94,8 @@ test.describe('Active Offers', () => {
     await insuranceBilling.addOfferButton.click();
 
     await insuranceBilling.fillAndBlur(insuranceBilling.originalPriceInput, '-10');
-    await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.originalPriceInput.inputValue();
-    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    const errors = await insuranceBilling.fieldErrorCount();
     expect(errors > 0 || Number(value) >= 0).toBeTruthy();
   });
 
@@ -125,9 +123,8 @@ test.describe('Active Offers', () => {
     await insuranceBilling.addOfferButton.click();
 
     await insuranceBilling.fillAndBlur(insuranceBilling.includedServicesInput, 'A'.repeat(501));
-    await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.includedServicesInput.inputValue();
-    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    const errors = await insuranceBilling.fieldErrorCount();
     expect(errors > 0 || value.length <= 500).toBeTruthy();
   });
 
@@ -146,9 +143,8 @@ test.describe('Active Offers', () => {
     await insuranceBilling.addOfferButton.click();
 
     await insuranceBilling.fillAndBlur(insuranceBilling.restrictionsTermsInput, 'A'.repeat(501));
-    await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.restrictionsTermsInput.inputValue();
-    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    const errors = await insuranceBilling.fieldErrorCount();
     expect(errors > 0 || value.length <= 500).toBeTruthy();
   });
 
@@ -160,9 +156,8 @@ test.describe('Active Offers', () => {
     await insuranceBilling.addOfferButton.click();
 
     await insuranceBilling.fillAndBlur(insuranceBilling.expirationDaysInput, '-10');
-    await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.expirationDaysInput.inputValue();
-    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    const errors = await insuranceBilling.fieldErrorCount();
     // Expected: error shown OR value silently sanitized to positive
     expect(errors > 0 || Number(value) >= 0).toBeTruthy();
   });
@@ -184,7 +179,6 @@ test.describe('Active Offers', () => {
     const toggle  = insuranceBilling.modal.getByRole('switch').first();
     const initial = await toggle.getAttribute('aria-checked');
     await toggle.click();
-    await insuranceBilling.page.waitForTimeout(300);
     expect(await toggle.getAttribute('aria-checked')).not.toBe(initial);
   });
 });
