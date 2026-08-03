@@ -260,7 +260,7 @@ export class InsuranceBillingPage extends BasePage {
   // -------------------------------------------------------------------------
 
   get addOfferButton(): Locator {
-    return this.page.getByText('New PromotionPromotion Name*');
+    return this.modal.getByRole('button', { name: 'Custom Promotion' });
   }
 
   get promotionNameInput(): Locator {
@@ -283,8 +283,16 @@ export class InsuranceBillingPage extends BasePage {
     return this.page.getByRole('textbox', { name: 'Restrictions/Terms' });
   }
 
+  get expirationDaysInput(): Locator {
+    return this.page.getByRole('spinbutton', { name: 'Expiration Days' });
+  }
+
   get addPromotionButton(): Locator {
     return this.page.getByRole('button', { name: 'Add Promotion' });
+  }
+
+  get updatePromotionButton(): Locator {
+    return this.page.getByRole('button', { name: 'Update Promotion' });
   }
 
   // -------------------------------------------------------------------------
