@@ -68,11 +68,15 @@ test.describe('Active Offers', () => {
   // -------------------------------------------------------------------------
 
   test('IB-OFF-R5 included services 500 chars → accepted', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
+  
     await insuranceBilling.fillAndBlur(insuranceBilling.includedServicesInput, 'A'.repeat(500));
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
   test('IB-OFF-R5 included services > 500 chars → blocked or truncated', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
+
     await insuranceBilling.fillAndBlur(insuranceBilling.includedServicesInput, 'A'.repeat(501));
     await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.includedServicesInput.inputValue();
@@ -85,11 +89,15 @@ test.describe('Active Offers', () => {
   // -------------------------------------------------------------------------
 
   test('IB-OFF-R6 restrictions 500 chars → accepted', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
+
     await insuranceBilling.fillAndBlur(insuranceBilling.restrictionsTermsInput, 'A'.repeat(500));
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
   test('IB-OFF-R6 restrictions > 500 chars → blocked or truncated', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
+
     await insuranceBilling.fillAndBlur(insuranceBilling.restrictionsTermsInput, 'A'.repeat(501));
     await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.restrictionsTermsInput.inputValue();
@@ -102,6 +110,8 @@ test.describe('Active Offers', () => {
   // -------------------------------------------------------------------------
 
   test('IB-OFF-R7 negative expiration days → error or sanitized', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
+
     await insuranceBilling.fillAndBlur(insuranceBilling.expirationDaysInput, '-10');
     await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.expirationDaysInput.inputValue();
@@ -111,6 +121,8 @@ test.describe('Active Offers', () => {
   });
 
   test('IB-OFF-R7 valid expiration days → accepted', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
+
     await insuranceBilling.fillAndBlur(insuranceBilling.expirationDaysInput, ACTIVE_OFFERS.expirationDays);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
@@ -120,6 +132,8 @@ test.describe('Active Offers', () => {
   // -------------------------------------------------------------------------
 
   test('IB-OFF-R8 active promotion toggle changes state', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
+
     const toggle  = insuranceBilling.modal.getByRole('switch').first();
     const initial = await toggle.getAttribute('aria-checked');
     await toggle.click();
