@@ -82,6 +82,8 @@ test.describe('Active Offers', () => {
   });
 
   test('IB-OFF-R4 negative promotional price → blocked or sanitized', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
+
     await insuranceBilling.fillAndBlur(insuranceBilling.promotionalPriceInput, '-10');
     await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.promotionalPriceInput.inputValue();
@@ -90,6 +92,8 @@ test.describe('Active Offers', () => {
   });
 
   test('IB-OFF-R4 negative original price → blocked or sanitized', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
+
     await insuranceBilling.fillAndBlur(insuranceBilling.originalPriceInput, '-10');
     await insuranceBilling.page.waitForTimeout(500);
     const value  = await insuranceBilling.originalPriceInput.inputValue();
