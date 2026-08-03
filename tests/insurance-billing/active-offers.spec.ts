@@ -1,4 +1,4 @@
-import { test, expect, Browser } from '@playwright/test';
+import { test, expect } from '../../src/fixtures';
 import { InsuranceBillingPage } from '../../src/pages/InsuranceBillingPage';
 import { ACTIVE_OFFERS } from '../../src/test-data/insurance-billing';
 
@@ -15,69 +15,43 @@ import { ACTIVE_OFFERS } from '../../src/test-data/insurance-billing';
  */
 
 test.describe('Active Offers', () => {
-  let ib: InsuranceBillingPage;
-
-  test.beforeAll(async ({ browser }: { browser: Browser }) => {
-    const context = await browser.newContext({ storageState: '.auth/admin.json' });
-    const page    = await context.newPage();
-    ib = new InsuranceBillingPage(page);
-    await ib.navigate();
+  test.beforeEach(async ({ insuranceBilling }) => {
+    await insuranceBilling.openEdit(InsuranceBillingPage.CARD.activeOffers);
   });
 
-  test.afterAll(async () => {
-    await ib.page.close();
+  test.afterEach(async ({ insuranceBilling }) => {
+    await insuranceBilling.cancel();
   });
 
-  test.beforeEach(async () => {
-    await ib.openEdit(InsuranceBillingPage.CARD.activeOffers);
+  test('TC-F-IB2-08 add active offer with all fields', async ({ insuranceBilling }) => {
+    await insuranceBilling.addOfferButton.click();
+    await insuranceBilling.promotionalPriceInput.fill(ACTIVE_OFFERS.promoPrice);
+    await insuranceBilling.originalPriceInput.fill(ACTIVE_OFFERS.originalPrice);
+    await insuranceBilling.includedServicesInput.fill('Cleaning, X-ray');
+    await insuranceBilling.restrictionsTermsInput.fill('New patients only');
+    await insuranceBilling.addPromotionButton.click();
+    await insuranceBilling.saveAndAssertSuccess();
   });
 
-  test.afterEach(async () => {
-    await ib.cancel();
+  test('TC-N-IB2-13 empty promotion name → error inline', async ({ insuranceBilling }) => {
+    await insuranceBilling.promotionNameInput.clear();
+    await insuranceBilling.promotionNameInput.press('Tab');
+    await expect(insuranceBilling.error).toContainText('at least 2 characters');
   });
 
-  // -------------------------------------------------------------------------
-  // TC-F-IB2-08 — Add Offer (happy path)
-  // -------------------------------------------------------------------------
-
-  test('TC-F-IB2-08 add active offer with all fields', async () => {
-    await ib.addOfferButton.click();
-    await ib.promotionalPriceInput.fill(ACTIVE_OFFERS.promoPrice);
-    await ib.originalPriceInput.fill(ACTIVE_OFFERS.originalPrice);
-    await ib.includedServicesInput.fill('Cleaning, X-ray');
-    await ib.restrictionsTermsInput.fill('New patients only');
-    await ib.addPromotionButton.click();
-    await ib.saveAndAssertSuccess();
-  });
-
-  // -------------------------------------------------------------------------
-  // IB-OFF-R1 — Promotion Name
-  // -------------------------------------------------------------------------
-
-  test('TC-N-IB2-13 empty promotion name → error inline', async () => {
-    await ib.promotionNameInput.clear();
-    await ib.promotionNameInput.press('Tab');
-    await expect(ib.error).toContainText('at least 2 characters');
-  });
-
-  test('TC-S-IB2-04 XSS in promotion name → sanitized', async () => {
+  test('TC-S-IB2-04 XSS in promotion name → sanitized', async ({ insuranceBilling }) => {
     let alertFired = false;
-    ib.page.on('dialog', () => { alertFired = true; });
-    await ib.promotionNameInput.fill(ACTIVE_OFFERS.xssPayload);
-    await ib.page.waitForTimeout(1000);
+    insuranceBilling.page.on('dialog', () => { alertFired = true; });
+    await insuranceBilling.promotionNameInput.fill(ACTIVE_OFFERS.xssPayload);
+    await insuranceBilling.page.waitForTimeout(1000);
     expect(alertFired).toBe(false);
   });
 
-  // -------------------------------------------------------------------------
-  // IB-OFF-R4 — Promo price > original → DEF-IB2-06 (not enforced)
-  // -------------------------------------------------------------------------
-
-  test('DEF-IB2-06 promo price > original price → not enforced (bug)', async () => {
-    await ib.promotionalPriceInput.fill(ACTIVE_OFFERS.defPromoPrice);
-    await ib.originalPriceInput.fill(ACTIVE_OFFERS.defOriginalPrice);
-    await ib.originalPriceInput.press('Tab');
-    // DEF-IB2-06: negative discount not blocked — documenting actual behavior
-    const hasError = await ib.error.isVisible();
+  test('DEF-IB2-06 promo price > original price → not enforced (bug)', async ({ insuranceBilling }) => {
+    await insuranceBilling.promotionalPriceInput.fill(ACTIVE_OFFERS.defPromoPrice);
+    await insuranceBilling.originalPriceInput.fill(ACTIVE_OFFERS.defOriginalPrice);
+    await insuranceBilling.originalPriceInput.press('Tab');
+    const hasError = await insuranceBilling.error.isVisible();
     console.log(`DEF-IB2-06 Promo > Original — error shown: ${hasError}`);
   });
 });
