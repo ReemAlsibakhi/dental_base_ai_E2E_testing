@@ -88,4 +88,76 @@ test.describe('Finance', () => {
     await insuranceBilling.page.waitForTimeout(1000);
     expect(alertFired).toBe(false);
   });
+
+  // -------------------------------------------------------------------------
+  // IB-FIN-R2 — Description (max 500 chars)
+  // -------------------------------------------------------------------------
+
+  test('IB-FIN-R2 description = 500 chars → accepted', async ({ insuranceBilling }) => {
+    await insuranceBilling.addCustomProviderButton.click();
+    await insuranceBilling.providerDescription.fill(FINANCE.maxDescription);
+    await expect(insuranceBilling.error).not.toBeVisible();
+  });
+
+  test('IB-FIN-R2 description > 500 chars → blocked or truncated', async ({ insuranceBilling }) => {
+    await insuranceBilling.addCustomProviderButton.click();
+    await insuranceBilling.providerDescription.fill(FINANCE.overDescription);
+    const value  = await insuranceBilling.providerDescription.inputValue();
+    const errors = await insuranceBilling.fieldErrorCount();
+    expect(errors > 0 || value.length <= 500).toBeTruthy();
+  });
+
+  // -------------------------------------------------------------------------
+  // IB-FIN-R3 — Website (free text, no enforced format)
+  // -------------------------------------------------------------------------
+
+  test('IB-FIN-R3 valid URL accepted', async ({ insuranceBilling }) => {
+    await insuranceBilling.addCustomProviderButton.click();
+    await insuranceBilling.providerWebsite.fill(FINANCE.website);
+    await insuranceBilling.providerWebsite.press('Tab');
+    await expect(insuranceBilling.error).not.toBeVisible();
+  });
+
+  // -------------------------------------------------------------------------
+  // IB-FIN-R4 — APR negative value
+  // -------------------------------------------------------------------------
+
+  test('IB-FIN-R4 APR negative → blocked or sanitized', async ({ insuranceBilling }) => {
+    await insuranceBilling.addCustomProviderButton.click();
+    await insuranceBilling.providerApr.fill(FINANCE.negativeApr);
+    await insuranceBilling.providerApr.press('Tab');
+    const value  = await insuranceBilling.providerApr.inputValue();
+    const errors = await insuranceBilling.fieldErrorCount();
+    expect(errors > 0 || Number(value) >= 0).toBeTruthy();
+  });
+
+  // -------------------------------------------------------------------------
+  // IB-FIN-R5 — Key Features (max 1000 chars)
+  // -------------------------------------------------------------------------
+
+  test('IB-FIN-R5 key features = 1000 chars → accepted', async ({ insuranceBilling }) => {
+    await insuranceBilling.addCustomProviderButton.click();
+    await insuranceBilling.providerKeyFeatures.fill(FINANCE.maxKeyFeatures);
+    await expect(insuranceBilling.error).not.toBeVisible();
+  });
+
+  test('IB-FIN-R5 key features > 1000 chars → blocked or truncated', async ({ insuranceBilling }) => {
+    await insuranceBilling.addCustomProviderButton.click();
+    await insuranceBilling.providerKeyFeatures.fill(FINANCE.overKeyFeatures);
+    const value  = await insuranceBilling.providerKeyFeatures.inputValue();
+    const errors = await insuranceBilling.fieldErrorCount();
+    expect(errors > 0 || value.length <= 1000).toBeTruthy();
+  });
+
+  // -------------------------------------------------------------------------
+  // IB-FIN-R8 — Active Status toggle (defaults ON for new providers)
+  // -------------------------------------------------------------------------
+
+  test('IB-FIN-R8 active status toggle changes state', async ({ insuranceBilling }) => {
+    await insuranceBilling.addCustomProviderButton.click();
+    const toggle  = insuranceBilling.modal.getByRole('switch').first();
+    const initial = await toggle.getAttribute('aria-checked');
+    await toggle.click();
+    expect(await toggle.getAttribute('aria-checked')).not.toBe(initial);
+  });
 });

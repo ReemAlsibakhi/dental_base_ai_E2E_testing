@@ -42,15 +42,21 @@ export const FINANCE = {
   providerName:    'LocalCreditUnion',
   description:     'In-house partnership financing',
   website:         'https://lcu.example.com',
+  invalidWebsite:  'not-a-url',
   validApr:        '9.99',
   maxApr:          '99.99',
   overApr:         '100',
   invalidApr:      '150',
+  negativeApr:     '-5',
   paymentTerms:    '12–24 months',
   loanRange:       '$200–$5000',
   creditReqs:      'Soft check only',
   keyFeatures:     'No prepayment penalty',
   xssPayload:      "<script>alert('finance')</script>",
+  maxDescription:  'A'.repeat(500),
+  overDescription: 'A'.repeat(501),
+  maxKeyFeatures:  'A'.repeat(1000),
+  overKeyFeatures: 'A'.repeat(1001),
 } as const;
 
 export const SERVICE_PRICING = {
