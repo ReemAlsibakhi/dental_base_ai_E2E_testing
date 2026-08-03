@@ -25,6 +25,7 @@ test.describe('Active Offers', () => {
 
   test('TC-F-IB2-08 add active offer with all fields', async ({ insuranceBilling }) => {
     await insuranceBilling.addOfferButton.click();
+    await insuranceBilling.fill(insuranceBilling.promotionNameInput, ACTIVE_OFFERS.name);
     await insuranceBilling.fillAndBlur(insuranceBilling.promotionalPriceInput, ACTIVE_OFFERS.promoPrice);
     await insuranceBilling.fillAndBlur(insuranceBilling.originalPriceInput, ACTIVE_OFFERS.originalPrice);
     await insuranceBilling.fillAndBlur(insuranceBilling.includedServicesInput, 'Cleaning, X-ray');

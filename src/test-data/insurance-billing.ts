@@ -65,7 +65,7 @@ export const SERVICE_PRICING = {
 
 export const ACTIVE_OFFERS = {
   name:           'New Patient Special',
-  promoPrice:     '0',
+  promoPrice:     '20',
   originalPrice:  '150',
   expirationDays: '30',
   xssPayload:     '<img src=x onerror=alert(1)>',
