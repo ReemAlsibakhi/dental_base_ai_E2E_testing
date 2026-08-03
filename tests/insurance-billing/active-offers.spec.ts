@@ -28,8 +28,8 @@ test.describe('Active Offers', () => {
     await insuranceBilling.fill(insuranceBilling.promotionNameInput, ACTIVE_OFFERS.name);
     await insuranceBilling.fillAndBlur(insuranceBilling.promotionalPriceInput, ACTIVE_OFFERS.promoPrice);
     await insuranceBilling.fillAndBlur(insuranceBilling.originalPriceInput, ACTIVE_OFFERS.originalPrice);
-    await insuranceBilling.fillAndBlur(insuranceBilling.includedServicesInput, 'Cleaning, X-ray');
-    await insuranceBilling.fillAndBlur(insuranceBilling.restrictionsTermsInput, 'New patients only');
+    await insuranceBilling.fillAndBlur(insuranceBilling.includedServicesInput, ACTIVE_OFFERS.includedServices);
+    await insuranceBilling.fillAndBlur(insuranceBilling.restrictionsTermsInput, ACTIVE_OFFERS.restrictions);
     await insuranceBilling.addPromotionButton.click();
     await insuranceBilling.saveAndAssertSuccess();
   });
@@ -61,5 +61,69 @@ test.describe('Active Offers', () => {
     expect(hasError).toBeTruthy();
 
 
+  });
+
+  // -------------------------------------------------------------------------
+  // IB-OFF-R5 — Included Services (max 500 chars)
+  // -------------------------------------------------------------------------
+
+  test('IB-OFF-R5 included services 500 chars → accepted', async ({ insuranceBilling }) => {
+    await insuranceBilling.fillAndBlur(insuranceBilling.includedServicesInput, 'A'.repeat(500));
+    await expect(insuranceBilling.error).not.toBeVisible();
+  });
+
+  test('IB-OFF-R5 included services > 500 chars → blocked or truncated', async ({ insuranceBilling }) => {
+    await insuranceBilling.fillAndBlur(insuranceBilling.includedServicesInput, 'A'.repeat(501));
+    await insuranceBilling.page.waitForTimeout(500);
+    const value  = await insuranceBilling.includedServicesInput.inputValue();
+    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    expect(errors > 0 || value.length <= 500).toBeTruthy();
+  });
+
+  // -------------------------------------------------------------------------
+  // IB-OFF-R6 — Restrictions/Terms (max 500 chars)
+  // -------------------------------------------------------------------------
+
+  test('IB-OFF-R6 restrictions 500 chars → accepted', async ({ insuranceBilling }) => {
+    await insuranceBilling.fillAndBlur(insuranceBilling.restrictionsTermsInput, 'A'.repeat(500));
+    await expect(insuranceBilling.error).not.toBeVisible();
+  });
+
+  test('IB-OFF-R6 restrictions > 500 chars → blocked or truncated', async ({ insuranceBilling }) => {
+    await insuranceBilling.fillAndBlur(insuranceBilling.restrictionsTermsInput, 'A'.repeat(501));
+    await insuranceBilling.page.waitForTimeout(500);
+    const value  = await insuranceBilling.restrictionsTermsInput.inputValue();
+    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    expect(errors > 0 || value.length <= 500).toBeTruthy();
+  });
+
+  // -------------------------------------------------------------------------
+  // IB-OFF-R7 — Expiration Days (numeric, default 90)
+  // -------------------------------------------------------------------------
+
+  test('IB-OFF-R7 negative expiration days → error or sanitized', async ({ insuranceBilling }) => {
+    await insuranceBilling.fillAndBlur(insuranceBilling.expirationDaysInput, '-10');
+    await insuranceBilling.page.waitForTimeout(500);
+    const value  = await insuranceBilling.expirationDaysInput.inputValue();
+    const errors = await insuranceBilling.modal.locator("p[id$='-error']").count();
+    // Expected: error shown OR value silently sanitized to positive
+    expect(errors > 0 || Number(value) >= 0).toBeTruthy();
+  });
+
+  test('IB-OFF-R7 valid expiration days → accepted', async ({ insuranceBilling }) => {
+    await insuranceBilling.fillAndBlur(insuranceBilling.expirationDaysInput, ACTIVE_OFFERS.expirationDays);
+    await expect(insuranceBilling.error).not.toBeVisible();
+  });
+
+  // -------------------------------------------------------------------------
+  // IB-OFF-R8 — Active toggle
+  // -------------------------------------------------------------------------
+
+  test('IB-OFF-R8 active promotion toggle changes state', async ({ insuranceBilling }) => {
+    const toggle  = insuranceBilling.modal.getByRole('switch').first();
+    const initial = await toggle.getAttribute('aria-checked');
+    await toggle.click();
+    await insuranceBilling.page.waitForTimeout(300);
+    expect(await toggle.getAttribute('aria-checked')).not.toBe(initial);
   });
 });

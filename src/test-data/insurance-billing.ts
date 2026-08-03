@@ -64,14 +64,15 @@ export const SERVICE_PRICING = {
 } as const;
 
 export const ACTIVE_OFFERS = {
-  name:           'New Patient Special',
-  promoPrice:     '20',
-  originalPrice:  '150',
-  expirationDays: '30',
-  xssPayload:     '<img src=x onerror=alert(1)>',
-  // DEF-IB2-06: promo > original not enforced
+  name:             'New Patient Special',
+  promoPrice:       '20',
+  originalPrice:    '150',
+  expirationDays:   '30',
+  xssPayload:       '<img src=x onerror=alert(1)>',
   defPromoPrice:    '10',
   defOriginalPrice: '7',
+  includedServices: 'Cleaning, X-ray',
+  restrictions:     'New patients only',
 } as const;
 
 export const PRICING_POLICY = {
