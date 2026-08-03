@@ -25,10 +25,10 @@ test.describe('Active Offers', () => {
 
   test('TC-F-IB2-08 add active offer with all fields', async ({ insuranceBilling }) => {
     await insuranceBilling.addOfferButton.click();
-    await insuranceBilling.promotionalPriceInput.fill(ACTIVE_OFFERS.promoPrice);
-    await insuranceBilling.originalPriceInput.fill(ACTIVE_OFFERS.originalPrice);
-    await insuranceBilling.includedServicesInput.fill('Cleaning, X-ray');
-    await insuranceBilling.restrictionsTermsInput.fill('New patients only');
+    await insuranceBilling.fillAndBlur(insuranceBilling.promotionalPriceInput, ACTIVE_OFFERS.promoPrice);
+    await insuranceBilling.fillAndBlur(insuranceBilling.originalPriceInput, ACTIVE_OFFERS.originalPrice);
+    await insuranceBilling.fillAndBlur(insuranceBilling.includedServicesInput, 'Cleaning, X-ray');
+    await insuranceBilling.fillAndBlur(insuranceBilling.restrictionsTermsInput, 'New patients only');
     await insuranceBilling.addPromotionButton.click();
     await insuranceBilling.saveAndAssertSuccess();
   });
@@ -42,14 +42,14 @@ test.describe('Active Offers', () => {
   test('TC-S-IB2-04 XSS in promotion name → sanitized', async ({ insuranceBilling }) => {
     let alertFired = false;
     insuranceBilling.page.on('dialog', () => { alertFired = true; });
-    await insuranceBilling.promotionNameInput.fill(ACTIVE_OFFERS.xssPayload);
+    await insuranceBilling.fillAndBlur(insuranceBilling.promotionNameInput, ACTIVE_OFFERS.xssPayload);
     await insuranceBilling.page.waitForTimeout(1000);
     expect(alertFired).toBe(false);
   });
 
   test('DEF-IB2-06 promo price > original price → not enforced (bug)', async ({ insuranceBilling }) => {
-    await insuranceBilling.promotionalPriceInput.fill(ACTIVE_OFFERS.defPromoPrice);
-    await insuranceBilling.originalPriceInput.fill(ACTIVE_OFFERS.defOriginalPrice);
+    await insuranceBilling.fillAndBlur(insuranceBilling.promotionalPriceInput, ACTIVE_OFFERS.defPromoPrice);
+    await insuranceBilling.fillAndBlur(insuranceBilling.originalPriceInput, ACTIVE_OFFERS.defOriginalPrice);
     await insuranceBilling.originalPriceInput.press('Tab');
     const hasError = await insuranceBilling.error.isVisible();
     console.log(`DEF-IB2-06 Promo > Original — error shown: ${hasError}`);
