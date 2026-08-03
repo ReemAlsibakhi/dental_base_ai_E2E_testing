@@ -107,12 +107,7 @@ test.describe('Active Offers', () => {
     await insuranceBilling.fill(insuranceBilling.promotionNameInput, ACTIVE_OFFERS.name);
     await insuranceBilling.fillAndBlur(insuranceBilling.promotionalPriceInput, ACTIVE_OFFERS.defPromoPrice);
     await insuranceBilling.fillAndBlur(insuranceBilling.originalPriceInput, ACTIVE_OFFERS.defOriginalPrice);
-    // DEF-IB2-06: negative discount accepted — no error shown (known bug)
-    const hasError = await insuranceBilling.error.isVisible();
-    console.log(`DEF-IB2-06 Promo > Original — error shown: ${hasError}`);   
-    expect(hasError).toBeTruthy();
-
-
+    await expect(insuranceBilling.error).toBeVisible();
   });
 
   // -------------------------------------------------------------------------
