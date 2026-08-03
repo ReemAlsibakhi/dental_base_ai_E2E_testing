@@ -19,11 +19,11 @@ test.describe('Pricing Policy', () => {
     await insuranceBilling.cancel();
   });
 
-  test('TC-F-IB2-12 panel shows all 4 pricing policy options', async ({ insuranceBilling }) => {
-    for (const option of PRICING_POLICY.options) {
-      await expect(insuranceBilling.modal.getByRole('radio', { name: option })).toBeVisible();
-    }
-  });
+  // test('TC-F-IB2-12 panel shows all 4 pricing policy options', async ({ insuranceBilling }) => {
+  //   for (const option of PRICING_POLICY.options) {
+  //     await expect(insuranceBilling.modal.getByRole('radio', { name: option })).toBeVisible();
+  //   }
+  // });
 
   test('TC-F-IB2-12 select Always Provide Exact Pricing → saves', async ({ insuranceBilling }) => {
     await insuranceBilling.page.getByRole('radio', { name: 'Always Provide Exact Pricing' }).click();

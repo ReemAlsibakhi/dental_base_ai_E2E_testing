@@ -20,7 +20,7 @@ import { InsuranceBillingPage } from '../../src/pages/InsuranceBillingPage';
 test.describe('Membership Plans', () => {
   test.beforeEach(async ({ insuranceBilling }) => {
     await insuranceBilling.openEdit(InsuranceBillingPage.CARD.membershipPlans);
-    // await insuranceBilling.openFirstPlanEdit();
+    
   });
 
   test.afterEach(async ({ insuranceBilling }) => {
@@ -32,6 +32,7 @@ test.describe('Membership Plans', () => {
   // -------------------------------------------------------------------------
 
   test('plan edit form opens with required fields', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     await expect(insuranceBilling.membershipNameInput).toBeVisible();
     await expect(insuranceBilling.annualFeeInput).toBeVisible();
     await expect(insuranceBilling.discountPercentageInput).toBeVisible();
@@ -44,6 +45,7 @@ test.describe('Membership Plans', () => {
   // -------------------------------------------------------------------------
 
   test('TC-F-IB2-04 valid plan name saves', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit(); 
     const current = await insuranceBilling.membershipNameInput.inputValue();
     const newName = current !== MEMBERSHIP.validName ? MEMBERSHIP.validName : MEMBERSHIP.altName;
     await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, newName);
@@ -51,6 +53,7 @@ test.describe('Membership Plans', () => {
   });
 
   test('TC-N-IB2-06 empty plan name → blocked', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();    
     await insuranceBilling.membershipNameInput.clear();
     await insuranceBilling.membershipNameInput.press('Tab');
     const isDisabled = await insuranceBilling.updatePlanButton.isDisabled();
@@ -60,6 +63,7 @@ test.describe('Membership Plans', () => {
 
   test('TC-S-IB2-02 XSS in plan name → sanitized on render', async ({ insuranceBilling }) => {
     // Truth source test data: <img src=x onerror=alert(1)>
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.fillAndBlur(
       insuranceBilling.membershipNameInput,
       '<img src=x onerror=alert(1)>'
@@ -73,6 +77,7 @@ test.describe('Membership Plans', () => {
   });
 
   test('TC-U-IB2-01 plan name error clears when corrected', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.membershipNameInput.clear();
     await insuranceBilling.membershipNameInput.press('Tab');
     await expect(insuranceBilling.error).toBeVisible();
@@ -81,6 +86,7 @@ test.describe('Membership Plans', () => {
   });
 
   test('TC-R-IB2-01 plan name persists after save', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     const current = await insuranceBilling.membershipNameInput.inputValue();
     const newName = current !== MEMBERSHIP.validName ? MEMBERSHIP.validName : MEMBERSHIP.altName;
     await insuranceBilling.fillAndBlur(insuranceBilling.membershipNameInput, newName);
@@ -96,10 +102,10 @@ test.describe('Membership Plans', () => {
 
   test('TC-F-IB2-04 add new membership plan (happy path)', async ({ insuranceBilling }) => {
     // Close current plan edit first
-    await insuranceBilling.cancel();
+    // await insuranceBilling.cancel();
 
     // Open panel and click "+ New Membership Plan"
-    await insuranceBilling.openEdit(InsuranceBillingPage.CARD.membershipPlans);
+    // await insuranceBilling.openEdit(InsuranceBillingPage.CARD.membershipPlans);
     const newPlanBtn = insuranceBilling.modal.getByRole('button', { name: '+ New Membership Plan' })
       .or(insuranceBilling.modal.getByText('New Membership Plan'));
     await newPlanBtn.click();
@@ -113,6 +119,7 @@ test.describe('Membership Plans', () => {
   test('EXPLORE negative discount % → behavior', async ({ insuranceBilling }) => {
     // IB-MEM-R4 states range 0–100 — negative is out of range
     // Not an explicit TC in truth source but logically invalid
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.zeroDiscount);
     const isDisabled = await insuranceBilling.updatePlanButton.isDisabled();
     const hasError   = await insuranceBilling.error.isVisible();
@@ -125,28 +132,33 @@ test.describe('Membership Plans', () => {
   });
 
   test('valid discount % accepted', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.validDiscount);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
   test('TC-N-IB2-07 discount % > 100 → error + Save disabled', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.overDiscount);
     await expect(insuranceBilling.error).toContainText('cannot exceed 100%');
     await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
 
   test('TC-B-IB2-04 discount % = 100 → maximum valid', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.maxDiscount);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
   test('TC-B-IB2-05 discount % = 101 → one above maximum → blocked', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.overDiscount);
     await expect(insuranceBilling.error).toBeVisible();
     await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
 
   test('TC-U-IB2-05 save disabled proactively when discount invalid', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.fillAndBlur(insuranceBilling.discountPercentageInput, MEMBERSHIP.overDiscount);
     await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
@@ -157,6 +169,7 @@ test.describe('Membership Plans', () => {
   // -------------------------------------------------------------------------
 
   test('TC-F-IB2-05 valid annual fee accepted', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, MEMBERSHIP.validFee);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
@@ -164,6 +177,7 @@ test.describe('Membership Plans', () => {
   test('TC-N-IB2-08 negative annual fee → silently corrected (DEF)', async ({ insuranceBilling }) => {
     // DEF: minus sign is silently dropped — field shows 50 instead of -50
     // No error message shown — flagged as missing feedback issue
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.annualFeeInput.fill('-50');
     await insuranceBilling.annualFeeInput.press('Tab');
     // const value = await insuranceBilling.annualFeeInput.inputValue();
@@ -173,18 +187,21 @@ test.describe('Membership Plans', () => {
   });
 
   test('TC-N annual fee = 0.01 → blocked (min is 1)', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, '0.01');
     await expect(insuranceBilling.error).toBeVisible();
     await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
 
   test('TC-B-IB2-07 annual fee = 0 → blocked (min is 1)', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, MEMBERSHIP.zeroFee);
     await expect(insuranceBilling.error).toBeVisible();
     await expect(insuranceBilling.updatePlanButton).toBeDisabled();
   });
 
   test('TC-B-IB2-06 annual fee = 1 → minimum valid', async ({ insuranceBilling }) => {
+    await insuranceBilling.openFirstPlanEdit();
     await insuranceBilling.fillAndBlur(insuranceBilling.annualFeeInput, MEMBERSHIP.minFee);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
