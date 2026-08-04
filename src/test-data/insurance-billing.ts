@@ -64,6 +64,7 @@ export const SERVICE_PRICING = {
   minName:     'AB',
   invalidName: 'A',
   cdtCode:     'D0140',
+  uniqueCdtPrefix: 'W',  // prefix for unique CDT codes to avoid duplicates
   validPrice:  '95',
   negPrice:    '-50',
   xssPayload:  '<script>alert(1)</script>',

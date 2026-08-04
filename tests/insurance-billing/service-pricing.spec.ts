@@ -1,5 +1,6 @@
 import { test, expect } from '../../src/fixtures';
 import { InsuranceBillingPage } from '../../src/pages/InsuranceBillingPage';
+import { BasePage } from '../../src/pages/BasePage';
 import { SERVICE_PRICING } from '../../src/test-data/insurance-billing';
 
 /**
@@ -29,7 +30,8 @@ test.describe('Service Pricing', () => {
   test('TC-F-IB2-07 add service with all fields', async ({ insuranceBilling }) => {
     await insuranceBilling.addServiceButton.click();
     await insuranceBilling.fillAndBlur(insuranceBilling.serviceNameInput, SERVICE_PRICING.validName);
-    await insuranceBilling.fillAndBlur(insuranceBilling.cdtCodeInput, SERVICE_PRICING.cdtCode);
+    // Use unique CDT code to avoid "already exists" error
+    await insuranceBilling.fillAndBlur(insuranceBilling.cdtCodeInput, BasePage.unique(SERVICE_PRICING.uniqueCdtPrefix));
     await insuranceBilling.fillAndBlur(insuranceBilling.servicePriceInput, SERVICE_PRICING.validPrice);
     await insuranceBilling.saveFeeButton.click();
     await insuranceBilling.saveAndAssertSuccess();
