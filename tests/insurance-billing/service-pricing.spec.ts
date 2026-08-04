@@ -22,63 +22,77 @@ test.describe('Service Pricing', () => {
     await insuranceBilling.cancel();
   });
 
+  // -------------------------------------------------------------------------
+  // TC-F-IB2-07 — Add Service (happy path)
+  // -------------------------------------------------------------------------
+
   test('TC-F-IB2-07 add service with all fields', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Service' }).click();
-    await insuranceBilling.page.getByRole('textbox', { name: 'Service Name' }).fill(SERVICE_PRICING.validName);
-    await insuranceBilling.page.getByRole('textbox', { name: 'CDT Code' }).fill(SERVICE_PRICING.cdtCode);
-    await insuranceBilling.page.getByRole('spinbutton', { name: 'Price ($)' }).fill(SERVICE_PRICING.validPrice);
-    await insuranceBilling.page.getByRole('button', { name: 'Save Fee' }).click();
+    await insuranceBilling.addServiceButton.click();
+    await insuranceBilling.fillAndBlur(insuranceBilling.serviceNameInput, SERVICE_PRICING.validName);
+    await insuranceBilling.fillAndBlur(insuranceBilling.cdtCodeInput, SERVICE_PRICING.cdtCode);
+    await insuranceBilling.fillAndBlur(insuranceBilling.servicePriceInput, SERVICE_PRICING.validPrice);
+    await insuranceBilling.saveFeeButton.click();
     await insuranceBilling.saveAndAssertSuccess();
   });
 
+  // -------------------------------------------------------------------------
+  // IB-SVC-R1 — Service Name (error fires on submit)
+  // -------------------------------------------------------------------------
+
   test('TC-N-IB2-09 empty service name → error on submit', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Service' }).click();
-    await insuranceBilling.page.getByRole('button', { name: 'Save Fee' }).click();
+    await insuranceBilling.addServiceButton.click();
+    await insuranceBilling.saveFeeButton.click();
     await expect(insuranceBilling.error).toContainText('at least 2 characters');
   });
 
   test('TC-N-IB2-10 1-char service name → error on submit', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Service' }).click();
-    await insuranceBilling.page.getByRole('textbox', { name: 'Service Name' }).fill(SERVICE_PRICING.invalidName);
-    await insuranceBilling.page.getByRole('button', { name: 'Save Fee' }).click();
+    await insuranceBilling.addServiceButton.click();
+    await insuranceBilling.fillAndBlur(insuranceBilling.serviceNameInput, SERVICE_PRICING.invalidName);
+    await insuranceBilling.saveFeeButton.click();
     await expect(insuranceBilling.error).toContainText('at least 2 characters');
   });
 
   test('TC-B-IB2-08 2-char service name → minimum valid', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Service' }).click();
-    await insuranceBilling.page.getByRole('textbox', { name: 'Service Name' }).fill(SERVICE_PRICING.minName);
-    await insuranceBilling.page.getByRole('button', { name: 'Save Fee' }).click();
+    await insuranceBilling.addServiceButton.click();
+    await insuranceBilling.fillAndBlur(insuranceBilling.serviceNameInput, SERVICE_PRICING.minName);
+    await insuranceBilling.saveFeeButton.click();
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
   test('TC-S-IB2-03 XSS in service name → sanitized', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Service' }).click();
+    await insuranceBilling.addServiceButton.click();
     let alertFired = false;
     insuranceBilling.page.on('dialog', () => { alertFired = true; });
-    await insuranceBilling.page.getByRole('textbox', { name: 'Service Name' }).fill(SERVICE_PRICING.xssPayload);
+    await insuranceBilling.serviceNameInput.fill(SERVICE_PRICING.xssPayload);
     await insuranceBilling.page.waitForTimeout(1000);
     expect(alertFired).toBe(false);
   });
 
+  // -------------------------------------------------------------------------
+  // IB-SVC-R2 — CDT Code (optional)
+  // -------------------------------------------------------------------------
+
   test('TC-F CDT code accepted', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Service' }).click();
-    await insuranceBilling.page.getByRole('textbox', { name: 'CDT Code' }).fill(SERVICE_PRICING.cdtCode);
+    await insuranceBilling.addServiceButton.click();
+    await insuranceBilling.fillAndBlur(insuranceBilling.cdtCodeInput, SERVICE_PRICING.cdtCode);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 
+  // -------------------------------------------------------------------------
+  // IB-SVC-R4 — Price
+  // -------------------------------------------------------------------------
+
   test('TC-N-IB2-11 negative price → silently sanitized (DEF)', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Service' }).click();
-    const priceField = insuranceBilling.page.getByRole('spinbutton', { name: 'Price ($)' });
-    await priceField.fill(SERVICE_PRICING.negPrice);
-    await priceField.press('Tab');
-    const value = await priceField.inputValue();
+    await insuranceBilling.addServiceButton.click();
+    await insuranceBilling.servicePriceInput.fill(SERVICE_PRICING.negPrice);
+    await insuranceBilling.servicePriceInput.press('Tab');
+    const value = await insuranceBilling.servicePriceInput.inputValue();
     expect(Number(value)).toBeGreaterThanOrEqual(0);
   });
 
   test('TC-B-IB2-09 valid price accepted', async ({ insuranceBilling }) => {
-    await insuranceBilling.modal.getByRole('button', { name: 'Add Service' }).click();
-    const priceField = insuranceBilling.page.getByRole('spinbutton', { name: 'Price ($)' });
-    await priceField.fill(SERVICE_PRICING.validPrice);
+    await insuranceBilling.addServiceButton.click();
+    await insuranceBilling.fillAndBlur(insuranceBilling.servicePriceInput, SERVICE_PRICING.validPrice);
     await expect(insuranceBilling.error).not.toBeVisible();
   });
 });

@@ -249,16 +249,24 @@ export class InsuranceBillingPage extends BasePage {
   // Service Pricing
   // -------------------------------------------------------------------------
 
-  get cdtCodeInput(): Locator {
-    return this.modal.locator('input[name="cdtCode"]');
+  get addServiceButton(): Locator {
+    return this.modal.getByRole('button', { name: 'Add Service' });
   }
 
   get serviceNameInput(): Locator {
-    return this.modal.locator('input[name="serviceName"]');
+    return this.page.getByRole('textbox', { name: 'Service Name' });
+  }
+
+  get cdtCodeInput(): Locator {
+    return this.page.getByRole('textbox', { name: 'CDT Code' });
   }
 
   get servicePriceInput(): Locator {
-    return this.modal.locator('input[name="price"]');
+    return this.page.getByRole('spinbutton', { name: 'Price ($)' });
+  }
+
+  get saveFeeButton(): Locator {
+    return this.page.getByRole('button', { name: 'Save Fee' });
   }
 
   // -------------------------------------------------------------------------
