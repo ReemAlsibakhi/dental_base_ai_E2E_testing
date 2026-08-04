@@ -41,10 +41,9 @@ test.describe('Service Pricing', () => {
   // IB-SVC-R1 — Service Name (error fires on submit)
   // -------------------------------------------------------------------------
 
-  test('TC-N-IB2-09 empty service name → error on submit', async ({ insuranceBilling }) => {
+  test('TC-N-IB2-09 empty service name → Save Fee disabled', async ({ insuranceBilling }) => {
     await insuranceBilling.addServiceButton.click();
-    await insuranceBilling.saveFeeButton.click();
-    await expect(insuranceBilling.error).toContainText('at least 2 characters');
+    await expect(insuranceBilling.saveFeeButton).toBeDisabled();
   });
 
   test('TC-N-IB2-10 1-char service name → error on submit', async ({ insuranceBilling }) => {
