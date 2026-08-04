@@ -85,12 +85,22 @@ test.describe('Service Pricing', () => {
   // IB-SVC-R4 — Price
   // -------------------------------------------------------------------------
 
-  test('TC-N-IB2-11 negative price → silently sanitized (DEF)', async ({ insuranceBilling }) => {
+  test('TC-N-IB2-11 negative price → error (min is 1)', async ({ insuranceBilling }) => {
     await insuranceBilling.addServiceButton.click();
-    await insuranceBilling.servicePriceInput.fill(SERVICE_PRICING.negPrice);
-    await insuranceBilling.servicePriceInput.press('Tab');
-    const value = await insuranceBilling.servicePriceInput.inputValue();
-    expect(Number(value)).toBeGreaterThanOrEqual(0);
+    await insuranceBilling.fillAndBlur(insuranceBilling.servicePriceInput, SERVICE_PRICING.negPrice);
+    await expect(insuranceBilling.error).toContainText('must be 1 or greater');
+  });
+
+  test('TC-B price = 0 → blocked (min is 1)', async ({ insuranceBilling }) => {
+    await insuranceBilling.addServiceButton.click();
+    await insuranceBilling.fillAndBlur(insuranceBilling.servicePriceInput, '0');
+    await expect(insuranceBilling.error).toContainText('must be 1 or greater');
+  });
+
+  test('TC-B price = 1 → minimum valid', async ({ insuranceBilling }) => {
+    await insuranceBilling.addServiceButton.click();
+    await insuranceBilling.fillAndBlur(insuranceBilling.servicePriceInput, '1');
+    await expect(insuranceBilling.error).not.toBeVisible();
   });
 
   test('TC-B-IB2-09 valid price accepted', async ({ insuranceBilling }) => {
